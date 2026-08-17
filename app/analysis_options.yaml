@@ -1,28 +1,32 @@
-# This file configures the analyzer, which statically analyzes Dart code to
-# check for errors, warnings, and lints.
-#
-# The issues identified by the analyzer are surfaced in the UI of Dart-enabled
-# IDEs (https://dart.dev/tools#ides-and-editors). The analyzer can also be
-# invoked from the command line by running `flutter analyze`.
-
-# The following line activates a set of recommended lints for Flutter apps,
-# packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
-linter:
-  # The lint rules applied to this project can be customized in the
-  # section below to disable rules from the `package:flutter_lints/flutter.yaml`
-  # included above or to enable additional rules. A list of all available lints
-  # and their documentation is published at https://dart.dev/lints.
-  #
-  # Instead of disabling a lint rule for the entire project in the
-  # section below, it can also be suppressed for a single line of code
-  # or a specific dart file by using the `// ignore: name_of_lint` and
-  # `// ignore_for_file: name_of_lint` syntax on the line or in the file
-  # producing the lint.
-  rules:
-    # avoid_print: false  # Uncomment to disable the `avoid_print` rule
-    # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
+analyzer:
+  language:
+    strict-casts: true      # 암묵적 다운캐스트 금지
+    strict-inference: true  # 타입 추론 실패 시 에러
+    strict-raw-types: true  # 제네릭 타입 금지
+  errors:
+    missing_required_param: error  # 필수 파라미터
+    missing_return: error          # return
+    todo: ignore                   # TODO는 무시
 
-# Additional information about this file can be found at
-# https://dart.dev/guides/language/analysis-options
+linter:
+  rules:
+    avoid_print: true  # print() 사용 금지 → 반드시 AppLog.logger 사용
+    always_use_package_imports: true  # 상대 경로 import 금지
+
+    prefer_single_quotes: true              # 문자열 리터럴은 단따옴표
+    always_declare_return_types: true       # 반환 타입 명시
+    prefer_interpolation_to_compose_strings: true  # 문자열 연결 '+' 대신 $ 사용
+    unnecessary_brace_in_string_interps: true      # ${x} → $x
+
+    prefer_final_fields: true              # 재할당 없는 인스턴스 final
+    prefer_final_locals: true              # 재할당 없는 지역변수 final
+    avoid_redundant_argument_values: true  # 기본값과 동일한 인자 전달 금지
+
+    cancel_subscriptions: true  # StreamSubscription은 반드시 cancel()
+    close_sinks: true           # StreamSink는 반드시 close()
+
+    avoid_bool_literals_in_conditional_expressions: true  # 조건식 자체로 사용 (bool)
+    avoid_empty_else: true # 조건문 empty else 검사
+    sort_child_properties_last: true # Widget의 child 요소를 항상 마지막에 적어야함.
