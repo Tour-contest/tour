@@ -1,4 +1,4 @@
-package com.example.nullnull_flutter
+package kr.co.nullnull
 
 import io.flutter.embedding.android.FlutterActivity
 
