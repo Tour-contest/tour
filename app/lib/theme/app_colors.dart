@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
-/// Classical(에디토리얼/북 스타일) 팔레트. docs/DESIGN.md 참고.
+/// Classical(에디토리얼/북 스타일) 팔레트. docs/DESIGN.md 참고. 라이트 테마만 지원한다.
 ///
-/// [ThemeExtension]로 등록해 라이트/다크에 따라 값이 바뀐다. 위젯에서는
-/// `AppColors.of(context)`로 현재 테마의 팔레트를 가져와 쓴다.
+/// [ThemeExtension]로 등록해둔다. 위젯에서는 `AppColors.of(context)`로 조회한다.
 @immutable
 class AppColors extends ThemeExtension<AppColors> {
   const AppColors({
@@ -38,13 +37,6 @@ class AppColors extends ThemeExtension<AppColors> {
     ink: Color(0xFF201F1D),
     gold: Color(0xFFB68235),
     gold700: Color(0xFF7A5620),
-  );
-
-  static const dark = AppColors(
-    paper: Color(0xFF201F1D),
-    ink: Color(0xFFF3F2F2),
-    gold: Color(0xFFB68235),
-    gold700: Color(0xFFD4A662),
   );
 
   static AppColors of(BuildContext context) {

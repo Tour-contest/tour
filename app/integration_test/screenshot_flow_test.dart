@@ -5,8 +5,8 @@ import 'package:integration_test/integration_test.dart';
 import 'package:nullnull/app_info.dart';
 import 'package:nullnull/main.dart';
 import 'package:nullnull/theme/app_colors.dart';
+import 'package:nullnull/theme/app_text_scale_controller.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
-import 'package:nullnull/theme/app_theme_controller.dart';
 
 /// 스토어 스크린샷용 화면 전환 흐름.
 ///
@@ -19,7 +19,7 @@ void main() {
 
   testWidgets('screenshot flow', (tester) async {
     await AppInfo.ensureInitialized();
-    appThemeController = await AppThemeController.ensureInitialized();
+    appTextScaleController = await AppTextScaleController.ensureInitialized();
     await tester.pumpWidget(const NullnullApp());
     await tester.pumpAndSettle();
     // ignore: avoid_print
@@ -29,7 +29,13 @@ void main() {
     await tester.tap(find.text('여행 시작하기'));
     await tester.pumpAndSettle();
     // ignore: avoid_print
-    print('SCREENSHOT_READY:02_chat_empty');
+    print('SCREENSHOT_READY:02_login');
+    await Future<void>.delayed(const Duration(seconds: 20));
+
+    await tester.tap(find.text('카카오로 시작하기'));
+    await tester.pumpAndSettle();
+    // ignore: avoid_print
+    print('SCREENSHOT_READY:03_chat_empty');
     await Future<void>.delayed(const Duration(seconds: 20));
 
     await tester.tap(find.text('이번 주말 전주 한옥마을 대신 갈 만한 곳'));
@@ -38,19 +44,19 @@ void main() {
       await tester.pump(const Duration(milliseconds: 50));
     }
     // ignore: avoid_print
-    print('SCREENSHOT_READY:03_chat_conversation');
+    print('SCREENSHOT_READY:04_chat_conversation');
     await Future<void>.delayed(const Duration(seconds: 20));
 
     await tester.tap(find.byTooltip('지난 대화'));
     await tester.pumpAndSettle();
     // ignore: avoid_print
-    print('SCREENSHOT_READY:04_history');
+    print('SCREENSHOT_READY:05_history');
     await Future<void>.delayed(const Duration(seconds: 20));
 
     await tester.tap(find.byTooltip('설정'));
     await tester.pumpAndSettle();
     // ignore: avoid_print
-    print('SCREENSHOT_READY:05_settings');
+    print('SCREENSHOT_READY:06_settings');
     await Future<void>.delayed(const Duration(seconds: 20));
   });
 

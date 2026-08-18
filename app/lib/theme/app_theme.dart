@@ -6,18 +6,15 @@ import 'package:nullnull/theme/app_text_styles.dart';
 class AppTheme {
   AppTheme._();
 
-  static ThemeData get light => _themeFor(AppColors.light, Brightness.light);
-  static ThemeData get dark => _themeFor(AppColors.dark, Brightness.dark);
-
-  static ThemeData _themeFor(AppColors colors, Brightness brightness) {
+  static ThemeData get theme {
+    final colors = AppColors.light;
     return ThemeData(
       useMaterial3: true,
-      brightness: brightness,
+      brightness: Brightness.light,
       scaffoldBackgroundColor: colors.paper,
       fontFamily: AppTextStyles.body(color: colors.ink).fontFamily,
       colorScheme: ColorScheme.fromSeed(
         seedColor: colors.gold,
-        brightness: brightness,
         surface: colors.paper,
       ),
       textSelectionTheme: TextSelectionThemeData(

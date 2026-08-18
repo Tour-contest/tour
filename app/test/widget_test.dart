@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:nullnull/app_info.dart';
 import 'package:nullnull/main.dart';
-import 'package:nullnull/theme/app_theme_controller.dart';
+import 'package:nullnull/theme/app_text_scale_controller.dart';
 
 void main() {
   setUpAll(() async {
@@ -20,16 +20,23 @@ void main() {
       buildSignature: '',
     );
     await AppInfo.ensureInitialized();
-    appThemeController = await AppThemeController.ensureInitialized();
+    appTextScaleController = await AppTextScaleController.ensureInitialized();
   });
 
-  testWidgets('온보딩에서 채팅으로, 새 대화에서 지난 대화로 이동한다', (WidgetTester tester) async {
+  testWidgets('온보딩에서 로그인, 채팅으로, 새 대화에서 지난 대화로 이동한다',
+      (WidgetTester tester) async {
     await tester.pumpWidget(const NullnullApp());
 
     expect(find.text('널널'), findsOneWidget);
     expect(find.text('여행 시작하기'), findsOneWidget);
 
     await tester.tap(find.text('여행 시작하기'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('카카오로 시작하기'), findsOneWidget);
+    expect(find.text('네이버로 시작하기'), findsOneWidget);
+
+    await tester.tap(find.text('카카오로 시작하기'));
     await tester.pumpAndSettle();
 
     expect(find.text('이번 여행,\n조금 더 널널하게 가볼까요?'), findsOneWidget);
@@ -42,7 +49,11 @@ void main() {
     await tester.tap(find.byTooltip('설정'));
     await tester.pumpAndSettle();
 
-    expect(find.text('화면 모드'), findsOneWidget);
+    expect(find.text('내 정보'), findsOneWidget);
+    expect(find.text('널널한 여행자'), findsOneWidget);
+    expect(find.text('카카오 계정'), findsOneWidget);
+    expect(find.text('글자 크기'), findsOneWidget);
+    expect(find.text('보통'), findsOneWidget);
     expect(find.text('1.0.0 (1)'), findsOneWidget);
   });
 }
