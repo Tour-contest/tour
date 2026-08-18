@@ -12,6 +12,8 @@ enum AppIconShape {
   refresh,
   chevronLeft,
   settings,
+  kakao,
+  naver,
 }
 
 class AppIcon extends StatelessWidget {
@@ -167,6 +169,28 @@ class _AppIconPainter extends CustomPainter {
         canvas.drawCircle(const Offset(15, 12), 2.3, strokePaint);
         canvas.drawLine(const Offset(4, 18), const Offset(20, 18), strokePaint);
         canvas.drawCircle(const Offset(8, 18), 2.3, strokePaint);
+        break;
+
+      case AppIconShape.kakao:
+        final bubble = RRect.fromRectAndRadius(
+          const Rect.fromLTWH(3.5, 4.5, 17, 12.5),
+          const Radius.circular(6),
+        );
+        canvas.drawRRect(bubble, strokePaint);
+        final tail = Path()
+          ..moveTo(8.2, 16.6)
+          ..lineTo(6.6, 20.3)
+          ..lineTo(11.3, 16.6);
+        canvas.drawPath(tail, strokePaint);
+        break;
+
+      case AppIconShape.naver:
+        final n = Path()
+          ..moveTo(5, 19)
+          ..lineTo(5, 5)
+          ..lineTo(19, 19)
+          ..lineTo(19, 5);
+        canvas.drawPath(n, strokePaint);
         break;
     }
 

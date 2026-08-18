@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:nullnull/screens/chat_screen.dart';
+import 'package:nullnull/screens/login_screen.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
 
@@ -15,8 +15,8 @@ class OnboardingScreen extends StatelessWidget {
   ];
 
   void _start(BuildContext context) {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(builder: (_) => const ChatScreen()),
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
     );
   }
 
