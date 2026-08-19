@@ -14,6 +14,9 @@ enum AppIconShape {
   settings,
   kakao,
   naver,
+  pin,
+  phone,
+  image,
 }
 
 class AppIcon extends StatelessWidget {
@@ -191,6 +194,54 @@ class _AppIconPainter extends CustomPainter {
           ..lineTo(19, 19)
           ..lineTo(19, 5);
         canvas.drawPath(n, strokePaint);
+        break;
+
+      case AppIconShape.pin:
+        final drop = Path()
+          ..moveTo(12, 21)
+          ..cubicTo(12, 21, 18, 14.3, 18, 10)
+          ..cubicTo(18, 6.7, 15.3, 4, 12, 4)
+          ..cubicTo(8.7, 4, 6, 6.7, 6, 10)
+          ..cubicTo(6, 14.3, 12, 21, 12, 21)
+          ..close();
+        canvas.drawPath(drop, strokePaint);
+        canvas.drawCircle(const Offset(12, 10), 2.2, strokePaint);
+        break;
+
+      case AppIconShape.phone:
+        final receiver = Path()
+          ..moveTo(6.8, 4.4)
+          ..cubicTo(5.5, 4.4, 4.5, 5.6, 4.7, 6.9)
+          ..cubicTo(5.6, 12.4, 10.0, 16.8, 15.5, 17.7)
+          ..cubicTo(16.8, 17.9, 18.0, 16.9, 18.0, 15.6)
+          ..lineTo(18.0, 14.1)
+          ..cubicTo(18.0, 13.4, 17.5, 12.8, 16.8, 12.7)
+          ..lineTo(14.7, 12.3)
+          ..cubicTo(14.2, 12.2, 13.7, 12.4, 13.4, 12.8)
+          ..lineTo(12.8, 13.6)
+          ..cubicTo(11.0, 12.6, 9.6, 11.1, 8.7, 9.4)
+          ..lineTo(9.5, 8.8)
+          ..cubicTo(9.9, 8.5, 10.1, 8.0, 10.0, 7.5)
+          ..lineTo(9.6, 5.4)
+          ..cubicTo(9.5, 4.7, 8.9, 4.2, 8.2, 4.2)
+          ..close();
+        canvas.drawPath(receiver, strokePaint);
+        break;
+
+      case AppIconShape.image:
+        final frame = RRect.fromRectAndRadius(
+          const Rect.fromLTWH(3.5, 4.5, 17, 15),
+          const Radius.circular(2.5),
+        );
+        canvas.drawRRect(frame, strokePaint);
+        canvas.drawCircle(const Offset(8.5, 9.5), 1.6, strokePaint);
+        final mountains = Path()
+          ..moveTo(4.5, 16.5)
+          ..lineTo(9.5, 11.5)
+          ..lineTo(13, 15)
+          ..lineTo(15.5, 12.5)
+          ..lineTo(19.5, 17);
+        canvas.drawPath(mountains, strokePaint);
         break;
     }
 

@@ -18,19 +18,19 @@ flutter run
 
 - 대상 플랫폼: iOS, Android (`## 플랫폼 지원` 참고)
 - 현재 단계: `lib/data/demo_script.dart`의 canned 스크립트로 동작하는 프로토타입으로, 실제 백엔드/AI 연동은 아직 없다.
-- 화면 흐름: 온보딩 → 로그인(SNS 전용) → 채팅(빈 상태 / 대화) → 지난 대화(히스토리) → 설정, 단일 스택 내비게이션(`Navigator`)으로 구성.
+- 화면 흐름: 온보딩 → 로그인(SNS 전용) → 채팅(빈 상태 / 대화) → 지난 대화(히스토리) → 설정, 단일 스택 내비게이션(`Navigator`)으로 구성. 채팅 내 장소 추천 아이템 탭 시 장소 상세 화면으로 별도 이동.
 
 ## Architecture
 
-Flutter 앱 "널널"(package name `nullnull`, Dart SDK `^3.6.1`)은 AI 여행 챗봇 서비스로, `docs/DESIGN.md`에 정의된 화면 구성(온보딩 → 채팅 → 지난 대화 → 설정)을 기반으로 하되, 온보딩과 채팅 사이에 SNS 전용 로그인 화면(`login_screen.dart`)이 추가되어 있다(`docs/DESIGN.md`에는 아직 반영되지 않음).
+Flutter 앱 "널널"(package name `nullnull`, Dart SDK `^3.6.1`)은 AI 여행 챗봇 서비스로, `docs/DESIGN.md`에 정의된 화면 구성(온보딩 → 채팅 → 지난 대화 → 설정)을 기반으로 하되, 온보딩과 채팅 사이에 SNS 전용 로그인 화면(`login_screen.dart`), 채팅 내 장소 추천 아이템 탭 시 이동하는 장소 상세 화면(`place_detail_screen.dart`)이 추가되어 있다(`docs/DESIGN.md`에는 아직 반영되지 않음).
 
 - `lib/main.dart` — 앱 진입점. `AppInfo.ensureInitialized()`와 `AppTextScaleController.ensureInitialized()`를 초기화한 뒤 전역 `appTextScaleController`(`late final`)를 통해 `MaterialApp`을 `ValueListenableBuilder<AppFontScale>`로 감싸고, `builder`에서 `MediaQuery`의 `textScaler`를 선택된 배율로 덮어써 앱 전체 글자 크기에 적용한다. 화면 모드(다크 모드) 전환 기능은 사용하지 않는다(`theme: AppTheme.theme` 고정).
 - `lib/app_info.dart` — 서비스명, 개발자 이메일, 개인정보처리방침/스토어 URL 등 앱 메타데이터와 `package_info_plus` 기반 `PackageInfo`를 전역으로 제공한다.
 - `lib/app_log.dart` — `logger` 패키지를 감싼 `AppLog.logger` 전역 로거.
-- `lib/screens/` — `onboarding_screen.dart`, `login_screen.dart`, `chat_screen.dart`, `history_screen.dart`, `settings_screen.dart`. 라우팅은 별도 패키지 없이 `Navigator.push(MaterialPageRoute)`로 처리한다. `login_screen.dart`는 카카오/네이버 SNS 로그인만 제공(회원가입 절차 별도 없음)하며, 실제 SNS 인증 SDK 연동 전 단계라 버튼 탭 시 바로 채팅 화면으로 이동하는 mock 동작이다. `settings_screen.dart`는 "내 정보" 섹션에서 `LoginPreference`에 저장된 마지막 SNS 로그인 수단(없으면 카카오로 가정)을 로그인된 계정으로 간주해 `DemoUser`의 닉네임/이메일 목업 데이터를 보여주고, "글자 크기" 섹션에서 `AppTextScaleController`를 통해 접근성용 글자 크기(작게/보통/크게/아주 크게)를 라디오 목록으로 선택할 수 있다. 화면 모드(다크 모드) 설정 항목은 없다.
-- `lib/widgets/` — `app_header.dart`, `app_icon.dart`(Lucide 스타일 아이콘을 `CustomPainter`로 직접 그리는 자체 아이콘 시스템, 외부 아이콘 폰트 의존성 없음. `kakao`/`naver` 등 SNS 로그인 아이콘도 브랜드 컬러 없이 골드 스트로크로 동일하게 그린다), `fade_slide_in.dart`, `chat/` 하위에 채팅 화면 전용 위젯들.
+- `lib/screens/` — `onboarding_screen.dart`, `login_screen.dart`, `chat_screen.dart`, `history_screen.dart`, `settings_screen.dart`, `place_detail_screen.dart`. 라우팅은 별도 패키지 없이 `Navigator.push(MaterialPageRoute)`로 처리한다. `login_screen.dart`는 카카오/네이버 SNS 로그인만 제공(회원가입 절차 별도 없음)하며, 실제 SNS 인증 SDK 연동 전 단계라 버튼 탭 시 바로 채팅 화면으로 이동하는 mock 동작이다. `settings_screen.dart`는 "내 정보" 섹션에서 `LoginPreference`에 저장된 마지막 SNS 로그인 수단(없으면 카카오로 가정)을 로그인된 계정으로 간주해 `DemoUser`의 닉네임/이메일 목업 데이터를 보여주고, "글자 크기" 섹션에서 `AppTextScaleController`를 통해 접근성용 글자 크기(작게/보통/크게/아주 크게)를 라디오 목록으로 선택할 수 있다. 화면 모드(다크 모드) 설정 항목은 없다. `place_detail_screen.dart`는 채팅 내 장소 추천 아이템(`PlaceRecommendation`) 탭 시 이동하는 상세 화면으로, 최상단 16:9 이미지 영역(`PlaceRecommendation.imageUrl`이 없거나 로딩/실패 시 `SkeletonBox`로 대체, 현재는 항상 스켈레톤) + 장소명/위치/혼잡도, 장소 소개, 주소, 전화번호를 보여준다. 지도 앱·네이버 지도 딥링크, 전화 걸기 버튼은 실제 SDK 연동 전 단계라 탭 시 "준비 중" 스낵바만 뜨는 mock 동작이다.
+- `lib/widgets/` — `app_header.dart`, `app_icon.dart`(Lucide 스타일 아이콘을 `CustomPainter`로 직접 그리는 자체 아이콘 시스템, 외부 아이콘 폰트 의존성 없음. `kakao`/`naver` 등 SNS 로그인 아이콘, `pin`/`phone`/`image` 등 장소 상세용 아이콘도 브랜드 컬러 없이 골드 스트로크로 동일하게 그린다), `skeleton_box.dart`(`SkeletonBox` — 네트워크 이미지 로딩 전/실패 시 보여주는 골드 톤 셰버 애니메이션 placeholder, `AnimationController.repeat()`로 무한 반복되므로 이 위젯이 있는 화면에서 위젯 테스트는 `pumpAndSettle()` 대신 `pump(duration)`을 써야 함), `fade_slide_in.dart`, `chat/` 하위에 채팅 화면 전용 위젯들(`chat/streaming_ai_message.dart`의 장소 추천 행은 탭 시 `PlaceDetailScreen`으로 이동).
 - `lib/theme/` — `app_colors.dart`(`ThemeExtension<AppColors>`로 라이트 팔레트만 정의, `AppColors.of(context)`로 조회), `app_text_styles.dart`, `app_theme.dart`(`AppTheme.theme` — 라이트 고정, 다크 테마/모드 전환 없음), `app_text_scale_controller.dart`(`AppFontScale` enum(글자 크기 배율 4단계) + `ValueNotifier<AppFontScale>` + `shared_preferences`로 사용자의 글자 크기 선택을 영속화).
-- `lib/data/demo_script.dart` — 데모/프로토타입용 대화 스크립트 데이터. 실제 백엔드 연동 전 단계로, 서비스 로직/API 레이어는 아직 없다.
+- `lib/data/demo_script.dart` — 데모/프로토타입용 대화 스크립트 데이터. `PlaceRecommendation`은 목록 표시용 필드(`name`/`description`/`congestionPercent`) 외에 상세 화면용 `location`/`address`/`phone`/`introduction` 목업 필드와, 상세 화면 이미지 영역용 `imageUrl`(nullable, 현재는 실제 이미지가 없어 전부 `null`)을 갖는다. 실제 백엔드 연동 전 단계로, 서비스 로직/API 레이어는 아직 없다.
 - `lib/data/login_preference.dart` — 로그인 화면의 "최근 로그인" 뱃지 표시를 위해 마지막으로 사용한 SNS 로그인 수단(`SnsProvider`)을 `shared_preferences`에 저장/조회한다(`app_text_scale_controller.dart`와 동일한 영속화 패턴). `SnsProviderLabel` extension으로 화면 표시용 한글 라벨(`카카오`/`네이버`)을 제공한다.
 - `lib/data/demo_user.dart` — 설정 화면 "내 정보"에 보여줄 데모 프로필(닉네임/마스킹된 이메일)을 `SnsProvider`별로 고정 매핑한 목업 데이터. 실제 회원 시스템 연동 전 단계.
 - 새 파일의 `lib/` 내부 import는 상대 경로(`../`, `./`) 대신 `package:nullnull/...` 형태를 사용한다(`analysis_options.yaml`의 `always_use_package_imports` 규칙).

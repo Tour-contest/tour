@@ -6,11 +6,32 @@ class PlaceRecommendation {
     required this.name,
     required this.description,
     required this.congestionPercent,
+    required this.location,
+    required this.address,
+    required this.phone,
+    required this.introduction,
+    this.imageUrl,
   });
 
   final String name;
   final String description;
   final int congestionPercent;
+
+  /// 상세 화면 이미지 영역용 네트워크 이미지 URL. 실제 이미지 소스 연동 전 단계라
+  /// 아직 값이 없고(null), 로딩 전/실패 시 [SkeletonBox]로 대체된다.
+  final String? imageUrl;
+
+  /// 상세 화면용 짧은 위치 표기 (예: "충남 논산시 강경읍").
+  final String location;
+
+  /// 상세 화면용 전체 주소.
+  final String address;
+
+  /// 상세 화면용 전화번호.
+  final String phone;
+
+  /// 상세 화면용 장소 소개 문단.
+  final String introduction;
 }
 
 class CourseStep {
@@ -63,16 +84,34 @@ class DemoScript {
           name: '강경 근대거리',
           description: '충남 논산 · 100년 전 거리를 그대로 걷는 근대문화거리',
           congestionPercent: 12,
+          location: '충남 논산시 강경읍',
+          address: '충청남도 논산시 강경읍 계백로 361번길 11',
+          phone: '041-746-8431',
+          introduction: '1900년대 초 개항장으로 번성했던 강경의 옛 거리를 그대로 걷는 '
+              '근대문화거리예요. 옛 한일은행 건물과 개항기 상점들이 남아 있어 사진 찍기 좋고, '
+              '평일 오전에는 관광객이 거의 없어 한적하게 둘러볼 수 있어요.',
         ),
         PlaceRecommendation(
           name: '삼례문화예술촌',
           description: '전북 완주 · 옛 양곡창고를 개조한 조용한 예술공간',
           congestionPercent: 18,
+          location: '전북 완주군 삼례읍',
+          address: '전라북도 완주군 삼례읍 삼례역로 81',
+          phone: '063-291-6799',
+          introduction: '1920년대 지어진 양곡창고를 개조한 복합 문화공간이에요. 옛 창고의 '
+              '골조를 그대로 살린 전시관과 카페가 모여 있어, 넓은 마당을 천천히 걸으며 여유롭게 '
+              '둘러보기 좋아요.',
         ),
         PlaceRecommendation(
           name: '아리랑문학마을',
           description: '전북 김제 · 지평선 아래 고즈넉한 문학 마을',
           congestionPercent: 9,
+          location: '전북 김제시 죽산면',
+          address: '전라북도 김제시 죽산면 화초로 200',
+          phone: '063-540-4064',
+          introduction: '조정래 소설 「아리랑」의 배경이 된 김제 죽산면 일대를 재현한 문학 '
+              '테마 마을이에요. 지평선이 끝없이 펼쳐지는 들녘과 옛 정미소, 일제강점기 가옥이 '
+              '남아 있어 고즈넉한 산책을 즐기기 좋아요.',
         ),
       ]),
       TextBlock('마음에 드는 곳이 있으면 반나절 코스도 짜드릴게요.'),

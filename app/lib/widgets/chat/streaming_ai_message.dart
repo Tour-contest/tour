@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:nullnull/data/demo_script.dart';
+import 'package:nullnull/screens/place_detail_screen.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
 
@@ -202,47 +203,53 @@ class _PlaceRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 11),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: colors.divider)),
+    return InkWell(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(
+            builder: (_) => PlaceDetailScreen(place: item)),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.name,
-                  style:
-                      AppTextStyles.heading(fontSize: 15.5, color: colors.ink),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  item.description,
-                  style: AppTextStyles.body(
-                      fontSize: 12, color: colors.ink700, height: 1.5),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-            decoration: BoxDecoration(
-              border: Border.all(color: colors.gold),
-              borderRadius: BorderRadius.circular(99),
-            ),
-            child: Text(
-              '혼잡도 ${item.congestionPercent}%',
-              style: AppTextStyles.tabularNums(
-                AppTextStyles.body(fontSize: 10.5, color: colors.gold700),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 11),
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: colors.divider)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.name,
+                    style: AppTextStyles.heading(
+                        fontSize: 15.5, color: colors.ink),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    item.description,
+                    style: AppTextStyles.body(
+                        fontSize: 12, color: colors.ink700, height: 1.5),
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+            const SizedBox(width: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+              decoration: BoxDecoration(
+                border: Border.all(color: colors.gold),
+                borderRadius: BorderRadius.circular(99),
+              ),
+              child: Text(
+                '혼잡도 ${item.congestionPercent}%',
+                style: AppTextStyles.tabularNums(
+                  AppTextStyles.body(fontSize: 10.5, color: colors.gold700),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
