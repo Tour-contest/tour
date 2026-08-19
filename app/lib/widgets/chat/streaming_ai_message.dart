@@ -205,8 +205,7 @@ class _PlaceRow extends StatelessWidget {
     final colors = AppColors.of(context);
     return InkWell(
       onTap: () => Navigator.of(context).push(
-        MaterialPageRoute<void>(
-            builder: (_) => PlaceDetailScreen(place: item)),
+        MaterialPageRoute<void>(builder: (_) => PlaceDetailScreen(place: item)),
       ),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 11),

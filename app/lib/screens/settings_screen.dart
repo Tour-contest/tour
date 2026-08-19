@@ -112,7 +112,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 14),
                   Text(
                     '오늘은 어디로 여행을 떠나볼까요?',
-                    style: AppTextStyles.body(fontSize: 14, color: colors.ink700),
+                    style:
+                        AppTextStyles.body(fontSize: 14, color: colors.ink700),
                   ),
                   const SizedBox(height: 28),
                   _SectionLabel('정보'),

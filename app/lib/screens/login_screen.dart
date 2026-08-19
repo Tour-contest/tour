@@ -85,7 +85,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         Text(
                           '별도 회원가입 절차 없이 아래 계정으로 바로 이용할 수 있어요.',
                           style: AppTextStyles.body(
-                              fontSize: 13.5, color: colors.ink700, height: 1.6),
+                              fontSize: 13.5,
+                              color: colors.ink700,
+                              height: 1.6),
                         ),
                       ],
                     ),
@@ -149,8 +151,8 @@ class _SnsLoginButton extends StatelessWidget {
             onPressed: onTap,
             style: OutlinedButton.styleFrom(
               side: BorderSide(color: colors.gold),
-              shape:
-                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4)),
               padding: const EdgeInsets.symmetric(vertical: 14),
               overlayColor: colors.goldTint08,
             ),

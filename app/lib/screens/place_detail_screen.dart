@@ -49,13 +49,14 @@ class PlaceDetailScreen extends StatelessWidget {
                     const SizedBox(height: 18),
                     Text(
                       place.name,
-                      style:
-                          AppTextStyles.heading(fontSize: 26, color: colors.ink),
+                      style: AppTextStyles.heading(
+                          fontSize: 26, color: colors.ink),
                     ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        AppIcon(AppIconShape.pin, size: 13, color: colors.ink600),
+                        AppIcon(AppIconShape.pin,
+                            size: 13, color: colors.ink600),
                         const SizedBox(width: 5),
                         Expanded(
                           child: Text(
@@ -115,15 +116,15 @@ class PlaceDetailScreen extends StatelessWidget {
                         _OutlineButton(
                           label: '지도 앱에서 보기',
                           icon: AppIconShape.arrowUpRight,
-                          onTap: () => _showComingSoon(
-                              context, '지도 앱 연동은 준비 중이에요.'),
+                          onTap: () =>
+                              _showComingSoon(context, '지도 앱 연동은 준비 중이에요.'),
                         ),
                         const SizedBox(width: 10),
                         _OutlineButton(
                           label: '네이버 지도로 열기',
                           icon: AppIconShape.arrowUpRight,
-                          onTap: () => _showComingSoon(
-                              context, '네이버 지도 연동은 준비 중이에요.'),
+                          onTap: () =>
+                              _showComingSoon(context, '네이버 지도 연동은 준비 중이에요.'),
                         ),
                       ],
                     ),
@@ -139,8 +140,7 @@ class PlaceDetailScreen extends StatelessWidget {
                         Text(
                           place.phone,
                           style: AppTextStyles.tabularNums(
-                            AppTextStyles.body(
-                                fontSize: 14, color: colors.ink),
+                            AppTextStyles.body(fontSize: 14, color: colors.ink),
                           ),
                         ),
                       ],
@@ -149,8 +149,7 @@ class PlaceDetailScreen extends StatelessWidget {
                     _OutlineButton(
                       label: '전화 걸기',
                       expand: true,
-                      onTap: () =>
-                          _showComingSoon(context, '전화 연결은 준비 중이에요.'),
+                      onTap: () => _showComingSoon(context, '전화 연결은 준비 중이에요.'),
                     ),
                   ],
                 ),
@@ -183,8 +182,8 @@ class _PlaceImage extends StatelessWidget {
         ),
         child: imageUrl == null
             ? SkeletonBox(
-                child: AppIcon(AppIconShape.image,
-                    size: 22, color: colors.ink600),
+                child:
+                    AppIcon(AppIconShape.image, size: 22, color: colors.ink600),
               )
             : Image.network(
                 imageUrl!,
@@ -212,7 +211,8 @@ class _Divider extends StatelessWidget {
   final AppColors colors;
 
   @override
-  Widget build(BuildContext context) => Container(height: 1, color: colors.divider);
+  Widget build(BuildContext context) =>
+      Container(height: 1, color: colors.divider);
 }
 
 class _SectionLabel extends StatelessWidget {
@@ -276,6 +276,8 @@ class _OutlineButton extends StatelessWidget {
         ),
       ),
     );
-    return expand ? SizedBox(width: double.infinity, child: button) : Expanded(child: button);
+    return expand
+        ? SizedBox(width: double.infinity, child: button)
+        : Expanded(child: button);
   }
 }
