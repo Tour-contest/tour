@@ -33,10 +33,10 @@ void main() {
     await tester.tap(find.text('여행 시작하기'));
     await tester.pumpAndSettle();
 
-    expect(find.text('카카오로 시작하기'), findsOneWidget);
-    expect(find.text('네이버로 시작하기'), findsOneWidget);
+    expect(find.text('카카오 로그인'), findsOneWidget);
+    expect(find.text('네이버 로그인'), findsOneWidget);
 
-    await tester.tap(find.text('카카오로 시작하기'));
+    await tester.tap(find.text('카카오 로그인'));
     await tester.pumpAndSettle();
 
     expect(find.text('이번 여행,\n조금 더 널널하게 가볼까요?'), findsOneWidget);

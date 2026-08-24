@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:nullnull/data/login_preference.dart';
 import 'package:nullnull/screens/chat_screen.dart';
@@ -94,17 +95,33 @@ class _LoginScreenState extends State<LoginScreen> {
                     Column(
                       children: [
                         _SnsLoginButton(
-                          icon: AppIconShape.kakao,
-                          label: '${SnsProvider.kakao.label}로 시작하기',
+                          icon: SvgPicture.asset(
+                            'assets/images/icon_kakao_login.svg',
+                            width: 18,
+                            height: 18,
+                            colorFilter: ColorFilter.mode(
+                                colors.kakaoSymbol, BlendMode.srcIn),
+                          ),
+                          label: '카카오 로그인',
                           showRecentBadge: _lastProvider == SnsProvider.kakao,
                           onTap: () => _loginWith(SnsProvider.kakao),
+                          backgroundColor: colors.kakaoContainer,
+                          labelColor: colors.kakaoLabel,
                         ),
                         const SizedBox(height: 12),
                         _SnsLoginButton(
-                          icon: AppIconShape.naver,
-                          label: '${SnsProvider.naver.label}로 시작하기',
+                          icon: SvgPicture.asset(
+                            'assets/images/icon_naver_login.svg',
+                            width: 18,
+                            height: 18,
+                            colorFilter: ColorFilter.mode(
+                                colors.naverForeground, BlendMode.srcIn),
+                          ),
+                          label: '네이버 로그인',
                           showRecentBadge: _lastProvider == SnsProvider.naver,
                           onTap: () => _loginWith(SnsProvider.naver),
+                          backgroundColor: colors.naverContainer,
+                          labelColor: colors.naverForeground,
                         ),
                         const SizedBox(height: 20),
                         Text(
@@ -132,12 +149,22 @@ class _SnsLoginButton extends StatelessWidget {
     required this.label,
     required this.showRecentBadge,
     required this.onTap,
+    required this.backgroundColor,
+    required this.labelColor,
   });
 
-  final AppIconShape icon;
+  static const double _height = 54;
+  static const double _borderRadius = 12;
+  static const double _iconGap = 16;
+
+  final Widget icon;
   final String label;
   final bool showRecentBadge;
   final VoidCallback onTap;
+
+  /// 각 SNS 브랜드 가이드에 따른 버튼 채움 색.
+  final Color backgroundColor;
+  final Color labelColor;
 
   @override
   Widget build(BuildContext context) {
@@ -147,24 +174,26 @@ class _SnsLoginButton extends StatelessWidget {
       children: [
         SizedBox(
           width: double.infinity,
+          height: _height,
           child: OutlinedButton(
             onPressed: onTap,
             style: OutlinedButton.styleFrom(
-              side: BorderSide(color: colors.gold),
+              backgroundColor: backgroundColor,
+              side: BorderSide.none,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4)),
-              padding: const EdgeInsets.symmetric(vertical: 14),
+                  borderRadius: BorderRadius.circular(_borderRadius)),
+              padding: EdgeInsets.zero,
               overlayColor: colors.goldTint08,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                AppIcon(icon, size: 18, color: colors.gold),
-                const SizedBox(width: 10),
+                icon,
+                const SizedBox(width: _iconGap),
                 Text(
                   label,
                   style: AppTextStyles.body(
-                      fontSize: 15, color: colors.ink, letterSpacing: .6),
+                      fontSize: 15, color: labelColor, letterSpacing: .6),
                 ),
               ],
             ),
