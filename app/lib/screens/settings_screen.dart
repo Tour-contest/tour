@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:nullnull/app_info.dart';
 import 'package:nullnull/data/demo_user.dart';
 import 'package:nullnull/data/login_preference.dart';
 import 'package:nullnull/main.dart';
+import 'package:nullnull/screens/login_screen.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_scale_controller.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
@@ -55,6 +57,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Future<void> _confirmDisconnect(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => _ConfirmDialog(
+        title: '정말 연결을 끊으시겠습니까?',
+        message: '연결을 끊으면 ${_provider.label} 계정으로 다시 로그인해야 이용할 수 있어요.',
+        confirmLabel: '연결 끊기',
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('계정 연결 끊기는 준비 중이에요.')),
+    );
+  }
+
+  Future<void> _confirmLogout(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => const _ConfirmDialog(
+        title: '로그아웃 하시겠습니까?',
+        message: '로그아웃하면 다시 로그인해야 채팅 내역을 이어서 볼 수 있어요.',
+        confirmLabel: '로그아웃',
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
@@ -85,10 +118,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     trailingText: DemoUser.maskedEmailFor(_provider),
                     isFirst: true,
                   ),
-                  _SettingsRow(
-                    label: '연결된 계정',
-                    trailingIcon: _iconFor(_provider),
-                    trailingText: '${_provider.label} 계정',
+                  _ConnectedAccountRow(
+                    provider: _provider,
+                    onDisconnect: () => _confirmDisconnect(context),
                   ),
                   const SizedBox(height: 28),
                   _SectionLabel('글자 크기'),
@@ -108,12 +140,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ],
                       );
                     },
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    '오늘은 어디로 여행을 떠나볼까요?',
-                    style:
-                        AppTextStyles.body(fontSize: 14, color: colors.ink700),
                   ),
                   const SizedBox(height: 28),
                   _SectionLabel('정보'),
@@ -135,6 +161,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onTap: () => _openLicenses(context),
                     isFirst: true,
                   ),
+                  const SizedBox(height: 28),
+                  _LogoutButton(onTap: () => _confirmLogout(context)),
                 ],
               ),
             ),
@@ -225,14 +253,12 @@ class _SettingsRow extends StatelessWidget {
   const _SettingsRow({
     required this.label,
     this.trailingText,
-    this.trailingIcon,
     this.onTap,
     this.isFirst = false,
   });
 
   final String label;
   final String? trailingText;
-  final AppIconShape? trailingIcon;
   final VoidCallback? onTap;
   final bool isFirst;
 
@@ -254,10 +280,6 @@ class _SettingsRow extends StatelessWidget {
               child: Text(label,
                   style: AppTextStyles.body(fontSize: 14, color: colors.ink)),
             ),
-            if (trailingIcon != null) ...[
-              AppIcon(trailingIcon!, size: 14, color: colors.gold),
-              const SizedBox(width: 6),
-            ],
             if (trailingText != null) ...[
               const SizedBox(width: 6),
               Text(
@@ -276,11 +298,209 @@ class _SettingsRow extends StatelessWidget {
   }
 }
 
-/// 로그인 화면에서 사용한 SNS 로그인 수단을 아이콘으로 매핑한다.
-AppIconShape _iconFor(SnsProvider provider) => switch (provider) {
-      SnsProvider.kakao => AppIconShape.kakao,
-      SnsProvider.naver => AppIconShape.naver,
+/// SNS 로그인 수단을 SVG 에셋 경로로 매핑한다(`app_icon.dart` 폐기 진행 중이라
+/// `AppIconShape` 대신 `assets/images/` SVG를 사용).
+String _snsAssetFor(SnsProvider provider) => switch (provider) {
+      SnsProvider.kakao => 'assets/images/icon_kakao_login.svg',
+      SnsProvider.naver => 'assets/images/icon_naver_login.svg',
     };
+
+class _SnsIcon extends StatelessWidget {
+  const _SnsIcon({required this.provider, required this.size, required this.color});
+
+  final SnsProvider provider;
+  final double size;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => SvgPicture.asset(
+        _snsAssetFor(provider),
+        width: size,
+        height: size,
+        colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+      );
+}
+
+/// "연결된 계정" 행. 연결 끊기 버튼 탭 시 확인 팝업을 띄운다.
+class _ConnectedAccountRow extends StatelessWidget {
+  const _ConnectedAccountRow({
+    required this.provider,
+    required this.onDisconnect,
+  });
+
+  final SnsProvider provider;
+  final VoidCallback onDisconnect;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: colors.divider)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text('연결된 계정',
+                style: AppTextStyles.body(fontSize: 14, color: colors.ink)),
+          ),
+          _SnsIcon(provider: provider, size: 14, color: colors.gold),
+          const SizedBox(width: 6),
+          Text(
+            '${provider.label} 계정',
+            style: AppTextStyles.body(fontSize: 12.5, color: colors.ink600),
+          ),
+          const SizedBox(width: 10),
+          InkWell(
+            onTap: onDisconnect,
+            borderRadius: BorderRadius.circular(4),
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                border: Border.all(color: colors.gold),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                '연결 끊기',
+                style: AppTextStyles.body(fontSize: 11.5, color: colors.gold700),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 2버튼(취소 / 확인) 확인 팝업. "연결 끊기"·"로그아웃"처럼 제목·설명·확인
+/// 버튼 문구만 다른 확인 다이얼로그에서 공용으로 사용한다.
+class _ConfirmDialog extends StatelessWidget {
+  const _ConfirmDialog({
+    required this.title,
+    required this.message,
+    required this.confirmLabel,
+  });
+
+  final String title;
+  final String message;
+  final String confirmLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return Dialog(
+      backgroundColor: colors.paper,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.heading(fontSize: 17, color: colors.ink),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.body(
+                  fontSize: 12.5, color: colors.ink700, height: 1.5),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: _DialogButton(
+                    label: '취소',
+                    filled: false,
+                    onTap: () => Navigator.of(context).pop(false),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _DialogButton(
+                    label: confirmLabel,
+                    filled: true,
+                    onTap: () => Navigator.of(context).pop(true),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DialogButton extends StatelessWidget {
+  const _DialogButton({
+    required this.label,
+    required this.filled,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool filled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return SizedBox(
+      height: 44,
+      child: OutlinedButton(
+        onPressed: onTap,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: filled ? colors.gold : null,
+          side: BorderSide(color: colors.gold),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+          overlayColor: colors.goldTint08,
+        ),
+        child: Text(
+          label,
+          style: AppTextStyles.body(
+            fontSize: 13.5,
+            color: filled ? colors.paper : colors.gold700,
+            letterSpacing: .3,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LogoutButton extends StatelessWidget {
+  const _LogoutButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton(
+        onPressed: onTap,
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(color: colors.divider),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          overlayColor: colors.goldTint08,
+        ),
+        child: Text(
+          '로그아웃',
+          style: AppTextStyles.body(fontSize: 14, color: colors.ink700),
+        ),
+      ),
+    );
+  }
+}
 
 class _ProfileSummary extends StatelessWidget {
   const _ProfileSummary({required this.provider});
@@ -319,7 +539,7 @@ class _ProfileSummary extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    AppIcon(_iconFor(provider), size: 12, color: colors.gold),
+                    _SnsIcon(provider: provider, size: 12, color: colors.gold),
                     const SizedBox(width: 5),
                     Text(
                       '${provider.label} 계정으로 로그인 중',
