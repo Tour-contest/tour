@@ -5,6 +5,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:nullnull/app_info.dart';
 import 'package:nullnull/main.dart';
 import 'package:nullnull/theme/app_colors.dart';
+import 'package:nullnull/theme/app_locale_controller.dart';
 import 'package:nullnull/theme/app_text_scale_controller.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
 
@@ -14,12 +15,19 @@ import 'package:nullnull/theme/app_text_styles.dart';
 /// 실제 기기/시뮬레이터 위에서 화면을 순서대로 전환한다. 각 화면에서
 /// "SCREENSHOT_READY:`<name>`" 을 출력한 뒤 잠시 정지하므로, 그 사이에
 /// 외부에서 `xcrun simctl io <device> screenshot` 등으로 캡처하면 된다.
+///
+/// 스토어 등록 문구(`docs/STORE_LISTING.md`)가 한국어 기준이라, 앱을 다국어
+/// 지원(`docs/TODO.md` "5-1" 참고)한 뒤에도 스크린샷은 기기/시뮬레이터의
+/// 실제 로케일과 무관하게 항상 한국어로 캡처되어야 한다. 그래서 실행 시
+/// `AppLocaleController`를 [AppLocaleOption.korean]으로 강제 고정한다.
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('screenshot flow', (tester) async {
     await AppInfo.ensureInitialized();
     appTextScaleController = await AppTextScaleController.ensureInitialized();
+    appLocaleController = await AppLocaleController.ensureInitialized();
+    await appLocaleController.setOption(AppLocaleOption.korean);
     await tester.pumpWidget(const NullnullApp());
     await tester.pumpAndSettle();
     // ignore: avoid_print
@@ -32,7 +40,7 @@ void main() {
     print('SCREENSHOT_READY:02_login');
     await Future<void>.delayed(const Duration(seconds: 20));
 
-    await tester.tap(find.text('카카오로 시작하기'));
+    await tester.tap(find.text('카카오 로그인'));
     await tester.pumpAndSettle();
     // ignore: avoid_print
     print('SCREENSHOT_READY:03_chat_empty');

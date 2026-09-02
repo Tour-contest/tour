@@ -82,6 +82,8 @@ doc/api/
 .pub/
 coverage/
 lib/generated_plugin_registrant.dart
+# flutter gen-l10n 산출물(빌드 시 자동 재생성, ARB 소스만 커밋)
+lib/l10n/app_localizations*.dart
 # For library packages, don’t commit the pubspec.lock file.
 # Regenerating the pubspec.lock file lets you test your package against the latest compatible versions of its dependencies.
 # See https://dart.dev/guides/libraries/private-files#pubspeclock

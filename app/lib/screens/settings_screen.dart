@@ -5,13 +5,42 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:nullnull/app_info.dart';
 import 'package:nullnull/data/demo_user.dart';
 import 'package:nullnull/data/login_preference.dart';
+import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/main.dart';
 import 'package:nullnull/screens/login_screen.dart';
 import 'package:nullnull/theme/app_colors.dart';
+import 'package:nullnull/theme/app_locale_controller.dart';
 import 'package:nullnull/theme/app_text_scale_controller.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
 import 'package:nullnull/widgets/app_header.dart';
 import 'package:nullnull/widgets/app_icon.dart';
+
+/// SNS 로그인 수단의 화면 표시명. 다국어 대응을 위해 [SnsProvider] 자체에는
+/// 문자열을 두지 않고 여기서 [AppLocalizations]로 매핑한다.
+String _providerLabel(AppLocalizations l10n, SnsProvider provider) =>
+    switch (provider) {
+      SnsProvider.kakao => l10n.snsProviderKakao,
+      SnsProvider.naver => l10n.snsProviderNaver,
+    };
+
+/// 글자 크기 단계의 화면 표시명. [AppFontScale] 자체에는 다국어 대응을 위해
+/// 문자열을 두지 않고 여기서 매핑한다.
+String _fontScaleLabel(AppLocalizations l10n, AppFontScale scale) =>
+    switch (scale) {
+      AppFontScale.small => l10n.fontScaleSmall,
+      AppFontScale.normal => l10n.fontScaleNormal,
+      AppFontScale.large => l10n.fontScaleLarge,
+      AppFontScale.extraLarge => l10n.fontScaleExtraLarge,
+    };
+
+/// 언어 옵션의 화면 표시명. [AppLocaleOption] 자체에는 다국어 대응을 위해
+/// 문자열을 두지 않고 여기서 매핑한다.
+String _languageOptionLabel(AppLocalizations l10n, AppLocaleOption option) =>
+    switch (option) {
+      AppLocaleOption.system => l10n.languageOptionSystem,
+      AppLocaleOption.korean => l10n.languageOptionKorean,
+      AppLocaleOption.english => l10n.languageOptionEnglish,
+    };
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -42,7 +71,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await Clipboard.setData(ClipboardData(text: AppInfo.developerEmail));
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('클립보드에 복사되었습니다.')),
+      SnackBar(content: Text(AppLocalizations.of(context)!.settingsContactCopied)),
     );
   }
 
@@ -58,27 +87,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _confirmDisconnect(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => _ConfirmDialog(
-        title: '정말 연결을 끊으시겠습니까?',
-        message: '연결을 끊으면 ${_provider.label} 계정으로 다시 로그인해야 이용할 수 있어요.',
-        confirmLabel: '연결 끊기',
+        title: l10n.settingsDisconnectDialogTitle,
+        message: l10n.settingsDisconnectDialogMessage(
+            _providerLabel(l10n, _provider)),
+        confirmLabel: l10n.settingsDisconnect,
       ),
     );
     if (confirmed != true || !context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('계정 연결 끊기는 준비 중이에요.')),
+      SnackBar(content: Text(AppLocalizations.of(context)!.settingsDisconnectSnackbar)),
     );
   }
 
   Future<void> _confirmLogout(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (_) => const _ConfirmDialog(
-        title: '로그아웃 하시겠습니까?',
-        message: '로그아웃하면 다시 로그인해야 채팅 내역을 이어서 볼 수 있어요.',
-        confirmLabel: '로그아웃',
+      builder: (_) => _ConfirmDialog(
+        title: l10n.settingsLogoutDialogTitle,
+        message: l10n.settingsLogoutDialogMessage,
+        confirmLabel: l10n.settingsLogout,
       ),
     );
     if (confirmed != true || !context.mounted) return;
@@ -91,18 +123,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: colors.paper,
       body: SafeArea(
         child: Column(
           children: [
             AppHeader(
-              title: '설정',
+              title: l10n.commonSettings,
               leading: IconButton(
                 icon: AppIcon(AppIconShape.chevronLeft,
                     size: 18, color: colors.ink),
                 onPressed: () => Navigator.of(context).pop(),
-                tooltip: '뒤로',
+                tooltip: l10n.commonBack,
               ),
             ),
             Expanded(
@@ -110,11 +143,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                 children: [
-                  _SectionLabel('내 정보'),
+                  _SectionLabel(l10n.settingsSectionMyInfo),
                   _ProfileSummary(provider: _provider),
                   const SizedBox(height: 8),
                   _SettingsRow(
-                    label: '이메일',
+                    label: l10n.settingsEmailLabel,
                     trailingText: DemoUser.maskedEmailFor(_provider),
                     isFirst: true,
                   ),
@@ -123,7 +156,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onDisconnect: () => _confirmDisconnect(context),
                   ),
                   const SizedBox(height: 28),
-                  _SectionLabel('글자 크기'),
+                  _SectionLabel(l10n.settingsSectionFontSize),
                   ValueListenableBuilder<AppFontScale>(
                     valueListenable: appTextScaleController,
                     builder: (context, scale, _) {
@@ -131,7 +164,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         children: [
                           for (final option in AppFontScale.values)
                             _RadioRow(
-                              label: option.label,
+                              label: _fontScaleLabel(l10n, option),
                               selected: scale == option,
                               onTap: () =>
                                   appTextScaleController.setScale(option),
@@ -142,22 +175,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     },
                   ),
                   const SizedBox(height: 28),
-                  _SectionLabel('정보'),
+                  _SectionLabel(l10n.settingsSectionLanguage),
+                  ValueListenableBuilder<AppLocaleOption>(
+                    valueListenable: appLocaleController,
+                    builder: (context, option, _) {
+                      return Column(
+                        children: [
+                          for (final value in AppLocaleOption.values)
+                            _RadioRow(
+                              label: _languageOptionLabel(l10n, value),
+                              selected: option == value,
+                              onTap: () => appLocaleController.setOption(value),
+                              isFirst: value == AppLocaleOption.values.first,
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 28),
+                  _SectionLabel(l10n.settingsSectionInfo),
                   _SettingsRow(
-                    label: '앱 버전',
+                    label: l10n.settingsAppVersion,
                     trailingText:
                         '${AppInfo.package.version} (${AppInfo.package.buildNumber})',
                     isFirst: true,
                   ),
                   _SettingsRow(
-                    label: '문의하기',
+                    label: l10n.settingsContact,
                     trailingText: AppInfo.developerEmail,
                     onTap: () => _contactByEmail(context),
                   ),
                   const SizedBox(height: 28),
-                  _SectionLabel('오픈소스'),
+                  _SectionLabel(l10n.settingsSectionOpenSource),
                   _SettingsRow(
-                    label: '오픈소스 라이선스',
+                    label: l10n.settingsOpenSourceLicense,
                     onTap: () => _openLicenses(context),
                     isFirst: true,
                   ),
@@ -334,6 +385,7 @@ class _ConnectedAccountRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
@@ -342,13 +394,13 @@ class _ConnectedAccountRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text('연결된 계정',
+            child: Text(l10n.settingsConnectedAccount,
                 style: AppTextStyles.body(fontSize: 14, color: colors.ink)),
           ),
           _SnsIcon(provider: provider, size: 14, color: colors.gold),
           const SizedBox(width: 6),
           Text(
-            '${provider.label} 계정',
+            l10n.settingsAccountSuffix(_providerLabel(l10n, provider)),
             style: AppTextStyles.body(fontSize: 12.5, color: colors.ink600),
           ),
           const SizedBox(width: 10),
@@ -363,7 +415,7 @@ class _ConnectedAccountRow extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
-                '연결 끊기',
+                l10n.settingsDisconnect,
                 style: AppTextStyles.body(fontSize: 11.5, color: colors.gold700),
               ),
             ),
@@ -415,7 +467,7 @@ class _ConfirmDialog extends StatelessWidget {
               children: [
                 Expanded(
                   child: _DialogButton(
-                    label: '취소',
+                    label: AppLocalizations.of(context)!.commonCancel,
                     filled: false,
                     onTap: () => Navigator.of(context).pop(false),
                   ),
@@ -494,7 +546,7 @@ class _LogoutButton extends StatelessWidget {
           overlayColor: colors.goldTint08,
         ),
         child: Text(
-          '로그아웃',
+          AppLocalizations.of(context)!.settingsLogout,
           style: AppTextStyles.body(fontSize: 14, color: colors.ink700),
         ),
       ),
@@ -510,7 +562,9 @@ class _ProfileSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    final nickname = DemoUser.nicknameFor(provider);
+    final l10n = AppLocalizations.of(context)!;
+    final nickname = DemoUser.nicknameFor(
+        provider, Localizations.localeOf(context).languageCode);
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
@@ -542,7 +596,7 @@ class _ProfileSummary extends StatelessWidget {
                     _SnsIcon(provider: provider, size: 12, color: colors.gold),
                     const SizedBox(width: 5),
                     Text(
-                      '${provider.label} 계정으로 로그인 중',
+                      l10n.settingsLoggedInWith(_providerLabel(l10n, provider)),
                       style: AppTextStyles.body(
                           fontSize: 11.5, color: colors.ink600),
                     ),

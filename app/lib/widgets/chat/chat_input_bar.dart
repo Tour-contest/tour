@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
 import 'package:nullnull/widgets/app_icon.dart';
@@ -43,6 +44,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: EdgeInsets.fromLTRB(
           16, 12, 16, 12 + MediaQuery.of(context).padding.bottom),
@@ -59,7 +61,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
               padding: EdgeInsets.zero,
               icon: AppIcon(AppIconShape.clip, color: colors.ink700),
               onPressed: () {},
-              tooltip: '첨부',
+              tooltip: l10n.chatInputAttachTooltip,
             ),
           ),
           const SizedBox(width: 4),
@@ -80,7 +82,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                 decoration: InputDecoration(
                   isDense: true,
                   border: InputBorder.none,
-                  hintText: '어디로 떠나고 싶으세요?',
+                  hintText: l10n.chatInputHint,
                   hintStyle:
                       AppTextStyles.body(fontSize: 13.5, color: colors.ink600),
                 ),
@@ -101,7 +103,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                 icon: AppIcon(AppIconShape.arrowUp,
                     size: 14, color: colors.gold700),
                 onPressed: _submit,
-                tooltip: '전송',
+                tooltip: l10n.chatInputSendTooltip,
               ),
             ),
           ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/screens/login_screen.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
@@ -7,12 +8,6 @@ import 'package:nullnull/theme/app_text_styles.dart';
 /// docs/DESIGN.md 화면 1: 온보딩.
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
-
-  static const _steps = [
-    '실시간 혼잡도 데이터로 지금 붐비는 곳을 피합니다',
-    '취향은 같고 인파는 적은 대안지를 매칭합니다',
-    '한적한 시간대 중심으로 코스를 설계합니다',
-  ];
 
   void _start(BuildContext context) {
     Navigator.of(context).push(
@@ -23,6 +18,8 @@ class OnboardingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final steps = [l10n.onboardingStep1, l10n.onboardingStep2, l10n.onboardingStep3];
     return Scaffold(
       backgroundColor: colors.paper,
       body: SafeArea(
@@ -34,7 +31,7 @@ class OnboardingScreen extends StatelessWidget {
               Column(
                 children: [
                   Text(
-                    '여유 · 쾌적 · 한적',
+                    l10n.onboardingKicker,
                     style: AppTextStyles.body(
                       fontSize: 13,
                       color: colors.gold700,
@@ -49,7 +46,7 @@ class OnboardingScreen extends StatelessWidget {
                   Container(width: 44, height: 1, color: colors.gold),
                   const SizedBox(height: 20),
                   Text(
-                    '인파 대신 여백을, 확신 대신 여유를\n원하는 여행자를 위해 당신만의 속도로\n걸을 수 있는 여행을 안내합니다.',
+                    l10n.onboardingIntro,
                     textAlign: TextAlign.center,
                     style: AppTextStyles.body(
                         fontSize: 16.5, color: colors.ink800, height: 1.75),
@@ -58,7 +55,7 @@ class OnboardingScreen extends StatelessWidget {
               ),
               Column(
                 children: [
-                  for (var i = 0; i < _steps.length; i++)
+                  for (var i = 0; i < steps.length; i++)
                     Container(
                       padding: const EdgeInsets.symmetric(vertical: 13),
                       decoration: BoxDecoration(
@@ -82,7 +79,7 @@ class OnboardingScreen extends StatelessWidget {
                           const SizedBox(width: 14),
                           Expanded(
                             child: Text(
-                              _steps[i],
+                              steps[i],
                               style: AppTextStyles.body(
                                 fontSize: 12.5,
                                 color: colors.ink800,
@@ -106,7 +103,7 @@ class OnboardingScreen extends StatelessWidget {
                         overlayColor: colors.goldTint08,
                       ),
                       child: Text(
-                        '여행 시작하기',
+                        l10n.onboardingCta,
                         style: AppTextStyles.body(
                             fontSize: 15,
                             color: colors.ink,

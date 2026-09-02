@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
 import 'package:nullnull/widgets/app_icon.dart';
@@ -40,19 +41,20 @@ class _MessageActionsRowState extends State<MessageActionsRow> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.only(top: 10),
       child: Row(
         children: [
           _ActionButton(
             icon: AppIconShape.copy,
-            label: _copied ? '복사됨' : '복사',
+            label: _copied ? l10n.chatActionCopied : l10n.chatActionCopy,
             onTap: _handleCopy,
           ),
           const SizedBox(width: 16),
           _ActionButton(
             icon: AppIconShape.refresh,
-            label: '다시 생성',
+            label: l10n.chatActionRegenerate,
             onTap: widget.onRegenerate,
           ),
         ],

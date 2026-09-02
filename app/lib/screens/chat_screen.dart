@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:nullnull/data/demo_script.dart';
+import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
 import 'package:nullnull/widgets/app_header.dart';
@@ -52,9 +53,11 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _send(String text) {
+    final languageCode = Localizations.localeOf(context).languageCode;
     setState(() {
       _entries.add(_UserChatEntry(_nextId++, text));
-      _entries.add(_AiChatEntry(_nextId++, DemoScript.turnFor(_scriptIndex)));
+      _entries.add(_AiChatEntry(
+          _nextId++, DemoScript.turnFor(_scriptIndex, languageCode)));
       _scriptIndex++;
     });
     _scrollToBottomSoon();
@@ -94,6 +97,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: colors.paper,
       body: SafeArea(
@@ -101,17 +105,17 @@ class _ChatScreenState extends State<ChatScreen> {
           children: [
             AppHeader(
               title: '널널',
-              subtitle: '한적한 여행을 위한 비서',
+              subtitle: l10n.chatSubtitle,
               leading: IconButton(
                 icon: AppIcon(AppIconShape.menu, size: 18, color: colors.ink),
                 onPressed: _openHistory,
-                tooltip: '지난 대화',
+                tooltip: l10n.chatHistoryTooltip,
               ),
               trailing: IconButton(
                 icon:
                     AppIcon(AppIconShape.refresh, size: 18, color: colors.ink),
                 onPressed: _newChat,
-                tooltip: '새 대화',
+                tooltip: l10n.chatNewTooltip,
               ),
             ),
             Expanded(
@@ -178,6 +182,9 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final prompts = DemoScript.suggestedPromptsFor(
+        Localizations.localeOf(context).languageCode);
     return Padding(
       padding: const EdgeInsets.fromLTRB(22, 0, 22, 16),
       child: Column(
@@ -185,22 +192,22 @@ class _EmptyState extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '이번 여행,\n조금 더 널널하게 가볼까요?',
+            l10n.chatEmptyHeading,
             style: AppTextStyles.display(fontSize: 28, color: colors.ink)
                 .copyWith(height: 1.35),
           ),
           const SizedBox(height: 8),
           Text(
-            '궁금한 여행지나 지금 이 순간의 혼잡도를 물어보세요',
+            l10n.chatEmptySubheading,
             style: AppTextStyles.body(
                 fontSize: 14, color: colors.ink700, height: 1.6),
           ),
           const SizedBox(height: 22),
-          for (var i = 0; i < DemoScript.suggestedPrompts.length; i++)
+          for (var i = 0; i < prompts.length; i++)
             SuggestedPromptRow(
-              text: DemoScript.suggestedPrompts[i],
-              isLast: i == DemoScript.suggestedPrompts.length - 1,
-              onTap: () => onPromptTap(DemoScript.suggestedPrompts[i]),
+              text: prompts[i],
+              isLast: i == prompts.length - 1,
+              onTap: () => onPromptTap(prompts[i]),
             ),
         ],
       ),

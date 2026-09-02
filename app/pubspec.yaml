@@ -40,6 +40,9 @@ dependencies:
   url_launcher: ^6.3.2
   flutter_svg: ^2.3.0
   dio: ^5.11.0
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
@@ -65,6 +68,8 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  generate: true
 
   assets:
     - assets/images/

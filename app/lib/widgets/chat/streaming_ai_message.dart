@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:nullnull/data/demo_script.dart';
+import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/screens/place_detail_screen.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
@@ -241,7 +242,8 @@ class _PlaceRow extends StatelessWidget {
                 borderRadius: BorderRadius.circular(99),
               ),
               child: Text(
-                '혼잡도 ${item.congestionPercent}%',
+                AppLocalizations.of(context)!
+                    .chatCongestionLabel(item.congestionPercent),
                 style: AppTextStyles.tabularNums(
                   AppTextStyles.body(fontSize: 10.5, color: colors.gold700),
                 ),

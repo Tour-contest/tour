@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:nullnull/data/login_preference.dart';
+import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/screens/chat_screen.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
@@ -44,6 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: colors.paper,
       body: SafeArea(
@@ -51,12 +53,12 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           children: [
             AppHeader(
-              title: '로그인',
+              title: l10n.loginTitle,
               leading: IconButton(
                 icon: AppIcon(AppIconShape.chevronLeft,
                     size: 18, color: colors.ink),
                 onPressed: () => Navigator.of(context).pop(),
-                tooltip: '뒤로',
+                tooltip: l10n.commonBack,
               ),
             ),
             Expanded(
@@ -69,7 +71,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '로그인 · 회원가입',
+                          l10n.loginKicker,
                           style: AppTextStyles.body(
                             fontSize: 13,
                             color: colors.gold700,
@@ -78,13 +80,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 14),
                         Text(
-                          'SNS 계정으로\n간편하게 시작하세요',
+                          l10n.loginHeading,
                           style: AppTextStyles.heading(
                               fontSize: 28, color: colors.ink, height: 1.3),
                         ),
                         const SizedBox(height: 14),
                         Text(
-                          '별도 회원가입 절차 없이 아래 계정으로 바로 이용할 수 있어요.',
+                          l10n.loginDescription,
                           style: AppTextStyles.body(
                               fontSize: 13.5,
                               color: colors.ink700,
@@ -102,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             colorFilter: ColorFilter.mode(
                                 colors.kakaoSymbol, BlendMode.srcIn),
                           ),
-                          label: '카카오 로그인',
+                          label: l10n.loginKakaoButton,
                           showRecentBadge: _lastProvider == SnsProvider.kakao,
                           onTap: () => _loginWith(SnsProvider.kakao),
                           backgroundColor: colors.kakaoContainer,
@@ -117,7 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             colorFilter: ColorFilter.mode(
                                 colors.naverForeground, BlendMode.srcIn),
                           ),
-                          label: '네이버 로그인',
+                          label: l10n.loginNaverButton,
                           showRecentBadge: _lastProvider == SnsProvider.naver,
                           onTap: () => _loginWith(SnsProvider.naver),
                           backgroundColor: colors.naverContainer,
@@ -125,7 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 20),
                         Text(
-                          '로그인 시 서비스 이용약관 및 개인정보처리방침에 동의하게 됩니다.',
+                          l10n.loginTerms,
                           textAlign: TextAlign.center,
                           style: AppTextStyles.body(
                               fontSize: 11, color: colors.ink600, height: 1.5),
@@ -211,7 +213,7 @@ class _SnsLoginButton extends StatelessWidget {
                 border: Border.all(color: colors.gold),
               ),
               child: Text(
-                '최근 로그인',
+                AppLocalizations.of(context)!.loginRecentBadge,
                 style: AppTextStyles.body(
                   fontSize: 9.5,
                   color: colors.gold700,

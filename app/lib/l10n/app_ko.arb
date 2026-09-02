@@ -1,0 +1,299 @@
+{
+  "@@locale": "ko",
+  "onboardingKicker": "여유 · 쾌적 · 한적",
+  "@onboardingKicker": {
+    "description": "온보딩 상단 킥커 문구"
+  },
+  "onboardingIntro": "인파 대신 여백을, 확신 대신 여유를\n원하는 여행자를 위해 당신만의 속도로\n걸을 수 있는 여행을 안내합니다.",
+  "@onboardingIntro": {
+    "description": "온보딩 소개문 3줄"
+  },
+  "onboardingStep1": "실시간 혼잡도 데이터로 지금 붐비는 곳을 피합니다",
+  "@onboardingStep1": {
+    "description": "온보딩 번호 리스트 1번 설명"
+  },
+  "onboardingStep2": "취향은 같고 인파는 적은 대안지를 매칭합니다",
+  "@onboardingStep2": {
+    "description": "온보딩 번호 리스트 2번 설명"
+  },
+  "onboardingStep3": "한적한 시간대 중심으로 코스를 설계합니다",
+  "@onboardingStep3": {
+    "description": "온보딩 번호 리스트 3번 설명"
+  },
+  "onboardingCta": "여행 시작하기",
+  "@onboardingCta": {
+    "description": "온보딩 하단 CTA 버튼"
+  },
+  "commonBack": "뒤로",
+  "@commonBack": {
+    "description": "뒤로가기 아이콘 버튼 툴팁 (여러 화면 공통)"
+  },
+  "loginTitle": "로그인",
+  "@loginTitle": {
+    "description": "로그인 화면 헤더 타이틀"
+  },
+  "loginKicker": "로그인 · 회원가입",
+  "@loginKicker": {
+    "description": "로그인 화면 상단 킥커 문구"
+  },
+  "loginHeading": "SNS 계정으로\n간편하게 시작하세요",
+  "@loginHeading": {
+    "description": "로그인 화면 헤딩"
+  },
+  "loginDescription": "별도 회원가입 절차 없이 아래 계정으로 바로 이용할 수 있어요.",
+  "@loginDescription": {
+    "description": "로그인 화면 보조 설명"
+  },
+  "loginKakaoButton": "카카오 로그인",
+  "@loginKakaoButton": {
+    "description": "카카오 SNS 로그인 버튼 레이블"
+  },
+  "loginNaverButton": "네이버 로그인",
+  "@loginNaverButton": {
+    "description": "네이버 SNS 로그인 버튼 레이블"
+  },
+  "loginTerms": "로그인 시 서비스 이용약관 및 개인정보처리방침에 동의하게 됩니다.",
+  "@loginTerms": {
+    "description": "로그인 화면 약관 동의 안내"
+  },
+  "loginRecentBadge": "최근 로그인",
+  "@loginRecentBadge": {
+    "description": "최근 사용한 SNS 로그인 버튼 위 뱃지"
+  },
+  "chatSubtitle": "한적한 여행을 위한 비서",
+  "@chatSubtitle": {
+    "description": "채팅 화면 헤더 부제"
+  },
+  "chatHistoryTooltip": "지난 대화",
+  "@chatHistoryTooltip": {
+    "description": "채팅 화면 좌측 상단 히스토리 이동 버튼 툴팁"
+  },
+  "chatNewTooltip": "새 대화",
+  "@chatNewTooltip": {
+    "description": "채팅 화면 우측 상단 새 대화 버튼 툴팁"
+  },
+  "chatEmptyHeading": "이번 여행,\n조금 더 널널하게 가볼까요?",
+  "@chatEmptyHeading": {
+    "description": "채팅 빈 상태 인사말"
+  },
+  "chatEmptySubheading": "궁금한 여행지나 지금 이 순간의 혼잡도를 물어보세요",
+  "@chatEmptySubheading": {
+    "description": "채팅 빈 상태 보조문구"
+  },
+  "chatInputAttachTooltip": "첨부",
+  "@chatInputAttachTooltip": {
+    "description": "채팅 입력바 첨부 아이콘 버튼 툴팁"
+  },
+  "chatInputHint": "어디로 떠나고 싶으세요?",
+  "@chatInputHint": {
+    "description": "채팅 입력창 placeholder"
+  },
+  "chatInputSendTooltip": "전송",
+  "@chatInputSendTooltip": {
+    "description": "채팅 입력바 전송 버튼 툴팁"
+  },
+  "chatActionCopy": "복사",
+  "@chatActionCopy": {
+    "description": "AI 답변 복사 버튼(복사 전)"
+  },
+  "chatActionCopied": "복사됨",
+  "@chatActionCopied": {
+    "description": "AI 답변 복사 버튼(복사 직후 1.5초)"
+  },
+  "chatActionRegenerate": "다시 생성",
+  "@chatActionRegenerate": {
+    "description": "AI 답변 다시 생성 버튼"
+  },
+  "chatCongestionLabel": "혼잡도 {percent}%",
+  "@chatCongestionLabel": {
+    "description": "추천 장소 카드의 혼잡도 배지",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "commonSettings": "설정",
+  "@commonSettings": {
+    "description": "설정 화면을 가리키는 문구 (아이콘 버튼 툴팁/화면 타이틀 공통)"
+  },
+  "historyTitle": "지난 대화",
+  "@historyTitle": {
+    "description": "지난 대화(히스토리) 화면 헤더 타이틀"
+  },
+  "commonCancel": "취소",
+  "@commonCancel": {
+    "description": "확인 팝업의 취소 버튼 (여러 화면 공통)"
+  },
+  "snsProviderKakao": "카카오",
+  "@snsProviderKakao": {
+    "description": "카카오 SNS 로그인 수단의 화면 표시명"
+  },
+  "snsProviderNaver": "네이버",
+  "@snsProviderNaver": {
+    "description": "네이버 SNS 로그인 수단의 화면 표시명"
+  },
+  "fontScaleSmall": "작게",
+  "@fontScaleSmall": {
+    "description": "글자 크기 설정 - 작게"
+  },
+  "fontScaleNormal": "보통",
+  "@fontScaleNormal": {
+    "description": "글자 크기 설정 - 보통"
+  },
+  "fontScaleLarge": "크게",
+  "@fontScaleLarge": {
+    "description": "글자 크기 설정 - 크게"
+  },
+  "fontScaleExtraLarge": "아주 크게",
+  "@fontScaleExtraLarge": {
+    "description": "글자 크기 설정 - 아주 크게"
+  },
+  "settingsSectionMyInfo": "내 정보",
+  "@settingsSectionMyInfo": {
+    "description": "설정 화면 섹션 라벨"
+  },
+  "settingsEmailLabel": "이메일",
+  "@settingsEmailLabel": {
+    "description": "설정 화면 이메일 행 라벨"
+  },
+  "settingsConnectedAccount": "연결된 계정",
+  "@settingsConnectedAccount": {
+    "description": "설정 화면 연결된 계정 행 라벨"
+  },
+  "settingsAccountSuffix": "{provider} 계정",
+  "@settingsAccountSuffix": {
+    "description": "연결된 계정 행의 트레일링 텍스트(예: 카카오 계정)",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsDisconnect": "연결 끊기",
+  "@settingsDisconnect": {
+    "description": "연결 끊기 버튼 레이블(확인 팝업의 확인 버튼과 동일 문구)"
+  },
+  "settingsSectionFontSize": "글자 크기",
+  "@settingsSectionFontSize": {
+    "description": "설정 화면 섹션 라벨"
+  },
+  "settingsSectionInfo": "정보",
+  "@settingsSectionInfo": {
+    "description": "설정 화면 섹션 라벨"
+  },
+  "settingsAppVersion": "앱 버전",
+  "@settingsAppVersion": {
+    "description": "설정 화면 앱 버전 행 라벨"
+  },
+  "settingsContact": "문의하기",
+  "@settingsContact": {
+    "description": "설정 화면 문의하기 행 라벨"
+  },
+  "settingsContactCopied": "클립보드에 복사되었습니다.",
+  "@settingsContactCopied": {
+    "description": "문의 이메일 복사 후 스낵바 문구"
+  },
+  "settingsSectionOpenSource": "오픈소스",
+  "@settingsSectionOpenSource": {
+    "description": "설정 화면 섹션 라벨"
+  },
+  "settingsOpenSourceLicense": "오픈소스 라이선스",
+  "@settingsOpenSourceLicense": {
+    "description": "설정 화면 오픈소스 라이선스 행 라벨"
+  },
+  "settingsLogout": "로그아웃",
+  "@settingsLogout": {
+    "description": "로그아웃 버튼 레이블(확인 팝업의 확인 버튼과 동일 문구)"
+  },
+  "settingsDisconnectDialogTitle": "정말 연결을 끊으시겠습니까?",
+  "@settingsDisconnectDialogTitle": {
+    "description": "연결 끊기 확인 팝업 제목"
+  },
+  "settingsDisconnectDialogMessage": "연결을 끊으면 {provider} 계정으로 다시 로그인해야 이용할 수 있어요.",
+  "@settingsDisconnectDialogMessage": {
+    "description": "연결 끊기 확인 팝업 설명",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsDisconnectSnackbar": "계정 연결 끊기는 준비 중이에요.",
+  "@settingsDisconnectSnackbar": {
+    "description": "연결 끊기 확정 후 스낵바 문구(mock 동작)"
+  },
+  "settingsLogoutDialogTitle": "로그아웃 하시겠습니까?",
+  "@settingsLogoutDialogTitle": {
+    "description": "로그아웃 확인 팝업 제목"
+  },
+  "settingsLogoutDialogMessage": "로그아웃하면 다시 로그인해야 채팅 내역을 이어서 볼 수 있어요.",
+  "@settingsLogoutDialogMessage": {
+    "description": "로그아웃 확인 팝업 설명"
+  },
+  "settingsLoggedInWith": "{provider} 계정으로 로그인 중",
+  "@settingsLoggedInWith": {
+    "description": "내 정보 프로필 요약의 로그인 수단 안내",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "placeDetailTitle": "장소 정보",
+  "@placeDetailTitle": {
+    "description": "장소 상세 화면 헤더 타이틀"
+  },
+  "placeDetailIntroSection": "장소 소개",
+  "@placeDetailIntroSection": {
+    "description": "장소 상세 화면 섹션 라벨"
+  },
+  "placeDetailLocationSection": "위치",
+  "@placeDetailLocationSection": {
+    "description": "장소 상세 화면 섹션 라벨"
+  },
+  "placeDetailOpenInMapApp": "지도 앱에서 보기",
+  "@placeDetailOpenInMapApp": {
+    "description": "지도 앱 딥링크 버튼(mock)"
+  },
+  "placeDetailMapComingSoon": "지도 앱 연동은 준비 중이에요.",
+  "@placeDetailMapComingSoon": {
+    "description": "지도 앱 딥링크 버튼 탭 시 스낵바"
+  },
+  "placeDetailOpenInNaverMap": "네이버 지도로 열기",
+  "@placeDetailOpenInNaverMap": {
+    "description": "네이버 지도 딥링크 버튼(mock)"
+  },
+  "placeDetailNaverMapComingSoon": "네이버 지도 연동은 준비 중이에요.",
+  "@placeDetailNaverMapComingSoon": {
+    "description": "네이버 지도 딥링크 버튼 탭 시 스낵바"
+  },
+  "placeDetailPhoneSection": "전화번호",
+  "@placeDetailPhoneSection": {
+    "description": "장소 상세 화면 섹션 라벨"
+  },
+  "placeDetailCallButton": "전화 걸기",
+  "@placeDetailCallButton": {
+    "description": "전화 걸기 버튼(mock)"
+  },
+  "placeDetailCallComingSoon": "전화 연결은 준비 중이에요.",
+  "@placeDetailCallComingSoon": {
+    "description": "전화 걸기 버튼 탭 시 스낵바"
+  },
+  "settingsSectionLanguage": "언어",
+  "@settingsSectionLanguage": {
+    "description": "설정 화면 언어 섹션 라벨"
+  },
+  "languageOptionSystem": "시스템 언어",
+  "@languageOptionSystem": {
+    "description": "언어 설정 - 기기 언어를 따르는 옵션"
+  },
+  "languageOptionKorean": "한국어",
+  "@languageOptionKorean": {
+    "description": "언어 설정 - 한국어로 고정하는 옵션"
+  },
+  "languageOptionEnglish": "영어",
+  "@languageOptionEnglish": {
+    "description": "언어 설정 - 영어로 고정하는 옵션"
+  }
+}

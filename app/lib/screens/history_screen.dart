@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:nullnull/data/demo_script.dart';
+import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
 import 'package:nullnull/screens/settings_screen.dart';
@@ -14,18 +15,21 @@ class HistoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final entries =
+        historyEntriesFor(Localizations.localeOf(context).languageCode);
     return Scaffold(
       backgroundColor: colors.paper,
       body: SafeArea(
         child: Column(
           children: [
             AppHeader(
-              title: '지난 대화',
+              title: l10n.historyTitle,
               leading: IconButton(
                 icon: AppIcon(AppIconShape.chevronLeft,
                     size: 18, color: colors.ink),
                 onPressed: () => Navigator.of(context).pop(),
-                tooltip: '뒤로',
+                tooltip: l10n.commonBack,
               ),
               trailing: IconButton(
                 icon:
@@ -36,15 +40,15 @@ class HistoryScreen extends StatelessWidget {
                         builder: (_) => const SettingsScreen()),
                   );
                 },
-                tooltip: '설정',
+                tooltip: l10n.commonSettings,
               ),
             ),
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: historyEntries.length,
+                itemCount: entries.length,
                 itemBuilder: (context, index) {
-                  final entry = historyEntries[index];
+                  final entry = entries[index];
                   return Container(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     decoration: BoxDecoration(

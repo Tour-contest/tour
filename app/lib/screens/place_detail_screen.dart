@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:nullnull/data/demo_script.dart';
+import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
 import 'package:nullnull/widgets/app_header.dart';
@@ -23,6 +24,7 @@ class PlaceDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: colors.paper,
       body: SafeArea(
@@ -30,12 +32,12 @@ class PlaceDetailScreen extends StatelessWidget {
         child: Column(
           children: [
             AppHeader(
-              title: '장소 정보',
+              title: l10n.placeDetailTitle,
               leading: IconButton(
                 icon: AppIcon(AppIconShape.chevronLeft,
                     size: 18, color: colors.ink),
                 onPressed: () => Navigator.of(context).pop(),
-                tooltip: '뒤로',
+                tooltip: l10n.commonBack,
               ),
             ),
             Expanded(
@@ -74,7 +76,7 @@ class PlaceDetailScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(99),
                           ),
                           child: Text(
-                            '혼잡도 ${place.congestionPercent}%',
+                            l10n.chatCongestionLabel(place.congestionPercent),
                             style: AppTextStyles.tabularNums(
                               AppTextStyles.body(
                                   fontSize: 10.5, color: colors.gold700),
@@ -86,7 +88,7 @@ class PlaceDetailScreen extends StatelessWidget {
                     const SizedBox(height: 24),
                     _Divider(colors: colors),
                     const SizedBox(height: 20),
-                    _SectionLabel('장소 소개'),
+                    _SectionLabel(l10n.placeDetailIntroSection),
                     Text(
                       place.introduction,
                       style: AppTextStyles.body(color: colors.ink, height: 1.8),
@@ -94,7 +96,7 @@ class PlaceDetailScreen extends StatelessWidget {
                     const SizedBox(height: 24),
                     _Divider(colors: colors),
                     const SizedBox(height: 20),
-                    _SectionLabel('위치'),
+                    _SectionLabel(l10n.placeDetailLocationSection),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -114,24 +116,24 @@ class PlaceDetailScreen extends StatelessWidget {
                     Row(
                       children: [
                         _OutlineButton(
-                          label: '지도 앱에서 보기',
+                          label: l10n.placeDetailOpenInMapApp,
                           icon: AppIconShape.arrowUpRight,
-                          onTap: () =>
-                              _showComingSoon(context, '지도 앱 연동은 준비 중이에요.'),
+                          onTap: () => _showComingSoon(
+                              context, l10n.placeDetailMapComingSoon),
                         ),
                         const SizedBox(width: 10),
                         _OutlineButton(
-                          label: '네이버 지도로 열기',
+                          label: l10n.placeDetailOpenInNaverMap,
                           icon: AppIconShape.arrowUpRight,
-                          onTap: () =>
-                              _showComingSoon(context, '네이버 지도 연동은 준비 중이에요.'),
+                          onTap: () => _showComingSoon(
+                              context, l10n.placeDetailNaverMapComingSoon),
                         ),
                       ],
                     ),
                     const SizedBox(height: 24),
                     _Divider(colors: colors),
                     const SizedBox(height: 20),
-                    _SectionLabel('전화번호'),
+                    _SectionLabel(l10n.placeDetailPhoneSection),
                     Row(
                       children: [
                         AppIcon(AppIconShape.phone,
@@ -147,9 +149,10 @@ class PlaceDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 14),
                     _OutlineButton(
-                      label: '전화 걸기',
+                      label: l10n.placeDetailCallButton,
                       expand: true,
-                      onTap: () => _showComingSoon(context, '전화 연결은 준비 중이에요.'),
+                      onTap: () => _showComingSoon(
+                          context, l10n.placeDetailCallComingSoon),
                     ),
                   ],
                 ),
