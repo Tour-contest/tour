@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -9,8 +8,6 @@ import 'package:nullnull/theme/app_text_scale_controller.dart';
 
 void main() {
   setUpAll(() async {
-    // 테스트 환경에서는 네트워크로 폰트를 내려받지 않고 로컬 폴백만 사용한다.
-    GoogleFonts.config.allowRuntimeFetching = false;
     SharedPreferences.setMockInitialValues({});
     PackageInfo.setMockInitialValues(
       appName: '널널',
