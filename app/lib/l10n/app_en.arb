@@ -68,5 +68,7 @@
   "settingsSectionLanguage": "Language",
   "languageOptionSystem": "System language",
   "languageOptionKorean": "Korean",
-  "languageOptionEnglish": "English"
+  "languageOptionEnglish": "English",
+  "networkOfflineDialogTitle": "You're offline",
+  "networkOfflineDialogMessage": "Please check your network connection.\nWe'll continue automatically once you're back online."
 }

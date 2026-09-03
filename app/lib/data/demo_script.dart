@@ -150,8 +150,7 @@ class DemoScript {
 
   static const List<AiTurn> _turnsEn = [
     AiTurn([
-      TextBlock(
-          'Jeonju Hanok Village is forecast to be 38% busier than usual '
+      TextBlock('Jeonju Hanok Village is forecast to be 38% busier than usual '
           "this weekend. I've found three quieter alternatives with a "
           'similar feel.'),
       PlaceListBlock([
@@ -199,13 +198,11 @@ class DemoScript {
               'from the Japanese colonial era make for a peaceful walk.',
         ),
       ]),
-      TextBlock(
-          'Let me know if one catches your eye — I can put together a '
+      TextBlock('Let me know if one catches your eye — I can put together a '
           'half-day course for it.'),
     ]),
     AiTurn([
-      TextBlock(
-          "Here's a half-day course for Ganggyeong Modern Street. Go "
+      TextBlock("Here's a half-day course for Ganggyeong Modern Street. Go "
           "earlier in the day and it'll be even quieter."),
       CourseListBlock([
         CourseStep(time: '10:00', title: 'Old Hanil Bank'),

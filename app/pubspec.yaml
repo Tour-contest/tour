@@ -43,6 +43,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   intl: ^0.20.2
+  connectivity_plus: ^7.3.1
 
 dev_dependencies:
   flutter_test:
@@ -57,9 +58,24 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
   flutter_launcher_icons: ^0.14.4
+  change_app_name: ^1.0.0
+  flutter_native_splash: ^2.4.8
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
+
+change_app_name:
+  name: "널널"
+
+flutter_native_splash:
+  color: "#ffffff"
+  web: false
+  ios: false
+
+  android_12:
+    image: assets/icon/blank.png
+    color: "#FFFFFF"
+    icon_background_color: "#FFFFFF"
 
 # The following section is specific to Flutter packages.
 flutter:

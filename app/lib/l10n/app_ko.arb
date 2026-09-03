@@ -295,5 +295,13 @@
   "languageOptionEnglish": "영어",
   "@languageOptionEnglish": {
     "description": "언어 설정 - 영어로 고정하는 옵션"
+  },
+  "networkOfflineDialogTitle": "인터넷 연결이 끊겼어요",
+  "@networkOfflineDialogTitle": {
+    "description": "네트워크 연결 끊김 팝업 제목"
+  },
+  "networkOfflineDialogMessage": "네트워크 연결을 확인해 주세요.\n연결되면 자동으로 이어서 진행돼요.",
+  "@networkOfflineDialogMessage": {
+    "description": "네트워크 연결 끊김 팝업 설명"
   }
 }

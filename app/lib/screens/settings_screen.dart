@@ -71,7 +71,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await Clipboard.setData(ClipboardData(text: AppInfo.developerEmail));
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context)!.settingsContactCopied)),
+      SnackBar(
+          content: Text(AppLocalizations.of(context)!.settingsContactCopied)),
     );
   }
 
@@ -92,14 +93,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (_) => _ConfirmDialog(
         title: l10n.settingsDisconnectDialogTitle,
-        message: l10n.settingsDisconnectDialogMessage(
-            _providerLabel(l10n, _provider)),
+        message: l10n
+            .settingsDisconnectDialogMessage(_providerLabel(l10n, _provider)),
         confirmLabel: l10n.settingsDisconnect,
       ),
     );
     if (confirmed != true || !context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context)!.settingsDisconnectSnackbar)),
+      SnackBar(
+          content:
+              Text(AppLocalizations.of(context)!.settingsDisconnectSnackbar)),
     );
   }
 
@@ -357,7 +360,8 @@ String _snsAssetFor(SnsProvider provider) => switch (provider) {
     };
 
 class _SnsIcon extends StatelessWidget {
-  const _SnsIcon({required this.provider, required this.size, required this.color});
+  const _SnsIcon(
+      {required this.provider, required this.size, required this.color});
 
   final SnsProvider provider;
   final double size;
@@ -408,15 +412,15 @@ class _ConnectedAccountRow extends StatelessWidget {
             onTap: onDisconnect,
             borderRadius: BorderRadius.circular(4),
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 border: Border.all(color: colors.gold),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
                 l10n.settingsDisconnect,
-                style: AppTextStyles.body(fontSize: 11.5, color: colors.gold700),
+                style:
+                    AppTextStyles.body(fontSize: 11.5, color: colors.gold700),
               ),
             ),
           ),
@@ -510,8 +514,7 @@ class _DialogButton extends StatelessWidget {
         style: OutlinedButton.styleFrom(
           backgroundColor: filled ? colors.gold : null,
           side: BorderSide(color: colors.gold),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
           overlayColor: colors.goldTint08,
         ),
         child: Text(

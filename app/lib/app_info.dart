@@ -5,6 +5,8 @@ class AppInfo {
 
   static const String serviceName = '널널';
   static const String developerEmail = 'dev.hie2gw@gmail.com';
+
+  /// TODO 변경
   static const String privacyPolicyUrl =
       'https://hie2gw.com/null_null/privacy/';
   static const String playStoreUrl =

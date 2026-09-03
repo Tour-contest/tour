@@ -9,6 +9,11 @@ analyzer:
     missing_required_param: error  # 필수 파라미터
     missing_return: error          # return
     todo: ignore                   # TODO는 무시
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
 
 linter:
   rules:

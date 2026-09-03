@@ -23,7 +23,8 @@ class DemoUser {
     SnsProvider.naver: 'travel****@naver.com',
   };
 
-  static String nicknameFor(SnsProvider provider, [String languageCode = 'ko']) {
+  static String nicknameFor(SnsProvider provider,
+      [String languageCode = 'ko']) {
     final nicknames = languageCode == 'en' ? _nicknamesEn : _nicknamesKo;
     return nicknames[provider]!;
   }

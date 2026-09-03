@@ -19,7 +19,11 @@ class OnboardingScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final steps = [l10n.onboardingStep1, l10n.onboardingStep2, l10n.onboardingStep3];
+    final steps = [
+      l10n.onboardingStep1,
+      l10n.onboardingStep2,
+      l10n.onboardingStep3
+    ];
     return Scaffold(
       backgroundColor: colors.paper,
       body: SafeArea(
