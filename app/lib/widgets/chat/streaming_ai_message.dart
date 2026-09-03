@@ -1,10 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:nullnull/app_router.dart';
 import 'package:nullnull/data/demo_script.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
-import 'package:nullnull/screens/place_detail_screen.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
 
@@ -205,9 +206,7 @@ class _PlaceRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     return InkWell(
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => PlaceDetailScreen(place: item)),
-      ),
+      onTap: () => context.pushNamed(RouteNames.place, extra: item),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 11),
         decoration: BoxDecoration(

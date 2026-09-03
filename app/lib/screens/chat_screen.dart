@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:nullnull/app_router.dart';
 import 'package:nullnull/data/demo_script.dart';
+import 'package:nullnull/double_back_exit_mixin.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
@@ -11,7 +14,6 @@ import 'package:nullnull/widgets/chat/message_actions_row.dart';
 import 'package:nullnull/widgets/chat/streaming_ai_message.dart';
 import 'package:nullnull/widgets/chat/suggested_prompt_row.dart';
 import 'package:nullnull/widgets/chat/user_message_bubble.dart';
-import 'package:nullnull/screens/history_screen.dart';
 import 'package:nullnull/widgets/fade_slide_in.dart';
 
 sealed class _ChatEntry {
@@ -38,7 +40,8 @@ class ChatScreen extends StatefulWidget {
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class _ChatScreenState extends State<ChatScreen>
+    with DoubleBackExitMixin<ChatScreen> {
   final List<_ChatEntry> _entries = [];
   final _inputController = TextEditingController();
   final _scrollController = ScrollController();
@@ -90,41 +93,47 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _openHistory() {
-    Navigator.of(context)
-        .push(MaterialPageRoute<void>(builder: (_) => const HistoryScreen()));
+    context.pushNamed(RouteNames.history);
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context)!;
-    return Scaffold(
-      backgroundColor: colors.paper,
-      body: SafeArea(
-        child: Column(
-          children: [
-            AppHeader(
-              title: '널널',
-              subtitle: l10n.chatSubtitle,
-              leading: IconButton(
-                icon: AppIcon(AppIconShape.menu, size: 18, color: colors.ink),
-                onPressed: _openHistory,
-                tooltip: l10n.chatHistoryTooltip,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        handleBackPress();
+      },
+      child: Scaffold(
+        backgroundColor: colors.paper,
+        body: SafeArea(
+          child: Column(
+            children: [
+              AppHeader(
+                title: '널널',
+                subtitle: l10n.chatSubtitle,
+                leading: IconButton(
+                  icon: AppIcon(AppIconShape.menu, size: 18, color: colors.ink),
+                  onPressed: _openHistory,
+                  tooltip: l10n.chatHistoryTooltip,
+                ),
+                trailing: IconButton(
+                  icon: AppIcon(AppIconShape.refresh,
+                      size: 18, color: colors.ink),
+                  onPressed: _newChat,
+                  tooltip: l10n.chatNewTooltip,
+                ),
               ),
-              trailing: IconButton(
-                icon:
-                    AppIcon(AppIconShape.refresh, size: 18, color: colors.ink),
-                onPressed: _newChat,
-                tooltip: l10n.chatNewTooltip,
+              Expanded(
+                child: _entries.isEmpty
+                    ? _EmptyState(onPromptTap: _send)
+                    : _buildThread(),
               ),
-            ),
-            Expanded(
-              child: _entries.isEmpty
-                  ? _EmptyState(onPromptTap: _send)
-                  : _buildThread(),
-            ),
-            ChatInputBar(controller: _inputController, onSend: _send),
-          ],
+              ChatInputBar(controller: _inputController, onSend: _send),
+            ],
+          ),
         ),
       ),
     );

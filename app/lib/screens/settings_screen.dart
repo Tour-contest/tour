@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:nullnull/app_info.dart';
+import 'package:nullnull/app_router.dart';
 import 'package:nullnull/data/demo_user.dart';
 import 'package:nullnull/data/login_preference.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/main.dart';
-import 'package:nullnull/screens/login_screen.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_locale_controller.dart';
 import 'package:nullnull/theme/app_text_scale_controller.dart';
@@ -117,10 +118,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
     if (confirmed != true || !context.mounted) return;
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
-      (route) => false,
-    );
+    context.goNamed(RouteNames.login);
   }
 
   @override
@@ -137,7 +135,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               leading: IconButton(
                 icon: AppIcon(AppIconShape.chevronLeft,
                     size: 18, color: colors.ink),
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () => context.pop(),
                 tooltip: l10n.commonBack,
               ),
             ),

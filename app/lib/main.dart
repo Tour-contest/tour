@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:nullnull/app_info.dart';
+import 'package:nullnull/app_router.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
-import 'package:nullnull/screens/onboarding_screen.dart';
 import 'package:nullnull/theme/app_locale_controller.dart';
 import 'package:nullnull/theme/app_text_scale_controller.dart';
 import 'package:nullnull/theme/app_theme.dart';
@@ -11,8 +11,6 @@ import 'package:nullnull/widgets/network_status_listener.dart';
 
 late final AppTextScaleController appTextScaleController;
 late final AppLocaleController appLocaleController;
-
-final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,8 +34,8 @@ class NullnullApp extends StatelessWidget {
         return ValueListenableBuilder<AppFontScale>(
           valueListenable: appTextScaleController,
           builder: (context, scale, _) {
-            return MaterialApp(
-              navigatorKey: _rootNavigatorKey,
+            return MaterialApp.router(
+              routerConfig: appRouter,
               title: '널널',
               debugShowCheckedModeBanner: false,
               theme: AppTheme.theme,
@@ -61,12 +59,11 @@ class NullnullApp extends StatelessWidget {
                     textScaler: TextScaler.linear(scale.factor),
                   ),
                   child: NetworkStatusListener(
-                    navigatorKey: _rootNavigatorKey,
+                    navigatorKey: rootNavigatorKey,
                     child: child!,
                   ),
                 );
               },
-              home: const OnboardingScreen(),
             );
           },
         );

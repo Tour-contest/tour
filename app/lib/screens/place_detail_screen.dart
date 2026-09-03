@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:nullnull/data/demo_script.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
@@ -36,7 +37,7 @@ class PlaceDetailScreen extends StatelessWidget {
               leading: IconButton(
                 icon: AppIcon(AppIconShape.chevronLeft,
                     size: 18, color: colors.ink),
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () => context.pop(),
                 tooltip: l10n.commonBack,
               ),
             ),

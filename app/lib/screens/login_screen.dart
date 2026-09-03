@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:nullnull/app_router.dart';
 import 'package:nullnull/data/login_preference.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
-import 'package:nullnull/screens/chat_screen.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
 import 'package:nullnull/widgets/app_header.dart';
@@ -37,9 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _loginWith(SnsProvider provider) async {
     await LoginPreference.saveLastProvider(provider);
     if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(builder: (_) => const ChatScreen()),
-    );
+    context.goNamed(RouteNames.chat);
   }
 
   @override
@@ -57,7 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
               leading: IconButton(
                 icon: AppIcon(AppIconShape.chevronLeft,
                     size: 18, color: colors.ink),
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () => context.pop(),
                 tooltip: l10n.commonBack,
               ),
             ),
