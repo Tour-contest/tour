@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 
 import 'package:nullnull/app_info.dart';
+import 'package:nullnull/app_log.dart';
 import 'package:nullnull/app_router.dart';
 import 'package:nullnull/data/demo_user.dart';
 import 'package:nullnull/data/login_preference.dart';
@@ -118,7 +120,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
     if (confirmed != true || !context.mounted) return;
+    await _logoutFromProvider();
+    if (!context.mounted) return;
     context.goNamed(RouteNames.login);
+  }
+
+  Future<void> _logoutFromProvider() async {
+    if (_provider != SnsProvider.kakao) return;
+    try {
+      await UserApi.instance.logout();
+      AppLog.logger.i('카카오 로그아웃 성공');
+    } catch (error) {
+      AppLog.logger.e('카카오 로그아웃 실패(기기에 저장된 토큰은 삭제됨)', error: error);
+    }
   }
 
   @override
