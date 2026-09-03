@@ -42,7 +42,10 @@ void main() {
     expect(find.text('카카오 로그인'), findsOneWidget);
     expect(find.text('네이버 로그인'), findsOneWidget);
 
-    await tester.tap(find.text('카카오 로그인'));
+    // 카카오 로그인은 이제 kakao_flutter_sdk_user로 실제 플랫폼 채널을 호출하므로
+    // 위젯 테스트 환경(채널 미구현)에서는 탭해도 넘어가지 않는다. 네이버는 아직
+    // SDK 연동 전 mock 동작이라 화면 전환 검증에는 네이버 버튼을 사용한다.
+    await tester.tap(find.text('네이버 로그인'));
     await tester.pumpAndSettle();
 
     expect(find.text('이번 여행,\n조금 더 널널하게 가볼까요?'), findsOneWidget);
@@ -78,8 +81,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('내 정보'), findsOneWidget);
-    expect(find.text('널널한 여행자'), findsOneWidget);
-    expect(find.text('카카오 계정'), findsOneWidget);
+    expect(find.text('한적한 나그네'), findsOneWidget);
+    expect(find.text('네이버 계정'), findsOneWidget);
     expect(find.text('글자 크기'), findsOneWidget);
     expect(find.text('보통'), findsOneWidget);
     expect(find.text('언어'), findsOneWidget);

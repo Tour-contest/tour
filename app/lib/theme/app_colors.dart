@@ -48,6 +48,9 @@ class AppColors extends ThemeExtension<AppColors> {
   Color get goldTint08 => gold.withAlpha(20);
   Color get goldTint14 => gold.withAlpha(36);
 
+  /// 비동기 작업 중 화면 터치를 막는 오버레이 색.
+  Color get scrim => ink.withAlpha(66);
+
   /// 카카오 로그인 버튼 레이블 색(#000000 85%).
   Color get kakaoLabel => kakaoSymbol.withAlpha(217);
 

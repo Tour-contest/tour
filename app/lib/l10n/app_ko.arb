@@ -60,6 +60,10 @@
   "@loginRecentBadge": {
     "description": "최근 사용한 SNS 로그인 버튼 위 뱃지"
   },
+  "loginKakaoError": "카카오 로그인에 실패했어요. 잠시 후 다시 시도해주세요.",
+  "@loginKakaoError": {
+    "description": "카카오 로그인 실패 시 스낵바 문구"
+  },
   "chatSubtitle": "한적한 여행을 위한 비서",
   "@chatSubtitle": {
     "description": "채팅 화면 헤더 부제"

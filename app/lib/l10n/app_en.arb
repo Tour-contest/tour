@@ -15,6 +15,7 @@
   "loginNaverButton": "Continue with Naver",
   "loginTerms": "By logging in, you agree to the Terms of Service and Privacy Policy.",
   "loginRecentBadge": "Recently used",
+  "loginKakaoError": "Kakao login failed. Please try again in a moment.",
   "chatSubtitle": "Your guide to quieter travel",
   "chatHistoryTooltip": "Past chats",
   "chatNewTooltip": "New chat",

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 
+import 'package:nullnull/app_log.dart';
 import 'package:nullnull/app_router.dart';
+import 'package:nullnull/data/connectivity_service.dart';
 import 'package:nullnull/data/login_preference.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/theme/app_colors.dart';
@@ -10,9 +14,10 @@ import 'package:nullnull/theme/app_text_styles.dart';
 import 'package:nullnull/widgets/app_header.dart';
 import 'package:nullnull/widgets/app_icon.dart';
 
-/// 온보딩 다음에 노출되는 로그인 화면. SNS 로그인만으로 로그인/회원가입을
-/// 함께 처리하며, 실제 SNS 인증 연동 전 단계라 탭 시 채팅 화면으로 바로
-/// 이동한다(canned 프로토타입).
+/// 온보딩 다음에 노출되는 로그인 화면. SNS 로그인만으로 로그인/회원가입을 함께
+/// 처리한다. 카카오는 `kakao_flutter_sdk_user`로 실제 로그인을 수행하고,
+/// 네이버는 아직 SDK 연동 전 단계라 탭 시 채팅 화면으로 바로 이동한다(canned
+/// 프로토타입, `docs/TODO.md` "6. 계정" 참고).
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -22,6 +27,9 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   SnsProvider? _lastProvider;
+
+  /// 카카오 로그인 진행 중에는 화면 터치·뒤로가기를 막는다.
+  bool _isLoggingIn = false;
 
   @override
   void initState() {
@@ -35,108 +43,172 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _lastProvider = provider);
   }
 
-  Future<void> _loginWith(SnsProvider provider) async {
+  Future<void> _completeLogin(SnsProvider provider) async {
     await LoginPreference.saveLastProvider(provider);
     if (!mounted) return;
     context.goNamed(RouteNames.chat);
+  }
+
+  /// 네이버는 아직 실제 SDK 연동 전이라 로그인 처리 없이 바로 다음 화면으로
+  /// 이동하는 mock 동작을 유지한다.
+  Future<void> _loginWithMock(SnsProvider provider) => _completeLogin(provider);
+
+  Future<void> _loginWithKakao() async {
+    setState(() => _isLoggingIn = true);
+    try {
+      final installed = await isKakaoTalkInstalled();
+      final OAuthToken token = installed
+          ? await UserApi.instance.loginWithKakaoTalk()
+          : await UserApi.instance.loginWithKakaoAccount();
+      AppLog.logger.i('카카오 로그인 성공: ${token.accessToken}');
+      await _logKakaoProfile();
+      await _completeLogin(SnsProvider.kakao);
+    } catch (error) {
+      if (error is PlatformException && error.code == 'CANCELED') return;
+      AppLog.logger.e('카카오 로그인 실패', error: error);
+      if (!mounted) return;
+      // 오프라인 상태면 전역 오프라인 다이얼로그(NetworkStatusListener)가 이미 화면
+      // 전체를 덮고 안내 중이라, 이 화면의 스낵바는 다이얼로그 뒤에 가려 안 보인 채로
+      // 사라진다. 그런 경우는 중복 안내를 띄우지 않는다.
+      if (!await ConnectivityService().isOnline()) return;
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.loginKakaoError)),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoggingIn = false);
+    }
+  }
+
+  /// 동의항목에 따라 실제로 어떤 사용자 정보를 받아오는지 확인하기 위한 임시 로깅.
+  /// `User.toString()`이 동의받은 필드만 JSON으로 덤프해준다. 화면에 반영하는 곳은
+  /// 아직 없고(`docs/TODO.md` 참고), 로그인 자체는 성공했으므로 여기서 실패해도
+  /// 무시하고 로그인 플로우는 계속 진행한다.
+  Future<void> _logKakaoProfile() async {
+    try {
+      final user = await UserApi.instance.me();
+      AppLog.logger.i('카카오 me() 응답: $user');
+    } catch (error) {
+      AppLog.logger.e('카카오 me() 조회 실패', error: error);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context)!;
-    return Scaffold(
-      backgroundColor: colors.paper,
-      body: SafeArea(
-        maintainBottomViewPadding: true,
-        child: Column(
+    return PopScope(
+      canPop: !_isLoggingIn,
+      child: Scaffold(
+        backgroundColor: colors.paper,
+        body: Stack(
           children: [
-            AppHeader(
-              title: l10n.loginTitle,
-              leading: IconButton(
-                icon: AppIcon(AppIconShape.chevronLeft,
-                    size: 18, color: colors.ink),
-                onPressed: () => context.pop(),
-                tooltip: l10n.commonBack,
+            SafeArea(
+              maintainBottomViewPadding: true,
+              child: Column(
+                children: [
+                  AppHeader(
+                    title: l10n.loginTitle,
+                    leading: IconButton(
+                      icon: AppIcon(AppIconShape.chevronLeft,
+                          size: 18, color: colors.ink),
+                      onPressed: () => context.pop(),
+                      tooltip: l10n.commonBack,
+                    ),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(26, 32, 26, 34),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.loginKicker,
+                                style: AppTextStyles.body(
+                                  fontSize: 13,
+                                  color: colors.gold700,
+                                  letterSpacing: 2.4,
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                              Text(
+                                l10n.loginHeading,
+                                style: AppTextStyles.heading(
+                                    fontSize: 28,
+                                    color: colors.ink,
+                                    height: 1.3),
+                              ),
+                              const SizedBox(height: 14),
+                              Text(
+                                l10n.loginDescription,
+                                style: AppTextStyles.body(
+                                    fontSize: 13.5,
+                                    color: colors.ink700,
+                                    height: 1.6),
+                              ),
+                            ],
+                          ),
+                          Column(
+                            children: [
+                              _SnsLoginButton(
+                                icon: SvgPicture.asset(
+                                  'assets/images/icon_kakao_login.svg',
+                                  width: 18,
+                                  height: 18,
+                                  colorFilter: ColorFilter.mode(
+                                      colors.kakaoSymbol, BlendMode.srcIn),
+                                ),
+                                label: l10n.loginKakaoButton,
+                                showRecentBadge:
+                                    _lastProvider == SnsProvider.kakao,
+                                onTap: _isLoggingIn ? null : _loginWithKakao,
+                                backgroundColor: colors.kakaoContainer,
+                                labelColor: colors.kakaoLabel,
+                              ),
+                              const SizedBox(height: 12),
+                              _SnsLoginButton(
+                                icon: SvgPicture.asset(
+                                  'assets/images/icon_naver_login.svg',
+                                  width: 18,
+                                  height: 18,
+                                  colorFilter: ColorFilter.mode(
+                                      colors.naverForeground, BlendMode.srcIn),
+                                ),
+                                label: l10n.loginNaverButton,
+                                showRecentBadge:
+                                    _lastProvider == SnsProvider.naver,
+                                onTap: _isLoggingIn
+                                    ? null
+                                    : () => _loginWithMock(SnsProvider.naver),
+                                backgroundColor: colors.naverContainer,
+                                labelColor: colors.naverForeground,
+                              ),
+                              const SizedBox(height: 20),
+                              Text(
+                                l10n.loginTerms,
+                                textAlign: TextAlign.center,
+                                style: AppTextStyles.body(
+                                    fontSize: 11,
+                                    color: colors.ink600,
+                                    height: 1.5),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(26, 32, 26, 34),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.loginKicker,
-                          style: AppTextStyles.body(
-                            fontSize: 13,
-                            color: colors.gold700,
-                            letterSpacing: 2.4,
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        Text(
-                          l10n.loginHeading,
-                          style: AppTextStyles.heading(
-                              fontSize: 28, color: colors.ink, height: 1.3),
-                        ),
-                        const SizedBox(height: 14),
-                        Text(
-                          l10n.loginDescription,
-                          style: AppTextStyles.body(
-                              fontSize: 13.5,
-                              color: colors.ink700,
-                              height: 1.6),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      children: [
-                        _SnsLoginButton(
-                          icon: SvgPicture.asset(
-                            'assets/images/icon_kakao_login.svg',
-                            width: 18,
-                            height: 18,
-                            colorFilter: ColorFilter.mode(
-                                colors.kakaoSymbol, BlendMode.srcIn),
-                          ),
-                          label: l10n.loginKakaoButton,
-                          showRecentBadge: _lastProvider == SnsProvider.kakao,
-                          onTap: () => _loginWith(SnsProvider.kakao),
-                          backgroundColor: colors.kakaoContainer,
-                          labelColor: colors.kakaoLabel,
-                        ),
-                        const SizedBox(height: 12),
-                        _SnsLoginButton(
-                          icon: SvgPicture.asset(
-                            'assets/images/icon_naver_login.svg',
-                            width: 18,
-                            height: 18,
-                            colorFilter: ColorFilter.mode(
-                                colors.naverForeground, BlendMode.srcIn),
-                          ),
-                          label: l10n.loginNaverButton,
-                          showRecentBadge: _lastProvider == SnsProvider.naver,
-                          onTap: () => _loginWith(SnsProvider.naver),
-                          backgroundColor: colors.naverContainer,
-                          labelColor: colors.naverForeground,
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          l10n.loginTerms,
-                          textAlign: TextAlign.center,
-                          style: AppTextStyles.body(
-                              fontSize: 11, color: colors.ink600, height: 1.5),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+            if (_isLoggingIn)
+              ColoredBox(
+                color: colors.scrim,
+                child: const Center(child: CircularProgressIndicator()),
               ),
-            ),
           ],
         ),
       ),
@@ -161,7 +233,7 @@ class _SnsLoginButton extends StatelessWidget {
   final Widget icon;
   final String label;
   final bool showRecentBadge;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   /// 각 SNS 브랜드 가이드에 따른 버튼 채움 색.
   final Color backgroundColor;

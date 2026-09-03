@@ -28,6 +28,9 @@ class _NetworkStatusListenerState extends State<NetworkStatusListener> {
   StreamSubscription<bool>? _subscription;
   BuildContext? _dialogContext;
 
+  bool _isOnline = true;
+  bool _isDialogOpening = false;
+
   @override
   void initState() {
     super.initState();
@@ -42,6 +45,7 @@ class _NetworkStatusListenerState extends State<NetworkStatusListener> {
   }
 
   void _handleStatusChanged(bool isOnline) {
+    _isOnline = isOnline;
     if (isOnline) {
       _dismissDialog();
     } else {
@@ -50,18 +54,23 @@ class _NetworkStatusListenerState extends State<NetworkStatusListener> {
   }
 
   Future<void> _showDialog() async {
-    if (_dialogContext != null) return;
+    if (_isDialogOpening) return;
     final overlayContext = widget.navigatorKey.currentState?.overlay?.context;
     if (overlayContext == null) return;
+    _isDialogOpening = true;
     await showDialog<void>(
       context: overlayContext,
       barrierDismissible: false,
       builder: (dialogContext) {
         _dialogContext = dialogContext;
+        if (_isOnline) {
+          WidgetsBinding.instance.addPostFrameCallback((_) => _dismissDialog());
+        }
         return const _OfflineDialog();
       },
     );
     _dialogContext = null;
+    _isDialogOpening = false;
   }
 
   void _dismissDialog() {

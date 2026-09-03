@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 
+import 'package:nullnull/app_config.dart';
 import 'package:nullnull/app_info.dart';
 import 'package:nullnull/app_router.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
@@ -17,6 +19,7 @@ Future<void> main() async {
   await AppInfo.ensureInitialized();
   appTextScaleController = await AppTextScaleController.ensureInitialized();
   appLocaleController = await AppLocaleController.ensureInitialized();
+  KakaoSdk.init(nativeAppKey: AppConfig.kakaoNativeAppKey);
 
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
