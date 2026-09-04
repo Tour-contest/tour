@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
@@ -5,6 +6,8 @@ import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'package:nullnull/app_config.dart';
 import 'package:nullnull/app_info.dart';
 import 'package:nullnull/app_router.dart';
+import 'package:nullnull/data/crash_reporting_service.dart';
+import 'package:nullnull/firebase_options.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/theme/app_locale_controller.dart';
 import 'package:nullnull/theme/app_text_scale_controller.dart';
@@ -16,6 +19,8 @@ late final AppLocaleController appLocaleController;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await CrashReportingService.ensureInitialized();
   await AppInfo.ensureInitialized();
   appTextScaleController = await AppTextScaleController.ensureInitialized();
   appLocaleController = await AppLocaleController.ensureInitialized();

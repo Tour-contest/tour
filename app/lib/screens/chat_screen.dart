@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:nullnull/app_router.dart';
+import 'package:nullnull/data/analytics_service.dart';
 import 'package:nullnull/data/demo_script.dart';
 import 'package:nullnull/double_back_exit_mixin.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
@@ -63,6 +66,7 @@ class _ChatScreenState extends State<ChatScreen>
           _nextId++, DemoScript.turnFor(_scriptIndex, languageCode)));
       _scriptIndex++;
     });
+    unawaited(AnalyticsService.logChatMessageSent());
     _scrollToBottomSoon();
   }
 

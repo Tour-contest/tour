@@ -47,6 +47,9 @@ dependencies:
   go_router: ^18.0.1
   flutter_exit_app: ^2.1.2
   kakao_flutter_sdk_user: ^2.0.1
+  firebase_core: ^4.14.0
+  firebase_analytics: ^12.5.0
+  firebase_crashlytics: ^5.3.0
 
 dev_dependencies:
   flutter_test:

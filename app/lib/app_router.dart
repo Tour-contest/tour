@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:nullnull/data/analytics_service.dart';
 import 'package:nullnull/data/demo_script.dart';
 import 'package:nullnull/screens/chat_screen.dart';
 import 'package:nullnull/screens/history_screen.dart';
@@ -32,6 +33,7 @@ class RouteNames {
 final GoRouter appRouter = GoRouter(
   navigatorKey: rootNavigatorKey,
   initialLocation: '/${RouteNames.onboarding}',
+  observers: [AnalyticsService.observer],
   routes: [
     GoRoute(
       path: '/${RouteNames.onboarding}',

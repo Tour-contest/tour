@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -6,6 +8,7 @@ import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 
 import 'package:nullnull/app_log.dart';
 import 'package:nullnull/app_router.dart';
+import 'package:nullnull/data/analytics_service.dart';
 import 'package:nullnull/data/connectivity_service.dart';
 import 'package:nullnull/data/login_preference.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
@@ -45,6 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _completeLogin(SnsProvider provider) async {
     await LoginPreference.saveLastProvider(provider);
+    unawaited(AnalyticsService.logLogin(provider));
     if (!mounted) return;
     context.goNamed(RouteNames.chat);
   }
