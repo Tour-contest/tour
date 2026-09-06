@@ -28,21 +28,13 @@
   "@commonBack": {
     "description": "뒤로가기 아이콘 버튼 툴팁 (여러 화면 공통)"
   },
-  "loginTitle": "로그인",
-  "@loginTitle": {
-    "description": "로그인 화면 헤더 타이틀"
+  "loginGradientHeadline": "널널하게 즐기고 싶다면\n미리 확인하세요",
+  "@loginGradientHeadline": {
+    "description": "로그인 화면 최상단 그라디언트 헤드라인"
   },
-  "loginKicker": "로그인 · 회원가입",
-  "@loginKicker": {
-    "description": "로그인 화면 상단 킥커 문구"
-  },
-  "loginHeading": "SNS 계정으로\n간편하게 시작하세요",
-  "@loginHeading": {
-    "description": "로그인 화면 헤딩"
-  },
-  "loginDescription": "별도 회원가입 절차 없이 아래 계정으로 바로 이용할 수 있어요.",
-  "@loginDescription": {
-    "description": "로그인 화면 보조 설명"
+  "loginSubheadline": "혼잡도부터 한산한 시간대까지\n널널이 미리 알려드려요",
+  "@loginSubheadline": {
+    "description": "로그인 화면 그라디언트 헤드라인 아래 보조 설명"
   },
   "loginKakaoButton": "카카오 로그인",
   "@loginKakaoButton": {
@@ -52,9 +44,9 @@
   "@loginNaverButton": {
     "description": "네이버 SNS 로그인 버튼 레이블"
   },
-  "loginTerms": "로그인 시 서비스 이용약관 및 개인정보처리방침에 동의하게 됩니다.",
-  "@loginTerms": {
-    "description": "로그인 화면 약관 동의 안내"
+  "loginInviteCaption": "지금 바로 널널과 함께 확인해 보세요!",
+  "@loginInviteCaption": {
+    "description": "로그인 화면 하단 초대 카드 캡션"
   },
   "loginRecentBadge": "최근 로그인",
   "@loginRecentBadge": {
@@ -64,10 +56,6 @@
   "@loginKakaoError": {
     "description": "카카오 로그인 실패 시 스낵바 문구"
   },
-  "chatSubtitle": "한적한 여행을 위한 비서",
-  "@chatSubtitle": {
-    "description": "채팅 화면 헤더 부제"
-  },
   "chatHistoryTooltip": "지난 대화",
   "@chatHistoryTooltip": {
     "description": "채팅 화면 좌측 상단 히스토리 이동 버튼 툴팁"
@@ -76,21 +64,54 @@
   "@chatNewTooltip": {
     "description": "채팅 화면 우측 상단 새 대화 버튼 툴팁"
   },
-  "chatEmptyHeading": "이번 여행,\n조금 더 널널하게 가볼까요?",
-  "@chatEmptyHeading": {
-    "description": "채팅 빈 상태 인사말"
+  "chatGreeting": "안녕하세요, {userName}님\n오늘은 어떤 여행지를 찾으시나요?",
+  "@chatGreeting": {
+    "description": "채팅 빈 상태(S2) 인사말",
+    "placeholders": {
+      "userName": {
+        "type": "String"
+      }
+    }
   },
-  "chatEmptySubheading": "궁금한 여행지나 지금 이 순간의 혼잡도를 물어보세요",
-  "@chatEmptySubheading": {
-    "description": "채팅 빈 상태 보조문구"
+  "chatThemeWellnessTitle": "웰니스 여행지",
+  "@chatThemeWellnessTitle": {
+    "description": "채팅 빈 상태(S3) 테마 그리드 - 웰니스 여행지 카드 제목"
   },
-  "chatInputAttachTooltip": "첨부",
-  "@chatInputAttachTooltip": {
-    "description": "채팅 입력바 첨부 아이콘 버튼 툴팁"
+  "chatThemeWellnessSubtitle": "야영장·오토캠핑 중심",
+  "@chatThemeWellnessSubtitle": {
+    "description": "채팅 빈 상태(S3) 테마 그리드 - 웰니스 여행지 카드 설명"
   },
-  "chatInputHint": "어디로 떠나고 싶으세요?",
+  "chatThemeMedicalTitle": "의료 관광지",
+  "@chatThemeMedicalTitle": {
+    "description": "채팅 빈 상태(S3) 테마 그리드 - 의료 관광지 카드 제목"
+  },
+  "chatThemeMedicalSubtitle": "의료·헬스케어 시설 연계 관광지",
+  "@chatThemeMedicalSubtitle": {
+    "description": "채팅 빈 상태(S3) 테마 그리드 - 의료 관광지 카드 설명"
+  },
+  "chatThemePetTitle": "반려동물 동반",
+  "@chatThemePetTitle": {
+    "description": "채팅 빈 상태(S3) 테마 그리드 - 반려동물 동반 카드 제목"
+  },
+  "chatThemePetSubtitle": "반려동물 입장 가능한 한적한 곳",
+  "@chatThemePetSubtitle": {
+    "description": "채팅 빈 상태(S3) 테마 그리드 - 반려동물 동반 카드 설명"
+  },
+  "chatThemeCampingTitle": "캠핑 여행지",
+  "@chatThemeCampingTitle": {
+    "description": "채팅 빈 상태(S3) 테마 그리드 - 캠핑 여행지 카드 제목"
+  },
+  "chatThemeCampingSubtitle": "야영장, 오토캠핑 중심",
+  "@chatThemeCampingSubtitle": {
+    "description": "채팅 빈 상태(S3) 테마 그리드 - 캠핑 여행지 카드 설명"
+  },
+  "chatInputHint": "궁금한 것을 널널에게 물어보세요.",
   "@chatInputHint": {
     "description": "채팅 입력창 placeholder"
+  },
+  "chatInputVoiceTooltip": "음성 입력",
+  "@chatInputVoiceTooltip": {
+    "description": "채팅 입력바 음성 입력 아이콘 버튼 툴팁"
   },
   "chatInputSendTooltip": "전송",
   "@chatInputSendTooltip": {
@@ -117,13 +138,87 @@
       }
     }
   },
+  "congestionLevelQuiet": "한적",
+  "@congestionLevelQuiet": {
+    "description": "혼잡도 배지: 한적(집중률 39 이하)"
+  },
+  "congestionLevelNormal": "보통",
+  "@congestionLevelNormal": {
+    "description": "혼잡도 배지: 보통(집중률 40~59)"
+  },
+  "congestionLevelBusy": "혼잡",
+  "@congestionLevelBusy": {
+    "description": "혼잡도 배지: 혼잡(집중률 60 이상, 75 미만)"
+  },
+  "congestionLevelVeryBusy": "매우 혼잡",
+  "@congestionLevelVeryBusy": {
+    "description": "혼잡도 배지: 매우 혼잡(집중률 75 이상)"
+  },
+  "forecastTooltip": "{weekday}요일 집중률 {score} · {level}",
+  "@forecastTooltip": {
+    "description": "예측 카드 막대 차트의 최고값 툴팁",
+    "placeholders": {
+      "weekday": {
+        "type": "String"
+      },
+      "score": {
+        "type": "int"
+      },
+      "level": {
+        "type": "String"
+      }
+    }
+  },
+  "alternativeRankLabel": "함께 찾는 곳 {rank}위",
+  "@alternativeRankLabel": {
+    "description": "대안 추천 카드 상단 랭킹 라벨",
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "alternativeTravelMinutes": "차로 {minutes}분",
+  "@alternativeTravelMinutes": {
+    "description": "대안 추천 카드의 이동 시간 표기",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "nulnulOpenInMap": "지도에서 보기 ↗",
+  "@nulnulOpenInMap": {
+    "description": "대안 추천 카드의 지도 딥링크 버튼(실 SDK 연동 전 mock)"
+  },
+  "nulnulOpenInMapComingSoon": "지도 연동은 준비 중이에요.",
+  "@nulnulOpenInMapComingSoon": {
+    "description": "지도 딥링크 mock 스낵바 문구"
+  },
+  "drawerRecentSection": "최근",
+  "@drawerRecentSection": {
+    "description": "드로어의 최근 대화 섹션 라벨"
+  },
+  "regionCardTitle": "{region} 여행지 추천",
+  "@regionCardTitle": {
+    "description": "지역 현황 카드 B의 제목",
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
+  "regionPopularLabel": "인기 관광지",
+  "@regionPopularLabel": {
+    "description": "지역 현황 카드의 인기 관광지 칩 섹션 라벨"
+  },
+  "regionQuietLabel": "한적한 관광지",
+  "@regionQuietLabel": {
+    "description": "지역 현황 카드의 한적한 관광지 칩 섹션 라벨"
+  },
   "commonSettings": "설정",
   "@commonSettings": {
     "description": "설정 화면을 가리키는 문구 (아이콘 버튼 툴팁/화면 타이틀 공통)"
-  },
-  "historyTitle": "지난 대화",
-  "@historyTitle": {
-    "description": "지난 대화(히스토리) 화면 헤더 타이틀"
   },
   "commonCancel": "취소",
   "@commonCancel": {
@@ -225,7 +320,11 @@
   },
   "settingsDisconnectSnackbar": "계정 연결 끊기는 준비 중이에요.",
   "@settingsDisconnectSnackbar": {
-    "description": "연결 끊기 확정 후 스낵바 문구(mock 동작)"
+    "description": "연결 끊기 확정 후 스낵바 문구. 아직 SDK 연동 전인 네이버 전용(mock 동작), 카카오는 settingsDisconnectError 참고"
+  },
+  "settingsDisconnectError": "연결 끊기에 실패했어요. 잠시 후 다시 시도해주세요.",
+  "@settingsDisconnectError": {
+    "description": "카카오 연결 끊기(UserApi.instance.unlink()) 실패 시 스낵바 문구"
   },
   "settingsLogoutDialogTitle": "로그아웃 하시겠습니까?",
   "@settingsLogoutDialogTitle": {

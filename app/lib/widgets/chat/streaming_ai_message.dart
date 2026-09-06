@@ -1,21 +1,26 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
-import 'package:nullnull/app_router.dart';
-import 'package:nullnull/data/analytics_service.dart';
 import 'package:nullnull/data/demo_script.dart';
-import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
+import 'package:nullnull/widgets/nullnull/alternative_card.dart';
+import 'package:nullnull/widgets/nullnull/forecast_card.dart';
+import 'package:nullnull/widgets/nullnull/no_data_card.dart';
+import 'package:nullnull/widgets/nullnull/region_card.dart';
 
-/// docs/DESIGN.md: "AI 메시지" + "스트리밍: 글자 단위 타이핑(30ms, 2자씩) + 깜빡이는 골드 캐럿".
 class StreamingAiMessage extends StatefulWidget {
-  const StreamingAiMessage({super.key, required this.turn, this.onComplete});
+  const StreamingAiMessage({
+    super.key,
+    required this.turn,
+    this.onComplete,
+    this.onActionTap,
+  });
 
   final AiTurn turn;
   final VoidCallback? onComplete;
+  final ValueChanged<String>? onActionTap;
 
   /// 액션(복사) 등에서 쓸 순수 텍스트.
   static String plainText(AiTurn turn) {
@@ -102,14 +107,14 @@ class _StreamingAiMessageState extends State<StreamingAiMessage> {
               width: 5,
               height: 5,
               decoration:
-                  BoxDecoration(color: colors.gold, shape: BoxShape.circle),
+                  BoxDecoration(color: colors.accent, shape: BoxShape.circle),
             ),
             const SizedBox(width: 6),
             Text(
               '널널',
               style: AppTextStyles.body(
                 fontSize: 9.5,
-                color: colors.gold700,
+                color: colors.accentBright,
                 letterSpacing: 1.6,
               ),
             ),
@@ -118,13 +123,17 @@ class _StreamingAiMessageState extends State<StreamingAiMessage> {
         const SizedBox(height: 7),
         for (var i = 0; i < blocks.length; i++)
           if (i < _blockIndex)
-            _BlockView(block: blocks[i], first: i == 0)
+            _BlockView(
+                block: blocks[i],
+                first: i == 0,
+                onActionTap: widget.onActionTap)
           else if (i == _blockIndex && !_done)
             _BlockView(
               block: blocks[i],
               first: i == 0,
               partialChars: blocks[i] is TextBlock ? _charsRevealed : null,
               showCaret: blocks[i] is TextBlock && _caretOn,
+              onActionTap: widget.onActionTap,
             ),
       ],
     );
@@ -137,12 +146,14 @@ class _BlockView extends StatelessWidget {
     required this.first,
     this.partialChars,
     this.showCaret = false,
+    this.onActionTap,
   });
 
   final AiBlock block;
   final bool first;
   final int? partialChars;
   final bool showCaret;
+  final ValueChanged<String>? onActionTap;
 
   @override
   Widget build(BuildContext context) {
@@ -165,130 +176,32 @@ class _BlockView extends StatelessWidget {
                       width: 6,
                       height: 13,
                       margin: const EdgeInsets.only(left: 2),
-                      color: colors.gold,
+                      color: colors.accent,
                     ),
                   ),
               ],
             ),
           ),
         ),
-      PlaceListBlock(:final items) => Padding(
+      ForecastBlock(:final forecast) => Padding(
           padding: const EdgeInsets.only(top: 12),
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border(top: BorderSide(color: colors.divider)),
-            ),
-            child: Column(
-              children: [for (final item in items) _PlaceRow(item: item)],
-            ),
-          ),
+          child: ForecastCard(forecast: forecast),
         ),
-      CourseListBlock(:final items) => Padding(
+      AlternativesBlock(:final items, :final excludedNote) => Padding(
           padding: const EdgeInsets.only(top: 12),
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border(top: BorderSide(color: colors.divider)),
-            ),
-            child: Column(
-              children: [for (final step in items) _CourseRow(step: step)],
-            ),
+          child: AlternativesSection(items: items, excludedNote: excludedNote),
+        ),
+      RegionBlock(:final status) => Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: RegionCard(status: status),
+        ),
+      NoDataBlock(:final actions) => Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: NoDataCard(
+            actions: actions,
+            onActionTap: onActionTap ?? (_) {},
           ),
         ),
     };
-  }
-}
-
-class _PlaceRow extends StatelessWidget {
-  const _PlaceRow({required this.item});
-
-  final PlaceRecommendation item;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return InkWell(
-      onTap: () {
-        unawaited(AnalyticsService.logPlaceDetailView(item));
-        context.pushNamed(RouteNames.place, extra: item);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 11),
-        decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: colors.divider)),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.name,
-                    style: AppTextStyles.heading(
-                        fontSize: 15.5, color: colors.ink),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    item.description,
-                    style: AppTextStyles.body(
-                        fontSize: 12, color: colors.ink700, height: 1.5),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 10),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-              decoration: BoxDecoration(
-                border: Border.all(color: colors.gold),
-                borderRadius: BorderRadius.circular(99),
-              ),
-              child: Text(
-                AppLocalizations.of(context)!
-                    .chatCongestionLabel(item.congestionPercent),
-                style: AppTextStyles.tabularNums(
-                  AppTextStyles.body(fontSize: 10.5, color: colors.gold700),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CourseRow extends StatelessWidget {
-  const _CourseRow({required this.step});
-
-  final CourseStep step;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 11),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: colors.divider)),
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 44,
-            child: Text(
-              step.time,
-              style: AppTextStyles.tabularNums(
-                AppTextStyles.body(fontSize: 11, color: colors.gold700),
-              ),
-            ),
-          ),
-          Text(
-            step.title,
-            style: AppTextStyles.heading(fontSize: 15.5, color: colors.ink),
-          ),
-        ],
-      ),
-    );
   }
 }

@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:nullnull/data/analytics_service.dart';
 import 'package:nullnull/data/demo_script.dart';
 import 'package:nullnull/screens/chat_screen.dart';
-import 'package:nullnull/screens/history_screen.dart';
 import 'package:nullnull/screens/login_screen.dart';
 import 'package:nullnull/screens/onboarding_screen.dart';
 import 'package:nullnull/screens/place_detail_screen.dart';
@@ -22,14 +21,10 @@ class RouteNames {
   static const onboarding = 'onboarding';
   static const login = 'login';
   static const chat = 'chat';
-  static const history = 'history';
   static const settings = 'settings';
   static const place = 'place';
 }
 
-/// 온보딩 → 로그인 → 채팅 → 지난 대화 → 설정, 채팅 내 장소 추천 탭 시
-/// 장소 상세로 이동하는 단일 스택 흐름을 경로로 표현한 앱 전역 라우터.
-/// 경로 문자열은 [RouteNames]에서 파생시켜 이름과 어긋나지 않게 한다.
 final GoRouter appRouter = GoRouter(
   navigatorKey: rootNavigatorKey,
   initialLocation: '/${RouteNames.onboarding}',
@@ -49,11 +44,6 @@ final GoRouter appRouter = GoRouter(
       path: '/${RouteNames.chat}',
       name: RouteNames.chat,
       builder: (context, state) => const ChatScreen(),
-    ),
-    GoRoute(
-      path: '/${RouteNames.history}',
-      name: RouteNames.history,
-      builder: (context, state) => const HistoryScreen(),
     ),
     GoRoute(
       path: '/${RouteNames.settings}',

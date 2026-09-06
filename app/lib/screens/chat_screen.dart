@@ -6,18 +6,22 @@ import 'package:go_router/go_router.dart';
 import 'package:nullnull/app_router.dart';
 import 'package:nullnull/data/analytics_service.dart';
 import 'package:nullnull/data/demo_script.dart';
+import 'package:nullnull/data/demo_user.dart';
+import 'package:nullnull/data/login_preference.dart';
 import 'package:nullnull/double_back_exit_mixin.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
+import 'package:nullnull/widgets/app_drawer.dart';
 import 'package:nullnull/widgets/app_header.dart';
 import 'package:nullnull/widgets/app_icon.dart';
 import 'package:nullnull/widgets/chat/chat_input_bar.dart';
 import 'package:nullnull/widgets/chat/message_actions_row.dart';
 import 'package:nullnull/widgets/chat/streaming_ai_message.dart';
-import 'package:nullnull/widgets/chat/suggested_prompt_row.dart';
 import 'package:nullnull/widgets/chat/user_message_bubble.dart';
 import 'package:nullnull/widgets/fade_slide_in.dart';
+import 'package:nullnull/widgets/nullnull/mascot.dart';
+import 'package:nullnull/widgets/nullnull/theme_grid.dart';
 
 sealed class _ChatEntry {
   const _ChatEntry(this.id);
@@ -96,10 +100,6 @@ class _ChatScreenState extends State<ChatScreen>
     });
   }
 
-  void _openHistory() {
-    context.pushNamed(RouteNames.history);
-  }
-
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
@@ -112,22 +112,19 @@ class _ChatScreenState extends State<ChatScreen>
       },
       child: Scaffold(
         backgroundColor: colors.paper,
+        drawer: AppDrawer(onNewChat: _newChat),
         body: SafeArea(
           child: Column(
             children: [
-              AppHeader(
-                title: '널널',
-                subtitle: l10n.chatSubtitle,
-                leading: IconButton(
-                  icon: AppIcon(AppIconShape.menu, size: 18, color: colors.ink),
-                  onPressed: _openHistory,
-                  tooltip: l10n.chatHistoryTooltip,
-                ),
-                trailing: IconButton(
-                  icon: AppIcon(AppIconShape.refresh,
-                      size: 18, color: colors.ink),
-                  onPressed: _newChat,
-                  tooltip: l10n.chatNewTooltip,
+              Builder(
+                builder: (context) => AppHeader(
+                  leading: IconButton(
+                    icon:
+                        AppIcon(AppIconShape.menu, size: 18, color: colors.ink),
+                    onPressed: () => Scaffold.of(context).openDrawer(),
+                    tooltip: l10n.chatHistoryTooltip,
+                  ),
+                  trailing: const Center(child: _ProfileAvatarButton()),
                 ),
               ),
               Expanded(
@@ -170,6 +167,7 @@ class _ChatScreenState extends State<ChatScreen>
                           setState(() => entry.completed = true);
                           _scrollToBottomSoon();
                         },
+                        onActionTap: _send,
                       ),
                       if (entry.completed)
                         MessageActionsRow(
@@ -187,43 +185,119 @@ class _ChatScreenState extends State<ChatScreen>
   }
 }
 
-class _EmptyState extends StatelessWidget {
+/// 헤더 우측 프로필 아바타 버튼. 탭하면 설정 화면으로 이동한다.
+class _ProfileAvatarButton extends StatefulWidget {
+  const _ProfileAvatarButton();
+
+  @override
+  State<_ProfileAvatarButton> createState() => _ProfileAvatarButtonState();
+}
+
+class _ProfileAvatarButtonState extends State<_ProfileAvatarButton> {
+  SnsProvider _provider = SnsProvider.kakao;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProvider();
+  }
+
+  Future<void> _loadProvider() async {
+    final provider = await LoginPreference.readLastProvider();
+    if (!mounted || provider == null) return;
+    setState(() => _provider = provider);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final nickname = DemoUser.nicknameFor(_provider, languageCode);
+    return InkWell(
+      customBorder: const CircleBorder(),
+      onTap: () => context.pushNamed(RouteNames.settings),
+      child: Container(
+        width: 36,
+        height: 36,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: colors.accent),
+        ),
+        child: Text(
+          nickname.substring(0, 1),
+          style:
+              AppTextStyles.heading(fontSize: 14, color: colors.accentBright),
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatefulWidget {
   const _EmptyState({required this.onPromptTap});
 
   final ValueChanged<String> onPromptTap;
 
   @override
+  State<_EmptyState> createState() => _EmptyStateState();
+}
+
+class _EmptyStateState extends State<_EmptyState> {
+  SnsProvider _provider = SnsProvider.kakao;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProvider();
+  }
+
+  Future<void> _loadProvider() async {
+    final provider = await LoginPreference.readLastProvider();
+    if (!mounted || provider == null) return;
+    setState(() => _provider = provider);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final prompts = DemoScript.suggestedPromptsFor(
-        Localizations.localeOf(context).languageCode);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(22, 0, 22, 16),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l10n.chatEmptyHeading,
-            style: AppTextStyles.display(fontSize: 28, color: colors.ink)
-                .copyWith(height: 1.35),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.chatEmptySubheading,
-            style: AppTextStyles.body(
-                fontSize: 14, color: colors.ink700, height: 1.6),
-          ),
-          const SizedBox(height: 22),
-          for (var i = 0; i < prompts.length; i++)
-            SuggestedPromptRow(
-              text: prompts[i],
-              isLast: i == prompts.length - 1,
-              onTap: () => onPromptTap(prompts[i]),
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final nickname = DemoUser.nicknameFor(_provider, languageCode);
+    return Column(
+      children: [
+        Expanded(
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 120,
+                  height: 120,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: colors.card,
+                  ),
+                  child: const Mascot(),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  l10n.chatGreeting(nickname),
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.body(
+                      fontSize: 15, color: colors.ink, height: 1.5),
+                ),
+              ],
             ),
-        ],
-      ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18),
+          child: ThemeGrid(onThemeTap: widget.onPromptTap),
+        ),
+        const SizedBox(height: 16),
+      ],
     );
   }
 }

@@ -48,25 +48,25 @@ void main() {
     await tester.tap(find.text('네이버 로그인'));
     await tester.pumpAndSettle();
 
-    expect(find.text('이번 여행,\n조금 더 널널하게 가볼까요?'), findsOneWidget);
+    expect(find.text('안녕하세요, 한적한 나그네님\n오늘은 어떤 여행지를 찾으시나요?'), findsOneWidget);
 
-    await tester.tap(find.text('이번 주말 전주 한옥마을 대신 갈 만한 곳'));
+    await tester.tap(find.text('원주 간현관광지 이번 주말에 붐빌까?'));
     await tester.pump();
-    await tester.pump(const Duration(seconds: 6));
+    await tester.pump(const Duration(seconds: 8));
     await tester.pumpAndSettle();
 
-    expect(find.text('강경 근대거리'), findsOneWidget);
+    expect(find.text('오크밸리 빌리지센터'), findsOneWidget);
 
     // 장소 상세 화면의 이미지 영역(SkeletonBox)은 계속 반복 재생되는
     // AnimationController를 쓰기 때문에 pumpAndSettle이 끝나지 않는다.
     // 화면 전환에 필요한 프레임만 명시적으로 pump한다.
-    await tester.tap(find.text('강경 근대거리'));
+    await tester.tap(find.text('오크밸리 빌리지센터'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.text('장소 정보'), findsOneWidget);
-    expect(find.text('충청남도 논산시 강경읍 계백로 361번길 11'), findsOneWidget);
-    expect(find.text('041-746-8431'), findsOneWidget);
+    expect(find.text('강원특별자치도 원주시 지정면 오크밸리2길 66'), findsOneWidget);
+    expect(find.text('033-730-3500'), findsOneWidget);
 
     await tester.tap(find.byTooltip('뒤로'));
     await tester.pump();
@@ -75,7 +75,8 @@ void main() {
     await tester.tap(find.byTooltip('지난 대화'));
     await tester.pumpAndSettle();
 
-    expect(find.text('지난 대화'), findsWidgets);
+    expect(find.text('최근'), findsOneWidget);
+    expect(find.text('간현관광지 대신 원주 한적 코스'), findsOneWidget);
 
     await tester.tap(find.byTooltip('설정'));
     await tester.pumpAndSettle();

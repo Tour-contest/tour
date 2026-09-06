@@ -73,14 +73,14 @@ class PlaceDetailScreen extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 9, vertical: 3),
                           decoration: BoxDecoration(
-                            border: Border.all(color: colors.gold),
+                            border: Border.all(color: colors.accent),
                             borderRadius: BorderRadius.circular(99),
                           ),
                           child: Text(
                             l10n.chatCongestionLabel(place.congestionPercent),
                             style: AppTextStyles.tabularNums(
                               AppTextStyles.body(
-                                  fontSize: 10.5, color: colors.gold700),
+                                  fontSize: 10.5, color: colors.accentBright),
                             ),
                           ),
                         ),
@@ -102,7 +102,7 @@ class PlaceDetailScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         AppIcon(AppIconShape.pin,
-                            size: 14, color: colors.gold700),
+                            size: 14, color: colors.accentBright),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
@@ -138,7 +138,7 @@ class PlaceDetailScreen extends StatelessWidget {
                     Row(
                       children: [
                         AppIcon(AppIconShape.phone,
-                            size: 14, color: colors.gold700),
+                            size: 14, color: colors.accentBright),
                         const SizedBox(width: 8),
                         Text(
                           place.phone,
@@ -232,7 +232,7 @@ class _SectionLabel extends StatelessWidget {
       child: Text(
         text,
         style: AppTextStyles.body(
-            fontSize: 11, color: colors.gold700, letterSpacing: 1.8),
+            fontSize: 11, color: colors.accentBright, letterSpacing: 1.8),
       ),
     );
   }
@@ -259,7 +259,7 @@ class _OutlineButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          border: Border.all(color: colors.gold),
+          border: Border.all(color: colors.accent),
           borderRadius: BorderRadius.circular(4),
         ),
         alignment: Alignment.center,
@@ -270,11 +270,11 @@ class _OutlineButton extends StatelessWidget {
             Text(
               label,
               style: AppTextStyles.body(
-                  fontSize: 13, color: colors.gold700, letterSpacing: .3),
+                  fontSize: 13, color: colors.accentBright, letterSpacing: .3),
             ),
             if (icon != null) ...[
               const SizedBox(width: 6),
-              AppIcon(icon!, size: 12, color: colors.gold700),
+              AppIcon(icon!, size: 12, color: colors.accentBright),
             ],
           ],
         ),

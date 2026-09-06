@@ -7,13 +7,13 @@ import 'package:nullnull/theme/app_text_styles.dart';
 class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   const AppHeader({
     super.key,
-    required this.title,
+    this.title,
     this.subtitle,
     this.leading,
     this.trailing,
   });
 
-  final String title;
+  final String? title;
   final String? subtitle;
   final Widget? leading;
   final Widget? trailing;
@@ -36,23 +36,26 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
           SizedBox(
               width: 44, height: 44, child: leading ?? const SizedBox.shrink()),
           Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(title, style: AppTextStyles.heading(color: colors.ink)),
-                if (subtitle != null) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle!,
-                    style: AppTextStyles.body(
-                      fontSize: 10,
-                      color: colors.gold700,
-                      letterSpacing: 1.8,
-                    ),
+            child: title == null
+                ? const SizedBox.shrink()
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(title!,
+                          style: AppTextStyles.heading(color: colors.ink)),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle!,
+                          style: AppTextStyles.body(
+                            fontSize: 10,
+                            color: colors.accentBright,
+                            letterSpacing: 1.8,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                ],
-              ],
-            ),
           ),
           SizedBox(
               width: 44,

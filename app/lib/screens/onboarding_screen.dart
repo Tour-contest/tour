@@ -37,7 +37,7 @@ class OnboardingScreen extends StatelessWidget {
                     l10n.onboardingKicker,
                     style: AppTextStyles.body(
                       fontSize: 13,
-                      color: colors.gold700,
+                      color: colors.accentBright,
                       letterSpacing: 3.1,
                     ),
                   ),
@@ -46,7 +46,7 @@ class OnboardingScreen extends StatelessWidget {
                       style: AppTextStyles.display(
                           fontSize: 64, color: colors.ink)),
                   const SizedBox(height: 18),
-                  Container(width: 44, height: 1, color: colors.gold),
+                  Container(width: 44, height: 1, color: colors.accent),
                   const SizedBox(height: 20),
                   Text(
                     l10n.onboardingIntro,
@@ -76,7 +76,7 @@ class OnboardingScreen extends StatelessWidget {
                             (i + 1).toString().padLeft(2, '0'),
                             style: AppTextStyles.tabularNums(
                               AppTextStyles.body(
-                                  fontSize: 13, color: colors.gold),
+                                  fontSize: 13, color: colors.accent),
                             ),
                           ),
                           const SizedBox(width: 14),
@@ -99,11 +99,11 @@ class OnboardingScreen extends StatelessWidget {
                     child: OutlinedButton(
                       onPressed: () => _start(context),
                       style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: colors.gold),
+                        side: BorderSide(color: colors.accent),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(4)),
                         padding: const EdgeInsets.symmetric(vertical: 15),
-                        overlayColor: colors.goldTint08,
+                        overlayColor: colors.accentTint08,
                       ),
                       child: Text(
                         l10n.onboardingCta,

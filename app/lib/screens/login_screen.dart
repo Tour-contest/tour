@@ -14,8 +14,7 @@ import 'package:nullnull/data/login_preference.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
-import 'package:nullnull/widgets/app_header.dart';
-import 'package:nullnull/widgets/app_icon.dart';
+import 'package:nullnull/widgets/nullnull/mascot.dart';
 
 /// 온보딩 다음에 노출되는 로그인 화면. SNS 로그인만으로 로그인/회원가입을 함께
 /// 처리한다. 카카오는 `kakao_flutter_sdk_user`로 실제 로그인을 수행하고,
@@ -31,7 +30,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   SnsProvider? _lastProvider;
 
-  /// 카카오 로그인 진행 중에는 화면 터치·뒤로가기를 막는다.
+  ///  진행 중에는 화면 터치·뒤로가기를 막는다.
   bool _isLoggingIn = false;
 
   @override
@@ -64,7 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final OAuthToken token = installed
           ? await UserApi.instance.loginWithKakaoTalk()
           : await UserApi.instance.loginWithKakaoAccount();
-      AppLog.logger.i('카카오 로그인 성공: ${token.accessToken}');
+      AppLog.logger.i(' 성공: ${token.accessToken}');
       await _logKakaoProfile();
       await _completeLogin(SnsProvider.kakao);
     } catch (error) {
@@ -104,109 +103,167 @@ class _LoginScreenState extends State<LoginScreen> {
     return PopScope(
       canPop: !_isLoggingIn,
       child: Scaffold(
-        backgroundColor: colors.paper,
+        backgroundColor: colors.loginBackground,
         body: Stack(
           children: [
-            SafeArea(
-              maintainBottomViewPadding: true,
-              child: Column(
-                children: [
-                  AppHeader(
-                    title: l10n.loginTitle,
-                    leading: IconButton(
-                      icon: AppIcon(AppIconShape.chevronLeft,
-                          size: 18, color: colors.ink),
-                      onPressed: () => context.pop(),
-                      tooltip: l10n.commonBack,
-                    ),
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(26, 32, 26, 34),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+            Column(
+              children: [
+                Expanded(
+                  child: SafeArea(
+                    bottom: false,
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(26, 27, 26, 0),
+                          child: Column(
                             children: [
-                              Text(
-                                l10n.loginKicker,
-                                style: AppTextStyles.body(
-                                  fontSize: 13,
-                                  color: colors.gold700,
-                                  letterSpacing: 2.4,
-                                ),
-                              ),
-                              const SizedBox(height: 14),
-                              Text(
-                                l10n.loginHeading,
-                                style: AppTextStyles.heading(
+                              ShaderMask(
+                                shaderCallback: (bounds) => LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    colors.loginHeadlineGradientStart,
+                                    colors.loginHeadlineGradientMid,
+                                    colors.loginHeadlineGradientEnd,
+                                  ],
+                                  stops: const [0, 0.399, 1],
+                                ).createShader(bounds),
+                                child: Text(
+                                  l10n.loginGradientHeadline,
+                                  textAlign: TextAlign.center,
+                                  style: AppTextStyles.heading(
                                     fontSize: 28,
-                                    color: colors.ink,
-                                    height: 1.3),
+                                    weight: FontWeight.w700,
+                                    color: Colors.white,
+                                    height: 1.5,
+                                  ).copyWith(letterSpacing: 0.56),
+                                ),
                               ),
                               const SizedBox(height: 14),
                               Text(
-                                l10n.loginDescription,
-                                style: AppTextStyles.body(
-                                    fontSize: 13.5,
-                                    color: colors.ink700,
-                                    height: 1.6),
-                              ),
-                            ],
-                          ),
-                          Column(
-                            children: [
-                              _SnsLoginButton(
-                                icon: SvgPicture.asset(
-                                  'assets/images/icon_kakao_login.svg',
-                                  width: 18,
-                                  height: 18,
-                                  colorFilter: ColorFilter.mode(
-                                      colors.kakaoSymbol, BlendMode.srcIn),
-                                ),
-                                label: l10n.loginKakaoButton,
-                                showRecentBadge:
-                                    _lastProvider == SnsProvider.kakao,
-                                onTap: _isLoggingIn ? null : _loginWithKakao,
-                                backgroundColor: colors.kakaoContainer,
-                                labelColor: colors.kakaoLabel,
-                              ),
-                              const SizedBox(height: 12),
-                              _SnsLoginButton(
-                                icon: SvgPicture.asset(
-                                  'assets/images/icon_naver_login.svg',
-                                  width: 18,
-                                  height: 18,
-                                  colorFilter: ColorFilter.mode(
-                                      colors.naverForeground, BlendMode.srcIn),
-                                ),
-                                label: l10n.loginNaverButton,
-                                showRecentBadge:
-                                    _lastProvider == SnsProvider.naver,
-                                onTap: _isLoggingIn
-                                    ? null
-                                    : () => _loginWithMock(SnsProvider.naver),
-                                backgroundColor: colors.naverContainer,
-                                labelColor: colors.naverForeground,
-                              ),
-                              const SizedBox(height: 20),
-                              Text(
-                                l10n.loginTerms,
+                                l10n.loginSubheadline,
                                 textAlign: TextAlign.center,
-                                style: AppTextStyles.body(
-                                    fontSize: 11,
-                                    color: colors.ink600,
-                                    height: 1.5),
+                                style: AppTextStyles.heading(
+                                  fontSize: 15,
+                                  weight: FontWeight.w600,
+                                  color: colors.loginSubheadline,
+                                  height: 1.5,
+                                ).copyWith(letterSpacing: 0.3),
                               ),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+                        Expanded(
+                          child: Center(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: colors.accent.withAlpha(115),
+                                    blurRadius: 44,
+                                    spreadRadius: 4,
+                                  ),
+                                ],
+                              ),
+                              child: const Mascot(size: 84),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    37,
+                    20,
+                    37 + MediaQuery.paddingOf(context).bottom,
+                  ),
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(40),
+                      topRight: Radius.circular(40),
+                    ),
+                    border: Border(
+                      top: BorderSide(
+                          color: colors.loginHeadlineGradientMid, width: 1.5),
+                      left: BorderSide(
+                          color: colors.loginHeadlineGradientMid, width: 1.5),
+                      right: BorderSide(
+                          color: colors.loginHeadlineGradientMid, width: 1.5),
+                    ),
+                    color: colors.loginBackground.withValues(alpha: 0.1),
+                    // color: Color(0x21A3F1F9),
+                    // gradient: LinearGradient(
+                    //   begin: Alignment.topCenter,
+                    //   end: Alignment.bottomCenter,
+                    //   colors: [
+                    //     colors.loginBottomBarGradientStart,
+                    //     colors.loginBottomBarGradientMid,
+                    //     colors.loginBottomBarGradientEnd,
+                    //   ],
+                    //   stops: const [0, 0.399, 1],
+                    // ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: colors.loginBottomBarGradientMid,
+                        // offset: const Offset(5, 4),
+                        blurRadius: 4,
+                        blurStyle: BlurStyle.inner,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        l10n.loginInviteCaption,
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.heading(
+                            weight: FontWeight.w600,
+                            fontSize: 15,
+                            color: Colors.white),
+                      ),
+                      const SizedBox(height: 36),
+                      _SnsLoginButton(
+                        icon: SvgPicture.asset(
+                          'assets/images/icon_kakao_login.svg',
+                          width: 18,
+                          height: 18,
+                          colorFilter: ColorFilter.mode(
+                              colors.kakaoSymbol, BlendMode.srcIn),
+                        ),
+                        label: l10n.loginKakaoButton,
+                        showRecentBadge: _lastProvider == SnsProvider.kakao,
+                        onTap: _isLoggingIn ? null : _loginWithKakao,
+                        backgroundColor: colors.kakaoContainer,
+                        labelColor: colors.kakaoLabel,
+                      ),
+                      const SizedBox(height: 16),
+                      _SnsLoginButton(
+                        icon: SvgPicture.asset(
+                          'assets/images/icon_naver_login.svg',
+                          width: 18,
+                          height: 18,
+                          colorFilter: ColorFilter.mode(
+                              colors.naverForeground, BlendMode.srcIn),
+                        ),
+                        label: l10n.loginNaverButton,
+                        showRecentBadge: _lastProvider == SnsProvider.naver,
+                        onTap: _isLoggingIn
+                            ? null
+                            : () => _loginWithMock(SnsProvider.naver),
+                        backgroundColor: colors.naverContainer,
+                        labelColor: colors.naverForeground,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
             if (_isLoggingIn)
               ColoredBox(
@@ -260,7 +317,7 @@ class _SnsLoginButton extends StatelessWidget {
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(_borderRadius)),
               padding: EdgeInsets.zero,
-              overlayColor: colors.goldTint08,
+              overlayColor: colors.accentTint08,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -269,8 +326,8 @@ class _SnsLoginButton extends StatelessWidget {
                 const SizedBox(width: _iconGap),
                 Text(
                   label,
-                  style: AppTextStyles.body(
-                      fontSize: 15, color: labelColor, letterSpacing: .6),
+                  style: AppTextStyles.heading(
+                      fontSize: 13, weight: FontWeight.w600, color: labelColor),
                 ),
               ],
             ),
@@ -285,13 +342,13 @@ class _SnsLoginButton extends StatelessWidget {
               decoration: BoxDecoration(
                 color: colors.paper,
                 borderRadius: BorderRadius.circular(99),
-                border: Border.all(color: colors.gold),
+                border: Border.all(color: colors.accent),
               ),
               child: Text(
                 AppLocalizations.of(context)!.loginRecentBadge,
                 style: AppTextStyles.body(
                   fontSize: 9.5,
-                  color: colors.gold700,
+                  color: colors.accentBright,
                   letterSpacing: .4,
                 ),
               ),

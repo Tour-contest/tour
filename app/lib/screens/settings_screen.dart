@@ -7,6 +7,7 @@ import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'package:nullnull/app_info.dart';
 import 'package:nullnull/app_log.dart';
 import 'package:nullnull/app_router.dart';
+import 'package:nullnull/data/connectivity_service.dart';
 import 'package:nullnull/data/demo_user.dart';
 import 'package:nullnull/data/login_preference.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
@@ -102,11 +103,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
     if (confirmed != true || !context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content:
-              Text(AppLocalizations.of(context)!.settingsDisconnectSnackbar)),
-    );
+
+    if (_provider != SnsProvider.kakao) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content:
+                Text(AppLocalizations.of(context)!.settingsDisconnectSnackbar)),
+      );
+      return;
+    }
+
+    final disconnected = await _disconnectKakao(context);
+    if (!disconnected || !context.mounted) return;
+    context.goNamed(RouteNames.login);
+  }
+
+  Future<bool> _disconnectKakao(BuildContext context) async {
+    try {
+      await UserApi.instance.unlink();
+      AppLog.logger.i('카카오 연결 끊기 성공');
+      return true;
+    } catch (error) {
+      AppLog.logger.e('카카오 연결 끊기 실패', error: error);
+      if (!context.mounted) return false;
+      if (!await ConnectivityService().isOnline()) return false;
+      if (!context.mounted) return false;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content:
+                Text(AppLocalizations.of(context)!.settingsDisconnectError)),
+      );
+      return false;
+    }
   }
 
   Future<void> _confirmLogout(BuildContext context) async {
@@ -252,7 +280,7 @@ class _SectionLabel extends StatelessWidget {
       child: Text(
         text,
         style: AppTextStyles.body(
-            fontSize: 11, color: colors.gold700, letterSpacing: 1.8),
+            fontSize: 11, color: colors.accentBright, letterSpacing: 1.8),
       ),
     );
   }
@@ -295,7 +323,8 @@ class _RadioRow extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                    color: selected ? colors.gold : colors.divider, width: 1.4),
+                    color: selected ? colors.accent : colors.divider,
+                    width: 1.4),
               ),
               child: selected
                   ? Center(
@@ -303,7 +332,7 @@ class _RadioRow extends StatelessWidget {
                         width: 8,
                         height: 8,
                         decoration: BoxDecoration(
-                            shape: BoxShape.circle, color: colors.gold),
+                            shape: BoxShape.circle, color: colors.accent),
                       ),
                     )
                   : null,
@@ -355,7 +384,8 @@ class _SettingsRow extends StatelessWidget {
             ],
             if (onTap != null) ...[
               const SizedBox(width: 8),
-              AppIcon(AppIconShape.arrowUpRight, size: 12, color: colors.gold),
+              AppIcon(AppIconShape.arrowUpRight,
+                  size: 12, color: colors.accent),
             ],
           ],
         ),
@@ -413,7 +443,7 @@ class _ConnectedAccountRow extends StatelessWidget {
             child: Text(l10n.settingsConnectedAccount,
                 style: AppTextStyles.body(fontSize: 14, color: colors.ink)),
           ),
-          _SnsIcon(provider: provider, size: 14, color: colors.gold),
+          _SnsIcon(provider: provider, size: 14, color: colors.accent),
           const SizedBox(width: 6),
           Text(
             l10n.settingsAccountSuffix(_providerLabel(l10n, provider)),
@@ -426,13 +456,13 @@ class _ConnectedAccountRow extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                border: Border.all(color: colors.gold),
+                border: Border.all(color: colors.accent),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
                 l10n.settingsDisconnect,
-                style:
-                    AppTextStyles.body(fontSize: 11.5, color: colors.gold700),
+                style: AppTextStyles.body(
+                    fontSize: 11.5, color: colors.accentBright),
               ),
             ),
           ),
@@ -524,16 +554,16 @@ class _DialogButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
-          backgroundColor: filled ? colors.gold : null,
-          side: BorderSide(color: colors.gold),
+          backgroundColor: filled ? colors.accent : null,
+          side: BorderSide(color: colors.accent),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-          overlayColor: colors.goldTint08,
+          overlayColor: colors.accentTint08,
         ),
         child: Text(
           label,
           style: AppTextStyles.body(
             fontSize: 13.5,
-            color: filled ? colors.paper : colors.gold700,
+            color: filled ? colors.paper : colors.accentBright,
             letterSpacing: .3,
           ),
         ),
@@ -558,7 +588,7 @@ class _LogoutButton extends StatelessWidget {
           side: BorderSide(color: colors.divider),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
           padding: const EdgeInsets.symmetric(vertical: 14),
-          overlayColor: colors.goldTint08,
+          overlayColor: colors.accentTint08,
         ),
         child: Text(
           AppLocalizations.of(context)!.settingsLogout,
@@ -590,11 +620,11 @@ class _ProfileSummary extends StatelessWidget {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: colors.gold),
+              border: Border.all(color: colors.accent),
             ),
             child: Text(
               nickname.substring(0, 1),
-              style: AppTextStyles.heading(color: colors.gold700),
+              style: AppTextStyles.heading(color: colors.accentBright),
             ),
           ),
           const SizedBox(width: 14),
@@ -608,7 +638,8 @@ class _ProfileSummary extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    _SnsIcon(provider: provider, size: 12, color: colors.gold),
+                    _SnsIcon(
+                        provider: provider, size: 12, color: colors.accent),
                     const SizedBox(width: 5),
                     Text(
                       l10n.settingsLoggedInWith(_providerLabel(l10n, provider)),

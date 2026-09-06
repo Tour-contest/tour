@@ -48,31 +48,18 @@ class _ChatInputBarState extends State<ChatInputBar> {
     return Container(
       padding: EdgeInsets.fromLTRB(
           16, 12, 16, 12 + MediaQuery.of(context).padding.bottom),
-      decoration: BoxDecoration(
-        color: colors.paper,
-        border: Border(top: BorderSide(color: colors.divider)),
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 34,
-            height: 34,
-            child: IconButton(
-              padding: EdgeInsets.zero,
-              icon: AppIcon(AppIconShape.clip, color: colors.ink700),
-              onPressed: () {},
-              tooltip: l10n.chatInputAttachTooltip,
-            ),
-          ),
-          const SizedBox(width: 4),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 4),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(99),
-                border:
-                    Border.all(color: _focused ? colors.gold : colors.divider),
-              ),
+      color: colors.paper,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(18, 6, 6, 6),
+        decoration: BoxDecoration(
+          color: colors.inputBar,
+          borderRadius: BorderRadius.circular(99),
+          border: Border.all(
+              color: _focused ? colors.accent : colors.inputBarBorder),
+        ),
+        child: Row(
+          children: [
+            Expanded(
               child: TextField(
                 controller: widget.controller,
                 focusNode: _focusNode,
@@ -88,26 +75,38 @@ class _ChatInputBarState extends State<ChatInputBar> {
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 10),
-          SizedBox(
-            width: 34,
-            height: 34,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: colors.gold),
-              ),
+            const SizedBox(width: 6),
+            SizedBox(
+              width: 34,
+              height: 34,
               child: IconButton(
                 padding: EdgeInsets.zero,
-                icon: AppIcon(AppIconShape.arrowUp,
-                    size: 14, color: colors.gold700),
-                onPressed: _submit,
-                tooltip: l10n.chatInputSendTooltip,
+                icon: Icon(Icons.mic_none_rounded,
+                    size: 18, color: colors.ink600),
+                onPressed: () {},
+                tooltip: l10n.chatInputVoiceTooltip,
               ),
             ),
-          ),
-        ],
+            const SizedBox(width: 4),
+            SizedBox(
+              width: 34,
+              height: 34,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: colors.accent,
+                ),
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  icon: AppIcon(AppIconShape.arrowUp,
+                      size: 14, color: colors.ink),
+                  onPressed: _submit,
+                  tooltip: l10n.chatInputSendTooltip,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

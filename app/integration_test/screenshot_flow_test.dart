@@ -83,7 +83,7 @@ void main() {
               'GRAPHIC_BOX:top=${topInset * dpr},width=${width * dpr},height=${height * dpr}',
             );
             return Scaffold(
-              backgroundColor: AppColors.light.ink,
+              backgroundColor: AppColors.dark.ink,
               body: Padding(
                 padding: EdgeInsets.only(top: topInset),
                 child: SizedBox(
@@ -99,7 +99,7 @@ void main() {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                                color: AppColors.light.gold, width: 5),
+                                color: AppColors.dark.accent, width: 5),
                           ),
                         ),
                         const SizedBox(width: 20),
@@ -111,7 +111,7 @@ void main() {
                               '여유 · 쾌적 · 한적',
                               style: AppTextStyles.body(
                                 fontSize: 9,
-                                color: AppColors.light.gold,
+                                color: AppColors.dark.accent,
                                 letterSpacing: 3,
                               ),
                             ),
