@@ -111,18 +111,31 @@ class _ChatScreenState extends State<ChatScreen>
         handleBackPress();
       },
       child: Scaffold(
-        backgroundColor: colors.paper,
+        backgroundColor: colors.loginBackground,
         drawer: AppDrawer(onNewChat: _newChat),
         body: SafeArea(
           child: Column(
             children: [
               Builder(
                 builder: (context) => AppHeader(
-                  leading: IconButton(
-                    icon:
-                        AppIcon(AppIconShape.menu, size: 18, color: colors.ink),
-                    onPressed: () => Scaffold.of(context).openDrawer(),
-                    tooltip: l10n.chatHistoryTooltip,
+                  backgroundColor: colors.loginBackground,
+                  leading: Center(
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: colors.accent),
+                      ),
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: AppIcon(AppIconShape.menu,
+                            size: 18, color: colors.ink),
+                        onPressed: () => Scaffold.of(context).openDrawer(),
+                        tooltip: l10n.chatHistoryTooltip,
+                      ),
+                    ),
                   ),
                   trailing: const Center(child: _ProfileAvatarButton()),
                 ),
@@ -277,7 +290,14 @@ class _EmptyStateState extends State<_EmptyState> {
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: colors.card,
+                    border: Border.all(color: colors.cardBorder),
+                    boxShadow: [
+                      BoxShadow(
+                        color: colors.accent.withAlpha(115),
+                        blurRadius: 44,
+                        spreadRadius: 4,
+                      ),
+                    ],
                   ),
                   child: const Mascot(),
                 ),

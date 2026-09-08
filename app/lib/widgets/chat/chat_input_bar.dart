@@ -48,7 +48,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
     return Container(
       padding: EdgeInsets.fromLTRB(
           16, 12, 16, 12 + MediaQuery.of(context).padding.bottom),
-      color: colors.paper,
+      color: colors.loginBackground,
       child: Container(
         padding: const EdgeInsets.fromLTRB(18, 6, 6, 6),
         decoration: BoxDecoration(
@@ -79,12 +79,18 @@ class _ChatInputBarState extends State<ChatInputBar> {
             SizedBox(
               width: 34,
               height: 34,
-              child: IconButton(
-                padding: EdgeInsets.zero,
-                icon: Icon(Icons.mic_none_rounded,
-                    size: 18, color: colors.ink600),
-                onPressed: () {},
-                tooltip: l10n.chatInputVoiceTooltip,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: colors.inputBarBorder,
+                ),
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  icon: Icon(Icons.mic_none_rounded,
+                      size: 18, color: colors.ink600),
+                  onPressed: () {},
+                  tooltip: l10n.chatInputVoiceTooltip,
+                ),
               ),
             ),
             const SizedBox(width: 4),
@@ -94,7 +100,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: colors.accent,
+                  color: colors.chatSendButton,
                 ),
                 child: IconButton(
                   padding: EdgeInsets.zero,

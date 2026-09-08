@@ -11,12 +11,17 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
     this.subtitle,
     this.leading,
     this.trailing,
+    this.backgroundColor,
   });
 
   final String? title;
   final String? subtitle;
   final Widget? leading;
   final Widget? trailing;
+
+  /// 화면별로 배경색을 달리해야 할 때만 지정한다(예: 채팅 화면). 지정하지
+  /// 않으면 `colors.paper`를 쓴다.
+  final Color? backgroundColor;
 
   @override
   Size get preferredSize => const Size.fromHeight(52);
@@ -28,7 +33,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
       height: preferredSize.height,
       padding: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
-        color: colors.paper,
+        color: backgroundColor ?? colors.paper,
         border: Border(bottom: BorderSide(color: colors.divider)),
       ),
       child: Row(

@@ -101,7 +101,7 @@
   "@chatThemeCampingTitle": {
     "description": "채팅 빈 상태(S3) 테마 그리드 - 캠핑 여행지 카드 제목"
   },
-  "chatThemeCampingSubtitle": "야영장, 오토캠핑 중심",
+  "chatThemeCampingSubtitle": "야영장·오토캠핑 중심",
   "@chatThemeCampingSubtitle": {
     "description": "채팅 빈 상태(S3) 테마 그리드 - 캠핑 여행지 카드 설명"
   },

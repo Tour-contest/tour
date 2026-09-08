@@ -17,6 +17,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.inputBar,
     required this.inputBarBorder,
     required this.userBubble,
+    required this.chatSendButton,
     required this.quietText,
     required this.quietBorder,
     required this.quietChart,
@@ -66,6 +67,9 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color inputBarBorder;
 
   final Color userBubble;
+
+  /// 채팅 입력바 전송 버튼 배경색(#309AE6).
+  final Color chatSendButton;
 
   final Color quietText;
   final Color quietBorder;
@@ -143,6 +147,7 @@ class AppColors extends ThemeExtension<AppColors> {
     inputBar: Color(0xFF3B4247),
     inputBarBorder: Color(0xFF4A5258),
     userBubble: Color(0xFF2E363C),
+    chatSendButton: Color(0xFF309AE6),
     quietText: Color(0xFF4CD980),
     quietBorder: Color(0xFF2F9E5B),
     quietChart: Color(0xFF25B34B),
@@ -182,6 +187,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? inputBar,
     Color? inputBarBorder,
     Color? userBubble,
+    Color? chatSendButton,
     Color? quietText,
     Color? quietBorder,
     Color? quietChart,
@@ -215,6 +221,7 @@ class AppColors extends ThemeExtension<AppColors> {
       inputBar: inputBar ?? this.inputBar,
       inputBarBorder: inputBarBorder ?? this.inputBarBorder,
       userBubble: userBubble ?? this.userBubble,
+      chatSendButton: chatSendButton ?? this.chatSendButton,
       quietText: quietText ?? this.quietText,
       quietBorder: quietBorder ?? this.quietBorder,
       quietChart: quietChart ?? this.quietChart,
@@ -259,6 +266,7 @@ class AppColors extends ThemeExtension<AppColors> {
       inputBar: Color.lerp(inputBar, other.inputBar, t)!,
       inputBarBorder: Color.lerp(inputBarBorder, other.inputBarBorder, t)!,
       userBubble: Color.lerp(userBubble, other.userBubble, t)!,
+      chatSendButton: Color.lerp(chatSendButton, other.chatSendButton, t)!,
       quietText: Color.lerp(quietText, other.quietText, t)!,
       quietBorder: Color.lerp(quietBorder, other.quietBorder, t)!,
       quietChart: Color.lerp(quietChart, other.quietChart, t)!,
