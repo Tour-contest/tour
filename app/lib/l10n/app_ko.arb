@@ -36,11 +36,11 @@
   "@loginSubheadline": {
     "description": "로그인 화면 그라디언트 헤드라인 아래 보조 설명"
   },
-  "loginKakaoButton": "카카오 로그인",
+  "loginKakaoButton": "카카오로 계속하기",
   "@loginKakaoButton": {
     "description": "카카오 SNS 로그인 버튼 레이블"
   },
-  "loginNaverButton": "네이버 로그인",
+  "loginNaverButton": "네이버로 계속하기",
   "@loginNaverButton": {
     "description": "네이버 SNS 로그인 버튼 레이블"
   },

@@ -5,6 +5,7 @@ class AppColors extends ThemeExtension<AppColors> {
   const AppColors({
     required this.paper,
     required this.loginBackground,
+    required this.loginBackgroundGlow,
     required this.drawerBackground,
     required this.ink,
     required this.accent,
@@ -39,6 +40,10 @@ class AppColors extends ThemeExtension<AppColors> {
 
   /// 로그인 화면 전용 배경색. 앱 전역 배경(`paper`)과 별도로 지정한다.
   final Color loginBackground;
+
+  /// 로그인 화면 상단(헤드라인·마스코트 영역) 배경 그라디언트 시작색. 화면
+  /// 55% 지점에서 `loginBackground`로 이어진다.
+  final Color loginBackgroundGlow;
 
   final Color drawerBackground;
 
@@ -126,6 +131,7 @@ class AppColors extends ThemeExtension<AppColors> {
   static const dark = AppColors(
     paper: Color(0xFF1C2023),
     loginBackground: Color(0xFF20232C),
+    loginBackgroundGlow: Color(0xFF375C78),
     drawerBackground: Color(0xFF191C1F),
     ink: Color(0xFFF2F6F9),
     accent: Color(0xFF68BDF9),
@@ -164,6 +170,7 @@ class AppColors extends ThemeExtension<AppColors> {
   AppColors copyWith({
     Color? paper,
     Color? loginBackground,
+    Color? loginBackgroundGlow,
     Color? drawerBackground,
     Color? ink,
     Color? accent,
@@ -196,6 +203,7 @@ class AppColors extends ThemeExtension<AppColors> {
     return AppColors(
       paper: paper ?? this.paper,
       loginBackground: loginBackground ?? this.loginBackground,
+      loginBackgroundGlow: loginBackgroundGlow ?? this.loginBackgroundGlow,
       drawerBackground: drawerBackground ?? this.drawerBackground,
       ink: ink ?? this.ink,
       accent: accent ?? this.accent,
@@ -236,6 +244,8 @@ class AppColors extends ThemeExtension<AppColors> {
     return AppColors(
       paper: Color.lerp(paper, other.paper, t)!,
       loginBackground: Color.lerp(loginBackground, other.loginBackground, t)!,
+      loginBackgroundGlow:
+          Color.lerp(loginBackgroundGlow, other.loginBackgroundGlow, t)!,
       drawerBackground:
           Color.lerp(drawerBackground, other.drawerBackground, t)!,
       ink: Color.lerp(ink, other.ink, t)!,

@@ -104,173 +104,183 @@ class _LoginScreenState extends State<LoginScreen> {
       canPop: !_isLoggingIn,
       child: Scaffold(
         backgroundColor: colors.loginBackground,
-        body: Stack(
-          children: [
-            Column(
-              children: [
-                Expanded(
-                  child: SafeArea(
-                    bottom: false,
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(26, 27, 26, 0),
-                          child: Column(
-                            children: [
-                              ShaderMask(
-                                shaderCallback: (bounds) => LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    colors.loginHeadlineGradientStart,
-                                    colors.loginHeadlineGradientMid,
-                                    colors.loginHeadlineGradientEnd,
-                                  ],
-                                  stops: const [0, 0.399, 1],
-                                ).createShader(bounds),
-                                child: Text(
-                                  l10n.loginGradientHeadline,
+        body: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [colors.loginBackgroundGlow, colors.loginBackground],
+              stops: const [0, 0.55],
+            ),
+          ),
+          child: Stack(
+            children: [
+              Column(
+                children: [
+                  Expanded(
+                    child: SafeArea(
+                      bottom: false,
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(26, 27, 26, 0),
+                            child: Column(
+                              children: [
+                                ShaderMask(
+                                  shaderCallback: (bounds) => LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      colors.loginHeadlineGradientStart,
+                                      colors.loginHeadlineGradientMid,
+                                      colors.loginHeadlineGradientEnd,
+                                    ],
+                                    stops: const [0, 0.399, 1],
+                                  ).createShader(bounds),
+                                  child: Text(
+                                    l10n.loginGradientHeadline,
+                                    textAlign: TextAlign.center,
+                                    style: AppTextStyles.heading(
+                                      fontSize: 28,
+                                      weight: FontWeight.w700,
+                                      color: Colors.white,
+                                      height: 1.5,
+                                    ).copyWith(letterSpacing: 0.56),
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                Text(
+                                  l10n.loginSubheadline,
                                   textAlign: TextAlign.center,
                                   style: AppTextStyles.heading(
-                                    fontSize: 28,
-                                    weight: FontWeight.w700,
-                                    color: Colors.white,
+                                    fontSize: 15,
+                                    weight: FontWeight.w600,
+                                    color: colors.loginSubheadline,
                                     height: 1.5,
-                                  ).copyWith(letterSpacing: 0.56),
+                                  ).copyWith(letterSpacing: 0.3),
                                 ),
-                              ),
-                              const SizedBox(height: 14),
-                              Text(
-                                l10n.loginSubheadline,
-                                textAlign: TextAlign.center,
-                                style: AppTextStyles.heading(
-                                  fontSize: 15,
-                                  weight: FontWeight.w600,
-                                  color: colors.loginSubheadline,
-                                  height: 1.5,
-                                ).copyWith(letterSpacing: 0.3),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Expanded(
-                          child: Center(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: colors.accent.withAlpha(115),
-                                    blurRadius: 44,
-                                    spreadRadius: 4,
-                                  ),
-                                ],
-                              ),
-                              child: const Mascot(size: 84),
+                              ],
                             ),
                           ),
+                          Expanded(
+                            child: Center(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: colors.accent.withAlpha(115),
+                                      blurRadius: 44,
+                                      spreadRadius: 4,
+                                    ),
+                                  ],
+                                ),
+                                child: const Mascot(size: 84),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: EdgeInsets.fromLTRB(
+                      20,
+                      37,
+                      20,
+                      37 + MediaQuery.paddingOf(context).bottom,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(40),
+                        topRight: Radius.circular(40),
+                      ),
+                      border: Border(
+                        top: BorderSide(
+                            color: colors.loginHeadlineGradientMid, width: 1.5),
+                        left: BorderSide(
+                            color: colors.loginHeadlineGradientMid, width: 1.5),
+                        right: BorderSide(
+                            color: colors.loginHeadlineGradientMid, width: 1.5),
+                      ),
+                      color: colors.loginBackground.withValues(alpha: 0.1),
+                      // color: Color(0x21A3F1F9),
+                      // gradient: LinearGradient(
+                      //   begin: Alignment.topCenter,
+                      //   end: Alignment.bottomCenter,
+                      //   colors: [
+                      //     colors.loginBottomBarGradientStart,
+                      //     colors.loginBottomBarGradientMid,
+                      //     colors.loginBottomBarGradientEnd,
+                      //   ],
+                      //   stops: const [0, 0.399, 1],
+                      // ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: colors.loginBottomBarGradientMid,
+                          // offset: const Offset(5, 4),
+                          blurRadius: 4,
+                          blurStyle: BlurStyle.inner,
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          l10n.loginInviteCaption,
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.heading(
+                              weight: FontWeight.w600,
+                              fontSize: 15,
+                              color: Colors.white),
+                        ),
+                        const SizedBox(height: 36),
+                        _SnsLoginButton(
+                          icon: SvgPicture.asset(
+                            'assets/images/icon_kakao_login.svg',
+                            width: 18,
+                            height: 18,
+                            colorFilter: ColorFilter.mode(
+                                colors.kakaoSymbol, BlendMode.srcIn),
+                          ),
+                          label: l10n.loginKakaoButton,
+                          showRecentBadge: _lastProvider == SnsProvider.kakao,
+                          onTap: _isLoggingIn ? null : _loginWithKakao,
+                          backgroundColor: colors.kakaoContainer,
+                          labelColor: colors.kakaoLabel,
+                        ),
+                        const SizedBox(height: 16),
+                        _SnsLoginButton(
+                          icon: SvgPicture.asset(
+                            'assets/images/icon_naver_login.svg',
+                            width: 18,
+                            height: 18,
+                            colorFilter: ColorFilter.mode(
+                                colors.naverForeground, BlendMode.srcIn),
+                          ),
+                          label: l10n.loginNaverButton,
+                          showRecentBadge: _lastProvider == SnsProvider.naver,
+                          onTap: _isLoggingIn
+                              ? null
+                              : () => _loginWithMock(SnsProvider.naver),
+                          backgroundColor: colors.naverContainer,
+                          labelColor: colors.naverForeground,
                         ),
                       ],
                     ),
                   ),
-                ),
-                Container(
-                  width: double.infinity,
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  padding: EdgeInsets.fromLTRB(
-                    20,
-                    37,
-                    20,
-                    37 + MediaQuery.paddingOf(context).bottom,
-                  ),
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(40),
-                      topRight: Radius.circular(40),
-                    ),
-                    border: Border(
-                      top: BorderSide(
-                          color: colors.loginHeadlineGradientMid, width: 1.5),
-                      left: BorderSide(
-                          color: colors.loginHeadlineGradientMid, width: 1.5),
-                      right: BorderSide(
-                          color: colors.loginHeadlineGradientMid, width: 1.5),
-                    ),
-                    color: colors.loginBackground.withValues(alpha: 0.1),
-                    // color: Color(0x21A3F1F9),
-                    // gradient: LinearGradient(
-                    //   begin: Alignment.topCenter,
-                    //   end: Alignment.bottomCenter,
-                    //   colors: [
-                    //     colors.loginBottomBarGradientStart,
-                    //     colors.loginBottomBarGradientMid,
-                    //     colors.loginBottomBarGradientEnd,
-                    //   ],
-                    //   stops: const [0, 0.399, 1],
-                    // ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: colors.loginBottomBarGradientMid,
-                        // offset: const Offset(5, 4),
-                        blurRadius: 4,
-                        blurStyle: BlurStyle.inner,
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        l10n.loginInviteCaption,
-                        textAlign: TextAlign.center,
-                        style: AppTextStyles.heading(
-                            weight: FontWeight.w600,
-                            fontSize: 15,
-                            color: Colors.white),
-                      ),
-                      const SizedBox(height: 36),
-                      _SnsLoginButton(
-                        icon: SvgPicture.asset(
-                          'assets/images/icon_kakao_login.svg',
-                          width: 18,
-                          height: 18,
-                          colorFilter: ColorFilter.mode(
-                              colors.kakaoSymbol, BlendMode.srcIn),
-                        ),
-                        label: l10n.loginKakaoButton,
-                        showRecentBadge: _lastProvider == SnsProvider.kakao,
-                        onTap: _isLoggingIn ? null : _loginWithKakao,
-                        backgroundColor: colors.kakaoContainer,
-                        labelColor: colors.kakaoLabel,
-                      ),
-                      const SizedBox(height: 16),
-                      _SnsLoginButton(
-                        icon: SvgPicture.asset(
-                          'assets/images/icon_naver_login.svg',
-                          width: 18,
-                          height: 18,
-                          colorFilter: ColorFilter.mode(
-                              colors.naverForeground, BlendMode.srcIn),
-                        ),
-                        label: l10n.loginNaverButton,
-                        showRecentBadge: _lastProvider == SnsProvider.naver,
-                        onTap: _isLoggingIn
-                            ? null
-                            : () => _loginWithMock(SnsProvider.naver),
-                        backgroundColor: colors.naverContainer,
-                        labelColor: colors.naverForeground,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            if (_isLoggingIn)
-              ColoredBox(
-                color: colors.scrim,
-                child: const Center(child: CircularProgressIndicator()),
+                ],
               ),
-          ],
+              if (_isLoggingIn)
+                ColoredBox(
+                  color: colors.scrim,
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+            ],
+          ),
         ),
       ),
     );
