@@ -17,6 +17,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.inputBar,
     required this.inputBarBorder,
     required this.userBubble,
+    required this.userBubbleBorder,
     required this.chatSendButton,
     required this.quietText,
     required this.quietBorder,
@@ -35,6 +36,8 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.loginHeadlineGradientMid,
     required this.loginHeadlineGradientEnd,
     required this.loginSubheadline,
+    required this.voiceListeningHint,
+    required this.graphite,
   });
 
   final Color paper;
@@ -67,6 +70,9 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color inputBarBorder;
 
   final Color userBubble;
+
+  /// 사용자 채팅 말풍선 테두리색(#D8D8D8).
+  final Color userBubbleBorder;
 
   /// 채팅 입력바 전송 버튼 배경색(#309AE6).
   final Color chatSendButton;
@@ -107,6 +113,12 @@ class AppColors extends ThemeExtension<AppColors> {
   /// 로그인 화면 그라디언트 헤드라인 아래 보조 설명 색(#7D8899).
   final Color loginSubheadline;
 
+  /// 음성 입력 배지(`VoiceListeningToast`) 둘째 줄("탭해서 종료") 보조 텍스트 색(#737B87).
+  final Color voiceListeningHint;
+
+  /// #292C36. 용도 미정 — 값만 우선 등록, 사용처가 정해지면 이름·용도를 갱신할 것.
+  final Color graphite;
+
   Color get ink800 => ink.withAlpha(230);
 
   Color get ink700 => const Color(0xFFA9B6BF);
@@ -144,9 +156,10 @@ class AppColors extends ThemeExtension<AppColors> {
     cardBorder: Color(0xFF343D44),
     surfaceMuted: Color(0xFF2F373D),
     surfaceMutedBorder: Color(0xFF3D474E),
-    inputBar: Color(0xFF3B4247),
-    inputBarBorder: Color(0xFF4A5258),
-    userBubble: Color(0xFF2E363C),
+    inputBar: Color(0xFF252A31),
+    inputBarBorder: Color(0xFF4E5963),
+    userBubble: Color(0xFF1A1C22),
+    userBubbleBorder: Color(0xFFD8D8D8),
     chatSendButton: Color(0xFF309AE6),
     quietText: Color(0xFF4CD980),
     quietBorder: Color(0xFF2F9E5B),
@@ -165,6 +178,8 @@ class AppColors extends ThemeExtension<AppColors> {
     loginHeadlineGradientMid: Color(0xFF6FC1FC),
     loginHeadlineGradientEnd: Color(0xFF309AE6),
     loginSubheadline: Color(0xFF7D8899),
+    voiceListeningHint: Color(0xFF737B87),
+    graphite: Color(0xFF292C36),
   );
 
   static AppColors of(BuildContext context) {
@@ -187,6 +202,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? inputBar,
     Color? inputBarBorder,
     Color? userBubble,
+    Color? userBubbleBorder,
     Color? chatSendButton,
     Color? quietText,
     Color? quietBorder,
@@ -205,6 +221,8 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? loginHeadlineGradientMid,
     Color? loginHeadlineGradientEnd,
     Color? loginSubheadline,
+    Color? voiceListeningHint,
+    Color? graphite,
   }) {
     return AppColors(
       paper: paper ?? this.paper,
@@ -221,6 +239,7 @@ class AppColors extends ThemeExtension<AppColors> {
       inputBar: inputBar ?? this.inputBar,
       inputBarBorder: inputBarBorder ?? this.inputBarBorder,
       userBubble: userBubble ?? this.userBubble,
+      userBubbleBorder: userBubbleBorder ?? this.userBubbleBorder,
       chatSendButton: chatSendButton ?? this.chatSendButton,
       quietText: quietText ?? this.quietText,
       quietBorder: quietBorder ?? this.quietBorder,
@@ -242,6 +261,8 @@ class AppColors extends ThemeExtension<AppColors> {
       loginHeadlineGradientEnd:
           loginHeadlineGradientEnd ?? this.loginHeadlineGradientEnd,
       loginSubheadline: loginSubheadline ?? this.loginSubheadline,
+      voiceListeningHint: voiceListeningHint ?? this.voiceListeningHint,
+      graphite: graphite ?? this.graphite,
     );
   }
 
@@ -266,6 +287,8 @@ class AppColors extends ThemeExtension<AppColors> {
       inputBar: Color.lerp(inputBar, other.inputBar, t)!,
       inputBarBorder: Color.lerp(inputBarBorder, other.inputBarBorder, t)!,
       userBubble: Color.lerp(userBubble, other.userBubble, t)!,
+      userBubbleBorder:
+          Color.lerp(userBubbleBorder, other.userBubbleBorder, t)!,
       chatSendButton: Color.lerp(chatSendButton, other.chatSendButton, t)!,
       quietText: Color.lerp(quietText, other.quietText, t)!,
       quietBorder: Color.lerp(quietBorder, other.quietBorder, t)!,
@@ -288,6 +311,9 @@ class AppColors extends ThemeExtension<AppColors> {
           loginHeadlineGradientEnd, other.loginHeadlineGradientEnd, t)!,
       loginSubheadline:
           Color.lerp(loginSubheadline, other.loginSubheadline, t)!,
+      voiceListeningHint:
+          Color.lerp(voiceListeningHint, other.voiceListeningHint, t)!,
+      graphite: Color.lerp(graphite, other.graphite, t)!,
     );
   }
 }

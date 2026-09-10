@@ -12,6 +12,7 @@ import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/theme/app_locale_controller.dart';
 import 'package:nullnull/theme/app_text_scale_controller.dart';
 import 'package:nullnull/theme/app_theme.dart';
+import 'package:nullnull/widgets/health_check_gate.dart';
 import 'package:nullnull/widgets/network_status_listener.dart';
 
 late final AppTextScaleController appTextScaleController;
@@ -50,25 +51,23 @@ class NullnullApp extends StatelessWidget {
               locale: localeOption.locale,
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
-              // locale이 null(시스템 언어 옵션)일 때만 적용된다. 지원하지 않는
-              // 기기 로케일은 한국어(제품 기본 언어)로 대체한다.
-              localeResolutionCallback: (locale, supportedLocales) {
-                for (final supported in supportedLocales) {
-                  if (supported.languageCode == locale?.languageCode) {
-                    return supported;
-                  }
-                }
-                return const Locale('ko');
-              },
               builder: (context, child) {
                 final mediaQuery = MediaQuery.of(context);
                 return MediaQuery(
                   data: mediaQuery.copyWith(
                     textScaler: TextScaler.linear(scale.factor),
                   ),
-                  child: NetworkStatusListener(
+                  child: HealthCheckGate(
                     navigatorKey: rootNavigatorKey,
-                    child: child!,
+                    child: NetworkStatusListener(
+                      navigatorKey: rootNavigatorKey,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () =>
+                            FocusManager.instance.primaryFocus?.unfocus(),
+                        child: child,
+                      ),
+                    ),
                   ),
                 );
               },

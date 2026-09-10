@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:nullnull/app_router.dart';
 import 'package:nullnull/data/demo_script.dart';
-import 'package:nullnull/data/demo_user.dart';
-import 'package:nullnull/data/login_preference.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
-import 'package:nullnull/widgets/app_icon.dart';
 
+/// docs/assets/images/drawer_screen.png 시안: 로고, "최근" 대화 목록, 하단
+/// 설정 원형 버튼 + "새 채팅" pill 버튼으로 구성된 드로어. `PushDrawer`(오버레이가
+/// 아닌 본문을 밀어내는 방식)의 `drawer` 슬롯에 들어가므로, 항목을 고르거나
+/// 닫기를 원할 때 `Navigator.pop`이 아니라 [onClose]로 직접 닫아야 한다.
 class AppDrawer extends StatefulWidget {
-  const AppDrawer({super.key, required this.onNewChat});
+  const AppDrawer({super.key, required this.onNewChat, required this.onClose});
 
   final VoidCallback onNewChat;
+  final VoidCallback onClose;
 
   @override
   State<AppDrawer> createState() => _AppDrawerState();
@@ -22,32 +25,15 @@ class AppDrawer extends StatefulWidget {
 class _AppDrawerState extends State<AppDrawer> {
   late List<HistoryEntry> _entries;
   String? _loadedForLanguageCode;
-  SnsProvider _provider = SnsProvider.kakao;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadProvider();
-  }
-
-  Future<void> _loadProvider() async {
-    final provider = await LoginPreference.readLastProvider();
-    if (!mounted || provider == null) return;
-    setState(() => _provider = provider);
-  }
 
   void _newChat() {
     widget.onNewChat();
-    Navigator.of(context).pop();
+    widget.onClose();
   }
 
   void _openSettings() {
-    Navigator.of(context).pop();
+    widget.onClose();
     context.pushNamed(RouteNames.settings);
-  }
-
-  void _delete(HistoryEntry entry) {
-    setState(() => _entries.remove(entry));
   }
 
   @override
@@ -59,7 +45,6 @@ class _AppDrawerState extends State<AppDrawer> {
       _entries = List.of(historyEntriesFor(languageCode));
       _loadedForLanguageCode = languageCode;
     }
-    final nickname = DemoUser.nicknameFor(_provider, languageCode);
 
     return Drawer(
       backgroundColor: colors.drawerBackground,
@@ -68,103 +53,35 @@ class _AppDrawerState extends State<AppDrawer> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 12, 8),
-              child: Text('널널',
-                  style:
-                      AppTextStyles.heading(fontSize: 17, color: colors.ink)),
-            ),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 26),
+                child: SvgPicture.asset('assets/images/typography.svg')),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(10),
-                onTap: _newChat,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: colors.surfaceMuted,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    children: [
-                      AppIcon(AppIconShape.edit, size: 15, color: colors.ink),
-                      const SizedBox(width: 10),
-                      Text(l10n.chatNewTooltip,
-                          style: AppTextStyles.body(
-                              fontSize: 13.5, color: colors.ink)),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
               child: Text(
                 l10n.drawerRecentSection,
-                style: AppTextStyles.body(
-                    fontSize: 11, color: colors.ink600, letterSpacing: 1.4),
+                style: AppTextStyles.body(fontSize: 13, color: colors.ink600),
               ),
             ),
             Expanded(
               child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 itemCount: _entries.length,
                 itemBuilder: (context, index) {
                   final entry = _entries[index];
-                  final active = index == 0;
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 2),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: active ? colors.surfaceMuted : null,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                entry.title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppTextStyles.body(
-                                    fontSize: 13, color: colors.ink),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                entry.date,
-                                style: AppTextStyles.tabularNums(
-                                  AppTextStyles.body(
-                                      fontSize: 10.5, color: colors.ink600),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (active)
-                          InkWell(
-                            onTap: () => _delete(entry),
-                            borderRadius: BorderRadius.circular(999),
-                            child: Padding(
-                              padding: const EdgeInsets.all(6),
-                              child: Text('✕',
-                                  style: AppTextStyles.body(
-                                      fontSize: 12, color: colors.ink600)),
-                            ),
-                          ),
-                      ],
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 9),
+                    child: Text(
+                      entry.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style:
+                          AppTextStyles.body(fontSize: 16, color: colors.ink),
                     ),
                   );
                 },
               ),
             ),
-            _ProfileFooter(
-                nickname: nickname,
-                onSettingsTap: _openSettings,
-                colors: colors),
+            _DrawerFooter(onNewChat: _newChat, onSettingsTap: _openSettings),
           ],
         ),
       ),
@@ -172,57 +89,81 @@ class _AppDrawerState extends State<AppDrawer> {
   }
 }
 
-class _ProfileFooter extends StatelessWidget {
-  const _ProfileFooter({
-    required this.nickname,
-    required this.onSettingsTap,
-    required this.colors,
-  });
+class _DrawerFooter extends StatelessWidget {
+  const _DrawerFooter({required this.onNewChat, required this.onSettingsTap});
 
-  final String nickname;
+  final VoidCallback onNewChat;
   final VoidCallback onSettingsTap;
-  final AppColors colors;
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context)!;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
-      decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: colors.cardBorder)),
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: colors.accent),
-            ),
-            child: Text(
-              nickname.substring(0, 1),
-              style: AppTextStyles.heading(
-                  fontSize: 14, color: colors.accentBright),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              nickname,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.body(fontSize: 13, color: colors.ink),
-            ),
-          ),
-          IconButton(
-            icon:
-                AppIcon(AppIconShape.settings, size: 17, color: colors.ink600),
-            onPressed: onSettingsTap,
+          _CircleIconButton(
+            onTap: onSettingsTap,
             tooltip: l10n.commonSettings,
+            child: SvgPicture.asset('assets/images/setting.svg'),
+          ),
+          InkWell(
+            borderRadius: BorderRadius.circular(999),
+            onTap: onNewChat,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: colors.chatSendButton,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SvgPicture.asset('assets/images/plus.svg'),
+                  const SizedBox(width: 10),
+                  Text(l10n.chatNewTooltip,
+                      style: AppTextStyles.body(
+                              fontSize: 15, color: colors.ink, height: 1.6)
+                          .copyWith(fontWeight: FontWeight.w500)),
+                ],
+              ),
+            ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _CircleIconButton extends StatelessWidget {
+  const _CircleIconButton({
+    required this.onTap,
+    required this.tooltip,
+    required this.child,
+  });
+
+  final VoidCallback onTap;
+  final String tooltip;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: Container(
+          width: 40,
+          height: 40,
+          alignment: Alignment.center,
+          decoration:
+              BoxDecoration(color: colors.surfaceMuted, shape: BoxShape.circle),
+          child: child,
+        ),
       ),
     );
   }

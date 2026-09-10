@@ -116,11 +116,13 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Stack(
             children: [
               Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Expanded(
                     child: SafeArea(
                       bottom: false,
                       child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Padding(
                             padding: const EdgeInsets.fromLTRB(26, 27, 26, 0),
@@ -159,24 +161,21 @@ class _LoginScreenState extends State<LoginScreen> {
                                     height: 1.5,
                                   ).copyWith(letterSpacing: 0.3),
                                 ),
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            child: Center(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: colors.accent.withAlpha(115),
-                                      blurRadius: 44,
-                                      spreadRadius: 4,
-                                    ),
-                                  ],
+                                Container(
+                                  margin: const EdgeInsets.only(top: 40),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: colors.accent.withAlpha(115),
+                                        blurRadius: 44,
+                                        spreadRadius: 4,
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Mascot(size: 130),
                                 ),
-                                child: const Mascot(size: 84),
-                              ),
+                              ],
                             ),
                           ),
                         ],
@@ -190,7 +189,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       20,
                       37,
                       20,
-                      37 + MediaQuery.paddingOf(context).bottom,
+                      MediaQuery.paddingOf(context).bottom,
                     ),
                     decoration: BoxDecoration(
                       borderRadius: const BorderRadius.only(
@@ -241,8 +240,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         _SnsLoginButton(
                           icon: SvgPicture.asset(
                             'assets/images/icon_kakao_login.svg',
-                            width: 18,
-                            height: 18,
                             colorFilter: ColorFilter.mode(
                                 colors.kakaoSymbol, BlendMode.srcIn),
                           ),
@@ -256,8 +253,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         _SnsLoginButton(
                           icon: SvgPicture.asset(
                             'assets/images/icon_naver_login.svg',
-                            width: 18,
-                            height: 18,
                             colorFilter: ColorFilter.mode(
                                 colors.naverForeground, BlendMode.srcIn),
                           ),
@@ -297,9 +292,10 @@ class _SnsLoginButton extends StatelessWidget {
     required this.labelColor,
   });
 
-  static const double _height = 54;
+  static const double _width = 240;
+  static const double _height = 48;
   static const double _borderRadius = 12;
-  static const double _iconGap = 16;
+  static const double _iconGap = 12;
 
   final Widget icon;
   final String label;
@@ -317,7 +313,7 @@ class _SnsLoginButton extends StatelessWidget {
       clipBehavior: Clip.none,
       children: [
         SizedBox(
-          width: double.infinity,
+          width: _width,
           height: _height,
           child: OutlinedButton(
             onPressed: onTap,
@@ -337,7 +333,7 @@ class _SnsLoginButton extends StatelessWidget {
                 Text(
                   label,
                   style: AppTextStyles.heading(
-                      fontSize: 13, weight: FontWeight.w600, color: labelColor),
+                      fontSize: 14, weight: FontWeight.w600, color: labelColor),
                 ),
               ],
             ),

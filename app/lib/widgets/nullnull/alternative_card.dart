@@ -9,6 +9,7 @@ import 'package:nullnull/data/demo_script.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
+import 'package:nullnull/widgets/map_app_sheet.dart';
 import 'package:nullnull/widgets/nullnull/card_container.dart';
 import 'package:nullnull/widgets/nullnull/congestion_badge.dart';
 
@@ -50,14 +51,6 @@ class _AlternativeCard extends StatelessWidget {
   const _AlternativeCard({required this.alternative});
 
   final Alternative alternative;
-
-  void _showComingSoon(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content:
-              Text(AppLocalizations.of(context)!.nulnulOpenInMapComingSoon)),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -114,7 +107,7 @@ class _AlternativeCard extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             InkWell(
-              onTap: () => _showComingSoon(context),
+              onTap: () => MapAppSheet.show(context, placeName: spot.name),
               child: Text(
                 l10n.nulnulOpenInMap,
                 style: AppTextStyles.body(

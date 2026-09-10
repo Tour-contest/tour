@@ -60,7 +60,7 @@
   "@chatHistoryTooltip": {
     "description": "채팅 화면 좌측 상단 히스토리 이동 버튼 툴팁"
   },
-  "chatNewTooltip": "새 대화",
+  "chatNewTooltip": "새 채팅",
   "@chatNewTooltip": {
     "description": "채팅 화면 우측 상단 새 대화 버튼 툴팁"
   },
@@ -112,6 +112,18 @@
   "chatInputVoiceTooltip": "음성 입력",
   "@chatInputVoiceTooltip": {
     "description": "채팅 입력바 음성 입력 아이콘 버튼 툴팁"
+  },
+  "chatInputVoiceUnavailable": "음성 인식을 사용할 수 없어요. 마이크 권한을 확인해 주세요.",
+  "@chatInputVoiceUnavailable": {
+    "description": "음성 인식 초기화 실패(권한 거부·기기 미지원) 시 안내 토스트"
+  },
+  "chatInputVoiceListeningTitle": "듣고 있어요",
+  "@chatInputVoiceListeningTitle": {
+    "description": "음성 입력 중 하단에 뜨는 VoiceListeningToast 안내 문구 첫 줄(14px)"
+  },
+  "chatInputVoiceListeningHint": "탭해서 종료",
+  "@chatInputVoiceListeningHint": {
+    "description": "음성 입력 중 하단에 뜨는 VoiceListeningToast 안내 문구 둘째 줄(13px)"
   },
   "chatInputSendTooltip": "전송",
   "@chatInputSendTooltip": {
@@ -189,11 +201,32 @@
   },
   "nulnulOpenInMap": "지도에서 보기 ↗",
   "@nulnulOpenInMap": {
-    "description": "대안 추천 카드의 지도 딥링크 버튼(실 SDK 연동 전 mock)"
+    "description": "대안 추천 카드의 지도 딥링크 버튼. 탭하면 MapAppSheet(앱 선택 시트)가 뜬다"
   },
-  "nulnulOpenInMapComingSoon": "지도 연동은 준비 중이에요.",
-  "@nulnulOpenInMapComingSoon": {
-    "description": "지도 딥링크 mock 스낵바 문구"
+  "mapAppSheetTitle": "{placeName} 지도로 보기",
+  "@mapAppSheetTitle": {
+    "description": "지도 앱 선택 시트 제목",
+    "placeholders": {
+      "placeName": {
+        "type": "String"
+      }
+    }
+  },
+  "mapAppSheetKakaoButton": "카카오맵에서 열기",
+  "@mapAppSheetKakaoButton": {
+    "description": "지도 앱 선택 시트의 카카오맵 버튼"
+  },
+  "mapAppSheetNaverButton": "네이버지도에서 열기",
+  "@mapAppSheetNaverButton": {
+    "description": "지도 앱 선택 시트의 네이버지도 버튼"
+  },
+  "mapAppSheetCancel": "취소하기",
+  "@mapAppSheetCancel": {
+    "description": "지도 앱 선택 시트의 취소 버튼"
+  },
+  "mapAppSheetUnavailable": "설치된 지도 앱을 찾을 수 없어요.",
+  "@mapAppSheetUnavailable": {
+    "description": "카카오맵/네이버지도 앱이 기기에 설치돼 있지 않아 스킴 실행에 실패했을 때 안내 토스트"
   },
   "drawerRecentSection": "최근",
   "@drawerRecentSection": {
@@ -326,11 +359,11 @@
   "@settingsDisconnectError": {
     "description": "카카오 연결 끊기(UserApi.instance.unlink()) 실패 시 스낵바 문구"
   },
-  "settingsLogoutDialogTitle": "로그아웃 하시겠습니까?",
+  "settingsLogoutDialogTitle": "로그아웃",
   "@settingsLogoutDialogTitle": {
     "description": "로그아웃 확인 팝업 제목"
   },
-  "settingsLogoutDialogMessage": "로그아웃하면 다시 로그인해야 채팅 내역을 이어서 볼 수 있어요.",
+  "settingsLogoutDialogMessage": "정말 로그아웃 하시겠습니까?",
   "@settingsLogoutDialogMessage": {
     "description": "로그아웃 확인 팝업 설명"
   },
@@ -387,15 +420,11 @@
   "@settingsSectionLanguage": {
     "description": "설정 화면 언어 섹션 라벨"
   },
-  "languageOptionSystem": "시스템 언어",
-  "@languageOptionSystem": {
-    "description": "언어 설정 - 기기 언어를 따르는 옵션"
-  },
   "languageOptionKorean": "한국어",
   "@languageOptionKorean": {
     "description": "언어 설정 - 한국어로 고정하는 옵션"
   },
-  "languageOptionEnglish": "영어",
+  "languageOptionEnglish": "English",
   "@languageOptionEnglish": {
     "description": "언어 설정 - 영어로 고정하는 옵션"
   },
@@ -406,5 +435,17 @@
   "networkOfflineDialogMessage": "네트워크 연결을 확인해 주세요.\n연결되면 자동으로 이어서 진행돼요.",
   "@networkOfflineDialogMessage": {
     "description": "네트워크 연결 끊김 팝업 설명"
+  },
+  "serverUnavailableDialogTitle": "서버에 문제가 있어요",
+  "@serverUnavailableDialogTitle": {
+    "description": "앱 실행 시 헬스 체크 실패 팝업 제목"
+  },
+  "serverUnavailableDialogMessage": "일시적인 서버 오류로 서비스를 이용할 수 없어요.\n잠시 후 다시 시도해 주세요.",
+  "@serverUnavailableDialogMessage": {
+    "description": "앱 실행 시 헬스 체크 실패 팝업 설명"
+  },
+  "serverUnavailableDialogExitButton": "앱 종료",
+  "@serverUnavailableDialogExitButton": {
+    "description": "앱 실행 시 헬스 체크 실패 팝업의 앱 종료 버튼"
   }
 }

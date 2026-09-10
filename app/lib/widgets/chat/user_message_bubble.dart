@@ -17,19 +17,21 @@ class UserMessageBubble extends StatelessWidget {
         constraints:
             BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
           decoration: BoxDecoration(
-            color: colors.userBubble,
+            color: colors.graphite,
             borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(18),
-              topRight: Radius.circular(18),
-              bottomRight: Radius.circular(6),
-              bottomLeft: Radius.circular(18),
+              topLeft: Radius.circular(21),
+              topRight: Radius.circular(21),
+              bottomRight: Radius.circular(8),
+              bottomLeft: Radius.circular(21),
             ),
           ),
           child: Text(
             text,
-            style: AppTextStyles.body(color: colors.ink, height: 1.6),
+            style:
+                AppTextStyles.body(color: colors.ink, height: 1.5, fontSize: 14)
+                    .copyWith(fontWeight: FontWeight.w500),
           ),
         ),
       ),

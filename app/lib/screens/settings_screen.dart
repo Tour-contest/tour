@@ -10,14 +10,15 @@ import 'package:nullnull/app_router.dart';
 import 'package:nullnull/data/connectivity_service.dart';
 import 'package:nullnull/data/demo_user.dart';
 import 'package:nullnull/data/login_preference.dart';
+import 'package:nullnull/data/logout_service.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/main.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_locale_controller.dart';
 import 'package:nullnull/theme/app_text_scale_controller.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
-import 'package:nullnull/widgets/app_header.dart';
 import 'package:nullnull/widgets/app_icon.dart';
+import 'package:nullnull/widgets/confirm_dialog.dart';
 
 /// SNS 로그인 수단의 화면 표시명. 다국어 대응을 위해 [SnsProvider] 자체에는
 /// 문자열을 두지 않고 여기서 [AppLocalizations]로 매핑한다.
@@ -41,7 +42,6 @@ String _fontScaleLabel(AppLocalizations l10n, AppFontScale scale) =>
 /// 문자열을 두지 않고 여기서 매핑한다.
 String _languageOptionLabel(AppLocalizations l10n, AppLocaleOption option) =>
     switch (option) {
-      AppLocaleOption.system => l10n.languageOptionSystem,
       AppLocaleOption.korean => l10n.languageOptionKorean,
       AppLocaleOption.english => l10n.languageOptionEnglish,
     };
@@ -95,7 +95,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (_) => _ConfirmDialog(
+      builder: (_) => ConfirmDialog(
         title: l10n.settingsDisconnectDialogTitle,
         message: l10n
             .settingsDisconnectDialogMessage(_providerLabel(l10n, _provider)),
@@ -141,26 +141,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (_) => _ConfirmDialog(
+      builder: (_) => ConfirmDialog(
         title: l10n.settingsLogoutDialogTitle,
         message: l10n.settingsLogoutDialogMessage,
         confirmLabel: l10n.settingsLogout,
       ),
     );
     if (confirmed != true || !context.mounted) return;
-    await _logoutFromProvider();
+    await LogoutService.logout(_provider);
     if (!context.mounted) return;
     context.goNamed(RouteNames.login);
-  }
-
-  Future<void> _logoutFromProvider() async {
-    if (_provider != SnsProvider.kakao) return;
-    try {
-      await UserApi.instance.logout();
-      AppLog.logger.i('카카오 로그아웃 성공');
-    } catch (error) {
-      AppLog.logger.e('카카오 로그아웃 실패(기기에 저장된 토큰은 삭제됨)', error: error);
-    }
   }
 
   @override
@@ -172,15 +162,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            AppHeader(
-              title: l10n.commonSettings,
-              leading: IconButton(
-                icon: AppIcon(AppIconShape.chevronLeft,
-                    size: 18, color: colors.ink),
-                onPressed: () => context.pop(),
-                tooltip: l10n.commonBack,
-              ),
-            ),
+            _SettingsAppBar(title: l10n.commonSettings),
             Expanded(
               child: ListView(
                 padding:
@@ -198,43 +180,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     provider: _provider,
                     onDisconnect: () => _confirmDisconnect(context),
                   ),
-                  const SizedBox(height: 28),
-                  _SectionLabel(l10n.settingsSectionFontSize),
-                  ValueListenableBuilder<AppFontScale>(
-                    valueListenable: appTextScaleController,
-                    builder: (context, scale, _) {
-                      return Column(
-                        children: [
-                          for (final option in AppFontScale.values)
-                            _RadioRow(
-                              label: _fontScaleLabel(l10n, option),
-                              selected: scale == option,
-                              onTap: () =>
-                                  appTextScaleController.setScale(option),
-                              isFirst: option == AppFontScale.values.first,
-                            ),
-                        ],
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 28),
-                  _SectionLabel(l10n.settingsSectionLanguage),
-                  ValueListenableBuilder<AppLocaleOption>(
-                    valueListenable: appLocaleController,
-                    builder: (context, option, _) {
-                      return Column(
-                        children: [
-                          for (final value in AppLocaleOption.values)
-                            _RadioRow(
-                              label: _languageOptionLabel(l10n, value),
-                              selected: option == value,
-                              onTap: () => appLocaleController.setOption(value),
-                              isFirst: value == AppLocaleOption.values.first,
-                            ),
-                        ],
-                      );
-                    },
-                  ),
+                  // const SizedBox(height: 28),
+                  // _SectionLabel(l10n.settingsSectionFontSize),
+                  // ValueListenableBuilder<AppFontScale>(
+                  //   valueListenable: appTextScaleController,
+                  //   builder: (context, scale, _) {
+                  //     return Column(
+                  //       children: [
+                  //         for (final option in AppFontScale.values)
+                  //           _RadioRow(
+                  //             label: _fontScaleLabel(l10n, option),
+                  //             selected: scale == option,
+                  //             onTap: () =>
+                  //                 appTextScaleController.setScale(option),
+                  //             isFirst: option == AppFontScale.values.first,
+                  //           ),
+                  //       ],
+                  //     );
+                  //   },
+                  // ),
+                  // const SizedBox(height: 28),
+                  // _SectionLabel(l10n.settingsSectionLanguage),
+                  // ValueListenableBuilder<AppLocaleOption>(
+                  //   valueListenable: appLocaleController,
+                  //   builder: (context, option, _) {
+                  //     return Column(
+                  //       children: [
+                  //         for (final value in AppLocaleOption.values)
+                  //           _RadioRow(
+                  //             label: _languageOptionLabel(l10n, value),
+                  //             selected: option == value,
+                  //             onTap: () => appLocaleController.setOption(value),
+                  //             isFirst: value == AppLocaleOption.values.first,
+                  //           ),
+                  //       ],
+                  //     );
+                  //   },
+                  // ),
                   const SizedBox(height: 28),
                   _SectionLabel(l10n.settingsSectionInfo),
                   _SettingsRow(
@@ -260,6 +242,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ],
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 설정 화면 전용 상단 바. 채팅/장소 상세 등에서 공용으로 쓰는 [AppHeader](배경
+/// 슬롯 이미지 장식 포함)를 쓰지 않고, 뒤로가기 버튼과 타이틀만 남긴 단순한 형태.
+class _SettingsAppBar extends StatelessWidget {
+  const _SettingsAppBar({required this.title});
+
+  final String title;
+
+  static const double _backButtonSize = 48;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    return SizedBox(
+      height: 52,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: Row(
+          children: [
+            IconButton(
+              icon: AppIcon(AppIconShape.chevronLeft,
+                  size: 18, color: colors.ink),
+              onPressed: () => context.pop(),
+              tooltip: l10n.commonBack,
+            ),
+            Expanded(
+              child: Center(
+                child: Text(title,
+                    style: AppTextStyles.heading(color: colors.ink)),
+              ),
+            ),
+            const SizedBox(width: _backButtonSize),
           ],
         ),
       ),
@@ -467,106 +488,6 @@ class _ConnectedAccountRow extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// 2버튼(취소 / 확인) 확인 팝업. "연결 끊기"·"로그아웃"처럼 제목·설명·확인
-/// 버튼 문구만 다른 확인 다이얼로그에서 공용으로 사용한다.
-class _ConfirmDialog extends StatelessWidget {
-  const _ConfirmDialog({
-    required this.title,
-    required this.message,
-    required this.confirmLabel,
-  });
-
-  final String title;
-  final String message;
-  final String confirmLabel;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return Dialog(
-      backgroundColor: colors.paper,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: AppTextStyles.heading(fontSize: 17, color: colors.ink),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: AppTextStyles.body(
-                  fontSize: 12.5, color: colors.ink700, height: 1.5),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: _DialogButton(
-                    label: AppLocalizations.of(context)!.commonCancel,
-                    filled: false,
-                    onTap: () => Navigator.of(context).pop(false),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _DialogButton(
-                    label: confirmLabel,
-                    filled: true,
-                    onTap: () => Navigator.of(context).pop(true),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _DialogButton extends StatelessWidget {
-  const _DialogButton({
-    required this.label,
-    required this.filled,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool filled;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return SizedBox(
-      height: 44,
-      child: OutlinedButton(
-        onPressed: onTap,
-        style: OutlinedButton.styleFrom(
-          backgroundColor: filled ? colors.accent : null,
-          side: BorderSide(color: colors.accent),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-          overlayColor: colors.accentTint08,
-        ),
-        child: Text(
-          label,
-          style: AppTextStyles.body(
-            fontSize: 13.5,
-            color: filled ? colors.paper : colors.accentBright,
-            letterSpacing: .3,
-          ),
-        ),
       ),
     );
   }

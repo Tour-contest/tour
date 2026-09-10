@@ -18,9 +18,9 @@ class CardContainer extends StatelessWidget {
     return Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: colors.card,
-        border: Border.all(color: colors.cardBorder),
-        borderRadius: BorderRadius.circular(15),
+        color: colors.graphite,
+        border: Border.all(color: colors.inputBarBorder, width: 1.5),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: child,
     );

@@ -194,21 +194,26 @@ void main() {
             ),
           ),
         ),
-        drawer: AppDrawer(onNewChat: () {}),
+        drawer: Builder(
+          builder: (context) => AppDrawer(
+            onNewChat: () {},
+            onClose: () => Navigator.of(context).pop(),
+          ),
+        ),
       ),
     ));
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
-    expect(find.text('널널'), findsOneWidget);
+    expect(find.text('최근'), findsOneWidget);
   });
 
   testWidgets('LoginScreen(S1)은 오버플로우 없이 렌더링된다', (tester) async {
     await tester.pumpWidget(_screenHarness(const LoginScreen()));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
-    expect(find.text('카카오 로그인'), findsOneWidget);
-    expect(find.text('네이버 로그인'), findsOneWidget);
+    expect(find.text('카카오로 계속하기'), findsOneWidget);
+    expect(find.text('네이버로 계속하기'), findsOneWidget);
   });
 
   testWidgets('ChatScreen 빈 상태(S2)는 오버플로우 없이 렌더링된다', (tester) async {

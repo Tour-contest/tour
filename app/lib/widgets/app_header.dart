@@ -11,6 +11,10 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
     this.subtitle,
     this.leading,
     this.trailing,
+    this.onLeadingTap,
+    this.onTrailingTap,
+    this.leadingTooltip,
+    this.trailingTooltip,
     this.backgroundColor,
   });
 
@@ -18,6 +22,12 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   final String? subtitle;
   final Widget? leading;
   final Widget? trailing;
+
+  final VoidCallback? onLeadingTap;
+  final VoidCallback? onTrailingTap;
+
+  final String? leadingTooltip;
+  final String? trailingTooltip;
 
   /// 화면별로 배경색을 달리해야 할 때만 지정한다(예: 채팅 화면). 지정하지
   /// 않으면 `colors.paper`를 쓴다.
@@ -31,15 +41,14 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
     final colors = AppColors.of(context);
     return Container(
       height: preferredSize.height,
-      padding: const EdgeInsets.symmetric(horizontal: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: backgroundColor ?? colors.paper,
-        border: Border(bottom: BorderSide(color: colors.divider)),
       ),
       child: Row(
         children: [
-          SizedBox(
-              width: 44, height: 44, child: leading ?? const SizedBox.shrink()),
+          _HeaderSlot(
+              onTap: onLeadingTap, tooltip: leadingTooltip, child: leading),
           Expanded(
             child: title == null
                 ? const SizedBox.shrink()
@@ -62,12 +71,40 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                     ],
                   ),
           ),
-          SizedBox(
-              width: 44,
-              height: 44,
-              child: trailing ?? const SizedBox.shrink()),
+          _HeaderSlot(
+              onTap: onTrailingTap, tooltip: trailingTooltip, child: trailing),
         ],
       ),
     );
+  }
+}
+
+class _HeaderSlot extends StatelessWidget {
+  const _HeaderSlot({this.child, this.onTap, this.tooltip});
+
+  final Widget? child;
+  final VoidCallback? onTap;
+  final String? tooltip;
+
+  static const double _tapSize = 44;
+
+  @override
+  Widget build(BuildContext context) {
+    final slot = GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        width: _tapSize,
+        height: _tapSize,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Image.asset('assets/images/slot.png', width: 33, height: 33),
+            if (child != null) child!,
+          ],
+        ),
+      ),
+    );
+    return tooltip == null ? slot : Tooltip(message: tooltip, child: slot);
   }
 }

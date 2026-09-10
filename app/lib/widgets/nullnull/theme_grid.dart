@@ -37,18 +37,20 @@ class ThemeGrid extends StatelessWidget {
     return Column(
       children: [
         Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Expanded(child: _ThemeCard(option: options[0], onTap: onThemeTap)),
-            const SizedBox(width: 12),
-            Expanded(child: _ThemeCard(option: options[1], onTap: onThemeTap)),
+            _ThemeCard(option: options[0], onTap: onThemeTap),
+            const SizedBox(width: 16),
+            _ThemeCard(option: options[1], onTap: onThemeTap),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Expanded(child: _ThemeCard(option: options[2], onTap: onThemeTap)),
-            const SizedBox(width: 12),
-            Expanded(child: _ThemeCard(option: options[3], onTap: onThemeTap)),
+            _ThemeCard(option: options[2], onTap: onThemeTap),
+            const SizedBox(width: 16),
+            _ThemeCard(option: options[3], onTap: onThemeTap),
           ],
         ),
       ],
@@ -65,26 +67,36 @@ class _ThemeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return InkWell(
-      borderRadius: BorderRadius.circular(15),
-      onTap: () => onTap(option.title),
-      child: CardContainer(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              option.title,
-              style: AppTextStyles.heading(fontSize: 15, color: colors.ink),
+    return GestureDetector(
+        onTap: () => onTap(option.title),
+        child: SizedBox(
+          width: 116,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 116),
+            child: CardContainer(
+              padding: EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    option.title,
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.heading(
+                        fontSize: 16,
+                        color: colors.ink,
+                        weight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    option.subtitle,
+                    textAlign: TextAlign.center,
+                    style:
+                        AppTextStyles.body(fontSize: 13, color: colors.ink600),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 6),
-            Text(
-              option.subtitle,
-              style: AppTextStyles.body(
-                  fontSize: 12, color: colors.ink600, height: 1.4),
-            ),
-          ],
-        ),
-      ),
-    );
+          ),
+        ));
   }
 }
