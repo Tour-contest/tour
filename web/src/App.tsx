@@ -1,8 +1,7 @@
+import Login from "@/pages/login";
+
+// TODO: 라우터 붙이면 이 임시 렌더링은 교체
 const App = () => {
-  return (
-    <div className="flex h-[100vh] items-center justify-center">
-      <p>널널</p>
-    </div>
-  )
+  return <Login />
 }
 export default App

@@ -1,12 +1,16 @@
-// TODO: API 연동 명세서의 실제 에러 코드 목록이 확정되면 채운다
+// TODO: 실제 호출하면서 새로 확인되는 코드가 있으면 여기에 추가
 export const ERROR_CODE = {
-  VALIDATION_FAILED: 'VALIDATION_FAILED',
+  LOGIN_FAILED: 'LOGIN_FAILED',
 } as const
 
 export type ErrorCode = (typeof ERROR_CODE)[keyof typeof ERROR_CODE]
 
-// TODO: 백엔드 에러 응답 스키마 확정되면 필드 맞춘다
+// POST /api/v1/auth/login 401 응답 실측 기준
 export type ErrorResponse = {
+  success: false
   code: ErrorCode
   message: string
+  data: null
+  retriable: boolean
+  timestamp: string
 }
