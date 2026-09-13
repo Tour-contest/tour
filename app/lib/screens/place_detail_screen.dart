@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -194,7 +195,8 @@ class PlaceDetailScreen extends StatelessWidget {
   }
 }
 
-/// 장소 상세 이미지 영역. `imageUrl`이 없거나 로딩 전/실패 시에는
+/// 장소 상세 이미지 영역. `CachedNetworkImage`로 내려받아(한 번 받은 이미지는
+/// 캐시돼 재요청하지 않음) 보여주며, `imageUrl`이 없거나 로딩 중/실패 시에는
 /// [SkeletonBox]로 대체된다(현재 데모 데이터는 실제 이미지가 없어 항상 표시됨).
 class _PlaceImage extends StatelessWidget {
   const _PlaceImage({required this.imageUrl});
@@ -217,17 +219,14 @@ class _PlaceImage extends StatelessWidget {
                 child:
                     AppIcon(AppIconShape.image, size: 22, color: colors.ink600),
               )
-            : Image.network(
-                imageUrl!,
+            : CachedNetworkImage(
+                imageUrl: imageUrl!,
                 fit: BoxFit.cover,
-                loadingBuilder: (context, child, progress) {
-                  if (progress == null) return child;
-                  return SkeletonBox(
-                    child: AppIcon(AppIconShape.image,
-                        size: 22, color: colors.ink600),
-                  );
-                },
-                errorBuilder: (context, error, stackTrace) => SkeletonBox(
+                placeholder: (_, __) => SkeletonBox(
+                  child: AppIcon(AppIconShape.image,
+                      size: 22, color: colors.ink600),
+                ),
+                errorWidget: (_, __, ___) => SkeletonBox(
                   child: AppIcon(AppIconShape.image,
                       size: 22, color: colors.ink600),
                 ),

@@ -55,13 +55,23 @@ class ChatResumeData {
 class _AiChatEntry extends _ChatEntry {
   _AiChatEntry(super.id);
 
-  /// [ChatApi.sendMessage]의 SSE 이벤트가 도착하는 대로 실시간으로 자라는
-  /// 블록 목록(`_send`가 매 이벤트마다 `setState`로 채워 넣는다). 비어 있으면
-  /// 아직 첫 이벤트도 못 받은 상태(생각 중 표시).
+  /// 스트림이 완전히 끝난 뒤 한 번에 채워지는 완성된 블록 목록. 비어 있으면
+  /// 아직 응답을 기다리는 중이라는 뜻(생각 중 표시)이고, 채워지는 순간
+  /// `StreamingAiMessage`가 마운트되어 그 안에서 타이핑 연출을 직접 진행한다.
   final List<AiBlock> blocks = [];
 
-  /// 스트림이 끝까지(성공적으로) 도착했는지. `false`인 동안 커서가 깜빡인다.
+  /// 타이핑 연출까지 끝까지 끝났는지(`StreamingAiMessage.onRevealComplete`).
+  /// `false`인 동안 커서가 깜빡인다.
   bool done = false;
+
+  /// 응답을 기다리는 동안 서버가 보낸 최신 진행 상태 라벨
+  /// (`ChatStatusEvent.message`, 예: "질문 이해 중"). 아직 하나도 못 받았으면
+  /// `_ThinkingIndicator`가 기본 문구(`chatThinkingLabel`)를 쓴다.
+  String? statusLabel;
+
+  /// `ChatSourcesEvent`로 받은 출처 목록(각 항목 `{name, note}`). 타이핑
+  /// 연출이 끝난 뒤 `StreamingAiMessage` 하단에 보여준다.
+  final List<Map<String, dynamic>> sources = [];
 }
 
 /// docs/DESIGN.md 화면 2·3: 채팅(빈 상태 / 대화).
@@ -140,12 +150,18 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   /// `docs/API_SPEC.md`의 `POST /api/v1/chat/stream`을 [ChatApi.sendMessage]로
-  /// 호출해 SSE 이벤트를 순서대로 소비한다. 문장을 다 받은 뒤 한 번에 넘기는 대신,
-  /// [ChatDeltaEvent]/[ChatCardEvent]가 올 때마다 [_AiChatEntry.blocks]를 그
-  /// 자리에서 늘려 `setState`하므로 화면에는 실제로 서버가 보낸 텍스트가 도착하는
-  /// 속도 그대로 나타난다(더 이상 다 받고 나서 타이핑을 흉내 내지 않음). 카드가
-  /// 문장보다 먼저 도착할 수 있으므로 도착 순서 그대로 쌓는다. 실패해도 **자동
-  /// 재시도하지 않는다** — 사용자가 다시 입력해야 재요청된다.
+  /// 호출해 SSE 이벤트를 순서대로 소비한다. 다른 생성형 AI 도구들처럼 응답을
+  /// 일정한 리듬으로 보여주기 위해, [ChatDeltaEvent]/[ChatCardEvent]는 도착하는
+  /// 대로 화면에 반영하지 않고 로컬 [buffer]에만 모아둔다 — 화면에는 대신
+  /// [ChatStatusEvent]의 라벨([_AiChatEntry.statusLabel])만 실시간으로
+  /// 갱신해 진행 상황을 보여준다. [ChatSourcesEvent]도 마찬가지로
+  /// [capturedSources]에만 모아둔다. 스트림이 완전히 끝나면(`await for` 정상
+  /// 종료, 즉 `final`/`done`까지 다 옴) 모아둔 블록·출처를 한 번에
+  /// [_AiChatEntry]에 채워 넣는다 — 그 순간 `StreamingAiMessage`가 처음
+  /// 마운트되어 타이핑 연출은 그 위젯이 직접 담당한다(`onRevealComplete`가
+  /// 끝나면 [_AiChatEntry.done]을 켜는 것도 `_buildThread`에서 처리). 카드가
+  /// 문장보다 먼저 도착할 수 있으므로 buffer에는 도착 순서 그대로 쌓는다.
+  /// 실패해도 **자동 재시도하지 않는다** — 사용자가 다시 입력해야 재요청된다.
   void _send(String text) async {
     final userEntryId = _nextId++;
     final aiEntryId = _nextId++;
@@ -157,13 +173,15 @@ class _ChatScreenState extends State<ChatScreen>
     unawaited(AnalyticsService.logChatMessageSent());
     _scrollToBottomSoon();
 
+    final buffer = <AiBlock>[];
+    final capturedSources = <Map<String, dynamic>>[];
+
     void appendDelta(String chunk) {
-      final blocks = aiEntry.blocks;
-      final last = blocks.isEmpty ? null : blocks.last;
+      final last = buffer.isEmpty ? null : buffer.last;
       if (last is TextBlock) {
-        blocks[blocks.length - 1] = TextBlock('${last.text}$chunk');
+        buffer[buffer.length - 1] = TextBlock('${last.text}$chunk');
       } else {
-        blocks.add(TextBlock(chunk));
+        buffer.add(TextBlock(chunk));
       }
     }
 
@@ -175,22 +193,20 @@ class _ChatScreenState extends State<ChatScreen>
         switch (event) {
           case ChatMetaEvent(:final sessionId):
             _sessionId = sessionId;
+          case ChatStatusEvent(:final message):
+            if (!mounted) return;
+            setState(() => aiEntry.statusLabel = message);
           case ChatDeltaEvent(text: final chunk):
-            if (!mounted) return;
-            setState(() => appendDelta(chunk));
-            _scrollToBottomSoon();
+            appendDelta(chunk);
           case ChatCardEvent(:final type, :final payload):
-            final block =
-                event.demoBlock ?? ChatCardBlock(type: type, payload: payload);
-            if (!mounted) return;
-            setState(() => aiEntry.blocks.add(block));
-            _scrollToBottomSoon();
+            buffer.add(
+                event.demoBlock ?? ChatCardBlock(type: type, payload: payload));
+          case ChatSourcesEvent(:final sources):
+            capturedSources.addAll(sources);
           case ChatErrorEvent(:final message):
             throw ChatApiException(message);
           case ChatFinalEvent():
-          case ChatStatusEvent():
           case ChatToolEvent():
-          case ChatSourcesEvent():
           case ChatDoneEvent():
           case ChatUnknownEvent():
             break;
@@ -208,7 +224,10 @@ class _ChatScreenState extends State<ChatScreen>
     }
 
     if (!mounted) return;
-    setState(() => aiEntry.done = true);
+    setState(() {
+      aiEntry.blocks.addAll(buffer);
+      aiEntry.sources.addAll(capturedSources);
+    });
     _scrollToBottomSoon();
   }
 
@@ -217,6 +236,7 @@ class _ChatScreenState extends State<ChatScreen>
     if (index == -1 || entry.blocks.isEmpty) return;
     final newEntry = _AiChatEntry(_nextId++)
       ..blocks.addAll(entry.blocks)
+      ..sources.addAll(entry.sources)
       ..done = true;
     setState(() => _entries[index] = newEntry);
   }
@@ -305,7 +325,7 @@ class _ChatScreenState extends State<ChatScreen>
             child: switch (entry) {
               _UserChatEntry(:final text) => UserMessageBubble(text: text),
               _AiChatEntry() when entry.blocks.isEmpty =>
-                const _ThinkingIndicator(),
+                _ThinkingIndicator(label: entry.statusLabel),
               _AiChatEntry() => ConstrainedBox(
                   constraints: BoxConstraints(
                       maxWidth: MediaQuery.of(context).size.width * 0.92),
@@ -316,7 +336,15 @@ class _ChatScreenState extends State<ChatScreen>
                         key: ValueKey('stream-${entry.id}'),
                         blocks: entry.blocks,
                         streaming: !entry.done,
+                        sources: entry.sources,
                         onActionTap: _send,
+                        onRevealProgress: _scrollToBottomSoon,
+                        onRevealComplete: entry.done
+                            ? null
+                            : () {
+                                if (!mounted) return;
+                                setState(() => entry.done = true);
+                              },
                       ),
                       if (entry.done)
                         MessageActionsRow(
@@ -335,10 +363,14 @@ class _ChatScreenState extends State<ChatScreen>
   }
 }
 
-/// [ChatApi.sendMessage] 스트림의 첫 이벤트를 기다리는 동안 보여주는 안내.
+/// [ChatApi.sendMessage] 스트림이 끝나기를 기다리는 동안 보여주는 안내.
 /// `StreamingAiMessage`의 "널널" 라벨 행과 같은 스타일(골드 점 + 라벨)을 쓴다.
+/// [label]이 있으면(`ChatStatusEvent`로 받은 진행 상태) 그걸, 없으면 기본
+/// 문구(`chatThinkingLabel`)를 보여준다.
 class _ThinkingIndicator extends StatefulWidget {
-  const _ThinkingIndicator();
+  const _ThinkingIndicator({this.label});
+
+  final String? label;
 
   @override
   State<_ThinkingIndicator> createState() => _ThinkingIndicatorState();
@@ -382,7 +414,7 @@ class _ThinkingIndicatorState extends State<_ThinkingIndicator> {
         ),
         const SizedBox(width: 6),
         Text(
-          l10n.chatThinkingLabel,
+          widget.label ?? l10n.chatThinkingLabel,
           style: AppTextStyles.body(fontSize: 13, color: colors.ink),
         ),
       ],
@@ -687,10 +719,16 @@ class _EmptyState extends StatefulWidget {
 class _EmptyStateState extends State<_EmptyState> {
   SnsProvider _provider = SnsProvider.kakao;
 
+  // `_ProfileAvatarButtonState`/`settings_screen.dart`의 `_ProfileSummary`와
+  // 동일한 패턴 — 카카오 로그인으로 받아온 실제 닉네임이 있으면 그걸, 없으면
+  // (동의 안 함, 조회 실패 등) `DemoUser` 목업으로 대체한다.
+  UserProfile? _profile;
+
   @override
   void initState() {
     super.initState();
     _loadProvider();
+    _loadProfile();
   }
 
   Future<void> _loadProvider() async {
@@ -699,12 +737,19 @@ class _EmptyStateState extends State<_EmptyState> {
     setState(() => _provider = provider);
   }
 
+  Future<void> _loadProfile() async {
+    final profile = await UserProfileStorage.read();
+    if (!mounted || profile == null) return;
+    setState(() => _profile = profile);
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context)!;
     final languageCode = Localizations.localeOf(context).languageCode;
-    final nickname = DemoUser.nicknameFor(_provider, languageCode);
+    final nickname =
+        _profile?.nickname ?? DemoUser.nicknameFor(_provider, languageCode);
     return Column(
       children: [
         Expanded(
