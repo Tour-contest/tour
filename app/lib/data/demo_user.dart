@@ -10,17 +10,14 @@ class DemoUser {
 
   static const _nicknamesKo = {
     SnsProvider.kakao: '널널한 여행자',
-    SnsProvider.naver: '한적한 나그네',
   };
 
   static const _nicknamesEn = {
     SnsProvider.kakao: 'Easygoing Traveler',
-    SnsProvider.naver: 'Quiet Wanderer',
   };
 
   static const _maskedEmails = {
     SnsProvider.kakao: 'travel****@kakao.com',
-    SnsProvider.naver: 'travel****@naver.com',
   };
 
   static String nicknameFor(SnsProvider provider,

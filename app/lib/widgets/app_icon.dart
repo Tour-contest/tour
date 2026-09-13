@@ -13,7 +13,6 @@ enum AppIconShape {
   chevronLeft,
   settings,
   kakao,
-  naver,
   pin,
   phone,
   image,
@@ -185,15 +184,6 @@ class _AppIconPainter extends CustomPainter {
           ..lineTo(6.6, 20.3)
           ..lineTo(11.3, 16.6);
         canvas.drawPath(tail, strokePaint);
-        break;
-
-      case AppIconShape.naver:
-        final n = Path()
-          ..moveTo(5, 19)
-          ..lineTo(5, 5)
-          ..lineTo(19, 19)
-          ..lineTo(19, 5);
-        canvas.drawPath(n, strokePaint);
         break;
 
       case AppIconShape.pin:

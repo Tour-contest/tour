@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:nullnull/data/analytics_service.dart';
 import 'package:nullnull/data/demo_script.dart';
 import 'package:nullnull/screens/chat_screen.dart';
+import 'package:nullnull/screens/history_screen.dart';
 import 'package:nullnull/screens/login_screen.dart';
 import 'package:nullnull/screens/onboarding_screen.dart';
 import 'package:nullnull/screens/place_detail_screen.dart';
@@ -23,6 +24,7 @@ class RouteNames {
   static const onboarding = 'onboarding';
   static const login = 'login';
   static const chat = 'chat';
+  static const history = 'history';
   static const settings = 'settings';
   static const place = 'place';
 }
@@ -51,6 +53,11 @@ final GoRouter appRouter = GoRouter(
       path: '/${RouteNames.chat}',
       name: RouteNames.chat,
       builder: (context, state) => const ChatScreen(),
+    ),
+    GoRoute(
+      path: '/${RouteNames.history}',
+      name: RouteNames.history,
+      builder: (context, state) => const HistoryScreen(),
     ),
     GoRoute(
       path: '/${RouteNames.settings}',

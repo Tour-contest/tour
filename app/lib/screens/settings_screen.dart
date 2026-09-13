@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 
 import 'package:nullnull/app_info.dart';
 import 'package:nullnull/app_log.dart';
 import 'package:nullnull/app_router.dart';
+import 'package:nullnull/data/auth_service.dart';
 import 'package:nullnull/data/connectivity_service.dart';
 import 'package:nullnull/data/demo_user.dart';
 import 'package:nullnull/data/login_preference.dart';
 import 'package:nullnull/data/logout_service.dart';
+import 'package:nullnull/data/user_profile_storage.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/main.dart';
 import 'package:nullnull/theme/app_colors.dart';
@@ -19,14 +20,29 @@ import 'package:nullnull/theme/app_text_scale_controller.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
 import 'package:nullnull/widgets/app_icon.dart';
 import 'package:nullnull/widgets/confirm_dialog.dart';
+import 'package:nullnull/widgets/nullnull/plain_header.dart';
+import 'package:nullnull/widgets/nullnull/profile_avatar.dart';
 
 /// SNS 로그인 수단의 화면 표시명. 다국어 대응을 위해 [SnsProvider] 자체에는
 /// 문자열을 두지 않고 여기서 [AppLocalizations]로 매핑한다.
 String _providerLabel(AppLocalizations l10n, SnsProvider provider) =>
     switch (provider) {
       SnsProvider.kakao => l10n.snsProviderKakao,
-      SnsProvider.naver => l10n.snsProviderNaver,
     };
+
+/// 실제 이메일(카카오 로그인으로 받아온 값)을 그대로 노출하지 않도록 `@` 바로
+/// 앞 최대 3글자를 `*`로 가린다(예: `hie2gw@gmail.com` → `hie***@gmail.com`).
+/// 로컬 파트가 3글자 이하면 전부 가린다. `DemoUser`의 목업 이메일은 이미 자체
+/// 마스킹 포맷(`travel****@kakao.com`)이라 이 함수를 거치지 않는다.
+String _maskEmail(String email) {
+  final atIndex = email.indexOf('@');
+  if (atIndex <= 0) return email;
+  final local = email.substring(0, atIndex);
+  final domain = email.substring(atIndex);
+  final maskLength = local.length <= 3 ? local.length : 3;
+  final visible = local.substring(0, local.length - maskLength);
+  return '$visible${'*' * maskLength}$domain';
+}
 
 /// 글자 크기 단계의 화면 표시명. [AppFontScale] 자체에는 다국어 대응을 위해
 /// 문자열을 두지 않고 여기서 매핑한다.
@@ -59,16 +75,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // 카카오로 로그인했다고 가정한다.
   SnsProvider _provider = SnsProvider.kakao;
 
+  // 카카오 로그인 성공 시 받아와 저장해둔 실제 닉네임/프로필 사진(`login_screen.dart`
+  // `_saveKakaoProfile`). 없으면(동의 안 함, 조회 실패 등) `_ProfileSummary`가
+  // `DemoUser` 목업으로 대체한다.
+  UserProfile? _profile;
+
+  /// 로그아웃 요청(`LogoutService.logout`) 진행 중에는 화면 터치를 막고
+  /// 로딩 인디케이터를 보여준다(`login_screen.dart`의 `_isLoggingIn`과 동일한
+  /// `PopScope` + `Stack`/`ColoredBox` 오버레이 패턴).
+  bool _isLoggingOut = false;
+
   @override
   void initState() {
     super.initState();
     _loadProvider();
+    _loadProfile();
   }
 
   Future<void> _loadProvider() async {
     final provider = await LoginPreference.readLastProvider();
     if (!mounted || provider == null) return;
     setState(() => _provider = provider);
+  }
+
+  Future<void> _loadProfile() async {
+    final profile = await UserProfileStorage.read();
+    if (!mounted || profile == null) return;
+    setState(() => _profile = profile);
   }
 
   Future<void> _contactByEmail(BuildContext context) async {
@@ -104,27 +137,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
     if (confirmed != true || !context.mounted) return;
 
-    if (_provider != SnsProvider.kakao) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content:
-                Text(AppLocalizations.of(context)!.settingsDisconnectSnackbar)),
-      );
-      return;
-    }
-
     final disconnected = await _disconnectKakao(context);
     if (!disconnected || !context.mounted) return;
     context.goNamed(RouteNames.login);
   }
 
+  /// `DELETE /api/v1/me`(`AuthService.withdraw()`)로 회원 탈퇴를 요청한다.
+  /// `docs/API_SPEC.md`에 이 엔드포인트가 카카오 연결 해제까지 함께 처리한다고
+  /// 명시돼 있어, 클라이언트에서 별도로 `UserApi.instance.unlink()`를 부르지
+  /// 않는다. 성공하면 로컬 프로필도 함께 지운다.
   Future<bool> _disconnectKakao(BuildContext context) async {
     try {
-      await UserApi.instance.unlink();
-      AppLog.logger.i('카카오 연결 끊기 성공');
+      await AuthService.withdraw();
+      await UserProfileStorage.clear();
+      AppLog.logger.i('연결 끊기(회원 탈퇴) 성공');
       return true;
     } catch (error) {
-      AppLog.logger.e('카카오 연결 끊기 실패', error: error);
+      AppLog.logger.e('연결 끊기 실패', error: error);
       if (!context.mounted) return false;
       if (!await ConnectivityService().isOnline()) return false;
       if (!context.mounted) return false;
@@ -148,6 +177,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
     if (confirmed != true || !context.mounted) return;
+    setState(() => _isLoggingOut = true);
     await LogoutService.logout(_provider);
     if (!context.mounted) return;
     context.goNamed(RouteNames.login);
@@ -157,131 +187,110 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context)!;
-    return Scaffold(
-      backgroundColor: colors.paper,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _SettingsAppBar(title: l10n.commonSettings),
-            Expanded(
-              child: ListView(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+    return PopScope(
+      canPop: !_isLoggingOut,
+      child: Scaffold(
+        backgroundColor: colors.paper,
+        body: SafeArea(
+          child: Stack(
+            children: [
+              Column(
                 children: [
-                  _SectionLabel(l10n.settingsSectionMyInfo),
-                  _ProfileSummary(provider: _provider),
-                  const SizedBox(height: 8),
-                  _SettingsRow(
-                    label: l10n.settingsEmailLabel,
-                    trailingText: DemoUser.maskedEmailFor(_provider),
-                    isFirst: true,
+                  PlainHeader(title: l10n.commonSettings),
+                  Expanded(
+                    child: ListView(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 24),
+                      children: [
+                        _SectionLabel(l10n.settingsSectionMyInfo),
+                        _ProfileSummary(
+                          provider: _provider,
+                          nickname: _profile?.nickname,
+                          profileImageUrl: _profile?.profileImageUrl,
+                        ),
+                        const SizedBox(height: 8),
+                        _SettingsRow(
+                          label: l10n.settingsEmailLabel,
+                          trailingText: _profile?.email != null
+                              ? _maskEmail(_profile!.email!)
+                              : DemoUser.maskedEmailFor(_provider),
+                          isFirst: true,
+                        ),
+                        _ConnectedAccountRow(
+                          provider: _provider,
+                          onDisconnect: () => _confirmDisconnect(context),
+                        ),
+                        // const SizedBox(height: 28),
+                        // _SectionLabel(l10n.settingsSectionFontSize),
+                        // ValueListenableBuilder<AppFontScale>(
+                        //   valueListenable: appTextScaleController,
+                        //   builder: (context, scale, _) {
+                        //     return Column(
+                        //       children: [
+                        //         for (final option in AppFontScale.values)
+                        //           _RadioRow(
+                        //             label: _fontScaleLabel(l10n, option),
+                        //             selected: scale == option,
+                        //             onTap: () =>
+                        //                 appTextScaleController.setScale(option),
+                        //             isFirst: option == AppFontScale.values.first,
+                        //           ),
+                        //       ],
+                        //     );
+                        //   },
+                        // ),
+                        // const SizedBox(height: 28),
+                        // _SectionLabel(l10n.settingsSectionLanguage),
+                        // ValueListenableBuilder<AppLocaleOption>(
+                        //   valueListenable: appLocaleController,
+                        //   builder: (context, option, _) {
+                        //     return Column(
+                        //       children: [
+                        //         for (final value in AppLocaleOption.values)
+                        //           _RadioRow(
+                        //             label: _languageOptionLabel(l10n, value),
+                        //             selected: option == value,
+                        //             onTap: () => appLocaleController.setOption(value),
+                        //             isFirst: value == AppLocaleOption.values.first,
+                        //           ),
+                        //       ],
+                        //     );
+                        //   },
+                        // ),
+                        const SizedBox(height: 28),
+                        _SectionLabel(l10n.settingsSectionInfo),
+                        _SettingsRow(
+                          label: l10n.settingsAppVersion,
+                          trailingText:
+                              '${AppInfo.package.version} (${AppInfo.package.buildNumber})',
+                          isFirst: true,
+                        ),
+                        _SettingsRow(
+                          label: l10n.settingsContact,
+                          trailingText: AppInfo.developerEmail,
+                          onTap: () => _contactByEmail(context),
+                        ),
+                        const SizedBox(height: 28),
+                        _SectionLabel(l10n.settingsSectionOpenSource),
+                        _SettingsRow(
+                          label: l10n.settingsOpenSourceLicense,
+                          onTap: () => _openLicenses(context),
+                          isFirst: true,
+                        ),
+                        const SizedBox(height: 28),
+                        _LogoutButton(onTap: () => _confirmLogout(context)),
+                      ],
+                    ),
                   ),
-                  _ConnectedAccountRow(
-                    provider: _provider,
-                    onDisconnect: () => _confirmDisconnect(context),
-                  ),
-                  // const SizedBox(height: 28),
-                  // _SectionLabel(l10n.settingsSectionFontSize),
-                  // ValueListenableBuilder<AppFontScale>(
-                  //   valueListenable: appTextScaleController,
-                  //   builder: (context, scale, _) {
-                  //     return Column(
-                  //       children: [
-                  //         for (final option in AppFontScale.values)
-                  //           _RadioRow(
-                  //             label: _fontScaleLabel(l10n, option),
-                  //             selected: scale == option,
-                  //             onTap: () =>
-                  //                 appTextScaleController.setScale(option),
-                  //             isFirst: option == AppFontScale.values.first,
-                  //           ),
-                  //       ],
-                  //     );
-                  //   },
-                  // ),
-                  // const SizedBox(height: 28),
-                  // _SectionLabel(l10n.settingsSectionLanguage),
-                  // ValueListenableBuilder<AppLocaleOption>(
-                  //   valueListenable: appLocaleController,
-                  //   builder: (context, option, _) {
-                  //     return Column(
-                  //       children: [
-                  //         for (final value in AppLocaleOption.values)
-                  //           _RadioRow(
-                  //             label: _languageOptionLabel(l10n, value),
-                  //             selected: option == value,
-                  //             onTap: () => appLocaleController.setOption(value),
-                  //             isFirst: value == AppLocaleOption.values.first,
-                  //           ),
-                  //       ],
-                  //     );
-                  //   },
-                  // ),
-                  const SizedBox(height: 28),
-                  _SectionLabel(l10n.settingsSectionInfo),
-                  _SettingsRow(
-                    label: l10n.settingsAppVersion,
-                    trailingText:
-                        '${AppInfo.package.version} (${AppInfo.package.buildNumber})',
-                    isFirst: true,
-                  ),
-                  _SettingsRow(
-                    label: l10n.settingsContact,
-                    trailingText: AppInfo.developerEmail,
-                    onTap: () => _contactByEmail(context),
-                  ),
-                  const SizedBox(height: 28),
-                  _SectionLabel(l10n.settingsSectionOpenSource),
-                  _SettingsRow(
-                    label: l10n.settingsOpenSourceLicense,
-                    onTap: () => _openLicenses(context),
-                    isFirst: true,
-                  ),
-                  const SizedBox(height: 28),
-                  _LogoutButton(onTap: () => _confirmLogout(context)),
                 ],
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// 설정 화면 전용 상단 바. 채팅/장소 상세 등에서 공용으로 쓰는 [AppHeader](배경
-/// 슬롯 이미지 장식 포함)를 쓰지 않고, 뒤로가기 버튼과 타이틀만 남긴 단순한 형태.
-class _SettingsAppBar extends StatelessWidget {
-  const _SettingsAppBar({required this.title});
-
-  final String title;
-
-  static const double _backButtonSize = 48;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    final l10n = AppLocalizations.of(context)!;
-    return SizedBox(
-      height: 52,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        child: Row(
-          children: [
-            IconButton(
-              icon: AppIcon(AppIconShape.chevronLeft,
-                  size: 18, color: colors.ink),
-              onPressed: () => context.pop(),
-              tooltip: l10n.commonBack,
-            ),
-            Expanded(
-              child: Center(
-                child: Text(title,
-                    style: AppTextStyles.heading(color: colors.ink)),
-              ),
-            ),
-            const SizedBox(width: _backButtonSize),
-          ],
+              if (_isLoggingOut)
+                ColoredBox(
+                  color: colors.scrim,
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -419,7 +428,14 @@ class _SettingsRow extends StatelessWidget {
 /// `AppIconShape` 대신 `assets/images/` SVG를 사용).
 String _snsAssetFor(SnsProvider provider) => switch (provider) {
       SnsProvider.kakao => 'assets/images/icon_kakao_login.svg',
-      SnsProvider.naver => 'assets/images/icon_naver_login.svg',
+    };
+
+/// "연결된 계정" 표시에 쓰는 작은 SNS 아이콘 색. `login_screen.dart`의 로그인
+/// 버튼과 같은 브랜드 컬러(`AppColors`의 `kakaoContainer`(카카오 노란색))를
+/// 그대로 쓴다 — 이전에는 앱 공통 `colors.accent`(골드)였다.
+Color _snsIconColor(AppColors colors, SnsProvider provider) =>
+    switch (provider) {
+      SnsProvider.kakao => colors.kakaoContainer,
     };
 
 class _SnsIcon extends StatelessWidget {
@@ -464,7 +480,10 @@ class _ConnectedAccountRow extends StatelessWidget {
             child: Text(l10n.settingsConnectedAccount,
                 style: AppTextStyles.body(fontSize: 14, color: colors.ink)),
           ),
-          _SnsIcon(provider: provider, size: 14, color: colors.accent),
+          _SnsIcon(
+              provider: provider,
+              size: 14,
+              color: _snsIconColor(colors, provider)),
           const SizedBox(width: 6),
           Text(
             l10n.settingsAccountSuffix(_providerLabel(l10n, provider)),
@@ -521,46 +540,51 @@ class _LogoutButton extends StatelessWidget {
 }
 
 class _ProfileSummary extends StatelessWidget {
-  const _ProfileSummary({required this.provider});
+  const _ProfileSummary({
+    required this.provider,
+    this.nickname,
+    this.profileImageUrl,
+  });
 
   final SnsProvider provider;
+
+  /// 로그인 시 받아온 실제 닉네임/프로필 사진. `null`이면 `DemoUser` 목업으로
+  /// 대체한다(카카오 동의 안 함, 조회 실패 등).
+  final String? nickname;
+  final String? profileImageUrl;
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final nickname = DemoUser.nicknameFor(
-        provider, Localizations.localeOf(context).languageCode);
+    final displayName = nickname ??
+        DemoUser.nicknameFor(
+            provider, Localizations.localeOf(context).languageCode);
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         children: [
-          Container(
-            width: 46,
-            height: 46,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: colors.accent),
-            ),
-            child: Text(
-              nickname.substring(0, 1),
-              style: AppTextStyles.heading(color: colors.accentBright),
-            ),
+          ProfileAvatar(
+            size: 46,
+            imageUrl: profileImageUrl,
+            initial: displayName.substring(0, 1),
+            borderColor: colors.accent,
           ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(nickname,
+                Text(displayName,
                     style:
                         AppTextStyles.heading(fontSize: 17, color: colors.ink)),
                 const SizedBox(height: 4),
                 Row(
                   children: [
                     _SnsIcon(
-                        provider: provider, size: 12, color: colors.accent),
+                        provider: provider,
+                        size: 12,
+                        color: _snsIconColor(colors, provider)),
                     const SizedBox(width: 5),
                     Text(
                       l10n.settingsLoggedInWith(_providerLabel(l10n, provider)),

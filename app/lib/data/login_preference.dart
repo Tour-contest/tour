@@ -1,10 +1,10 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 로그인 화면에서 지원하는 SNS 로그인/회원가입 수단.
-enum SnsProvider { kakao, naver }
+enum SnsProvider { kakao }
 
 /// 로그인 화면의 "최근 로그인" 뱃지 표시를 위해 마지막으로 사용한 SNS 로그인
-/// 수단을 기기에 저장한다. 프로토타입 단계로 실제 SNS 인증 연동은 없다.
+/// 수단을 기기에 저장한다.
 class LoginPreference {
   LoginPreference._();
 

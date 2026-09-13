@@ -9,17 +9,17 @@ import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'package:nullnull/app_log.dart';
 import 'package:nullnull/app_router.dart';
 import 'package:nullnull/data/analytics_service.dart';
+import 'package:nullnull/data/auth_service.dart';
 import 'package:nullnull/data/connectivity_service.dart';
 import 'package:nullnull/data/login_preference.dart';
+import 'package:nullnull/data/user_profile_storage.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
 import 'package:nullnull/widgets/nullnull/mascot.dart';
 
 /// 온보딩 다음에 노출되는 로그인 화면. SNS 로그인만으로 로그인/회원가입을 함께
-/// 처리한다. 카카오는 `kakao_flutter_sdk_user`로 실제 로그인을 수행하고,
-/// 네이버는 아직 SDK 연동 전 단계라 탭 시 채팅 화면으로 바로 이동한다(canned
-/// 프로토타입, `docs/TODO.md` "6. 계정" 참고).
+/// 처리한다. 카카오는 `kakao_flutter_sdk_user`로 실제 로그인을 수행한다.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -52,10 +52,6 @@ class _LoginScreenState extends State<LoginScreen> {
     context.goNamed(RouteNames.chat);
   }
 
-  /// 네이버는 아직 실제 SDK 연동 전이라 로그인 처리 없이 바로 다음 화면으로
-  /// 이동하는 mock 동작을 유지한다.
-  Future<void> _loginWithMock(SnsProvider provider) => _completeLogin(provider);
-
   Future<void> _loginWithKakao() async {
     setState(() => _isLoggingIn = true);
     try {
@@ -63,8 +59,9 @@ class _LoginScreenState extends State<LoginScreen> {
       final OAuthToken token = installed
           ? await UserApi.instance.loginWithKakaoTalk()
           : await UserApi.instance.loginWithKakaoAccount();
-      AppLog.logger.i(' 성공: ${token.accessToken}');
-      await _logKakaoProfile();
+      AppLog.logger.i('카카오 로그인 성공, 백엔드 토큰 교환 시작');
+      await AuthService.loginWithKakao(token.accessToken);
+      await _saveKakaoProfile();
       await _completeLogin(SnsProvider.kakao);
     } catch (error) {
       if (error is PlatformException && error.code == 'CANCELED') return;
@@ -83,23 +80,42 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  /// 동의항목에 따라 실제로 어떤 사용자 정보를 받아오는지 확인하기 위한 임시 로깅.
-  /// `User.toString()`이 동의받은 필드만 JSON으로 덤프해준다. 화면에 반영하는 곳은
-  /// 아직 없고(`docs/TODO.md` 참고), 로그인 자체는 성공했으므로 여기서 실패해도
-  /// 무시하고 로그인 플로우는 계속 진행한다.
-  Future<void> _logKakaoProfile() async {
+  /// 카카오 `me()`로 닉네임/프로필 사진 URL/이메일을 받아와 [UserProfileStorage]에
+  /// 저장한다(`settings_screen.dart`의 "내 정보"가 이 값을 읽어 보여준다).
+  /// 닉네임/프로필 사진은 `kakaoAccount.profile`, 이메일은 `kakaoAccount.email`에
+  /// 있다. 동의하지 않은 항목은 `null`로 오며, 그 경우 저장하는 쪽에서 걸러내
+  /// 읽는 쪽이 `DemoUser` 목업으로 대체하게 둔다. 로그인 자체는 이미
+  /// 성공했으므로 이 조회가 실패해도 무시하고 로그인 플로우는 계속 진행한다.
+  Future<void> _saveKakaoProfile() async {
     try {
       final user = await UserApi.instance.me();
       AppLog.logger.i('카카오 me() 응답: $user');
+      final account = user.kakaoAccount;
+      await UserProfileStorage.save(
+        nickname: account?.profile?.nickname,
+        profileImageUrl: account?.profile?.profileImageUrl,
+        email: account?.email,
+      );
     } catch (error) {
       AppLog.logger.e('카카오 me() 조회 실패', error: error);
     }
   }
 
+  /// 하단 카드 안쪽 여백에 쓸 최소 바닥 여백. iOS는 홈 인디케이터 때문에
+  /// `MediaQuery.paddingOf(context).bottom`이 항상 0보다 크지만, 안드로이드는
+  /// 제스처 내비게이션이어도 이 값이 실기기/에뮬레이터에서 0으로 오는 경우가
+  /// 있어(라이브로 확인함 — 버튼이 화면 맨 아래에 여백 없이 붙어 보임)
+  /// 시스템 인셋과 별개로 최소 여백을 보장한다.
+  static const double _minBottomCardPadding = 24;
+
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context)!;
+    final systemBottomPadding = MediaQuery.paddingOf(context).bottom;
+    final bottomCardPadding = systemBottomPadding > _minBottomCardPadding
+        ? systemBottomPadding
+        : _minBottomCardPadding;
     return PopScope(
       canPop: !_isLoggingIn,
       child: Scaffold(
@@ -189,7 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       20,
                       37,
                       20,
-                      MediaQuery.paddingOf(context).bottom,
+                      bottomCardPadding,
                     ),
                     decoration: BoxDecoration(
                       borderRadius: const BorderRadius.only(
@@ -248,21 +264,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           onTap: _isLoggingIn ? null : _loginWithKakao,
                           backgroundColor: colors.kakaoContainer,
                           labelColor: colors.kakaoLabel,
-                        ),
-                        const SizedBox(height: 16),
-                        _SnsLoginButton(
-                          icon: SvgPicture.asset(
-                            'assets/images/icon_naver_login.svg',
-                            colorFilter: ColorFilter.mode(
-                                colors.naverForeground, BlendMode.srcIn),
-                          ),
-                          label: l10n.loginNaverButton,
-                          showRecentBadge: _lastProvider == SnsProvider.naver,
-                          onTap: _isLoggingIn
-                              ? null
-                              : () => _loginWithMock(SnsProvider.naver),
-                          backgroundColor: colors.naverContainer,
-                          labelColor: colors.naverForeground,
                         ),
                       ],
                     ),

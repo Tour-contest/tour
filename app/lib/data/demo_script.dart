@@ -132,6 +132,16 @@ class NoDataBlock extends AiBlock {
   final List<String> actions;
 }
 
+/// 실제 백엔드 `ChatCardEvent`(`docs/API_SPEC.md`의 `card` 이벤트)를 그대로 담아두는
+/// 블록. 카드 종류마다 스키마가 달라 파싱은 렌더링 시점(`widgets/nullnull/chat_card_view.dart`)에
+/// `type`을 보고 한다 — 위의 `ForecastBlock` 등은 `MockChatApi`의 캔드 데이터 전용이고,
+/// 이 블록이 실 서버 카드용이다.
+class ChatCardBlock extends AiBlock {
+  const ChatCardBlock({required this.type, required this.payload});
+  final String type;
+  final Map<String, dynamic> payload;
+}
+
 class AiTurn {
   const AiTurn(this.blocks);
   final List<AiBlock> blocks;

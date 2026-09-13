@@ -40,10 +40,6 @@
   "@loginKakaoButton": {
     "description": "카카오 SNS 로그인 버튼 레이블"
   },
-  "loginNaverButton": "네이버로 계속하기",
-  "@loginNaverButton": {
-    "description": "네이버 SNS 로그인 버튼 레이블"
-  },
   "loginInviteCaption": "지금 바로 널널과 함께 확인해 보세요!",
   "@loginInviteCaption": {
     "description": "로그인 화면 하단 초대 카드 캡션"
@@ -72,6 +68,14 @@
         "type": "String"
       }
     }
+  },
+  "chatThinkingLabel": "생각하고 있어요...",
+  "@chatThinkingLabel": {
+    "description": "채팅 화면에서 AI 응답을 기다리는 동안 보여주는 안내 문구"
+  },
+  "chatSendFailedToast": "메시지를 보내지 못했어요. 다시 시도해주세요.",
+  "@chatSendFailedToast": {
+    "description": "채팅 메시지 전송(ChatApi.sendMessage) 실패 시 뜨는 토스트 문구"
   },
   "chatThemeWellnessTitle": "웰니스 여행지",
   "@chatThemeWellnessTitle": {
@@ -230,7 +234,31 @@
   },
   "drawerRecentSection": "최근",
   "@drawerRecentSection": {
-    "description": "드로어의 최근 대화 섹션 라벨"
+    "description": "드로어의 최근 대화 섹션 라벨. 탭하면 지난 대화 화면(HistoryScreen)으로 이동한다"
+  },
+  "historyTitle": "지난 대화",
+  "@historyTitle": {
+    "description": "지난 대화 화면(HistoryScreen) 헤더 타이틀"
+  },
+  "historyEmptyMessage": "아직 지난 대화가 없어요.",
+  "@historyEmptyMessage": {
+    "description": "지난 대화 화면에서 세션 목록이 비어있을 때 안내 문구"
+  },
+  "historyErrorMessage": "지난 대화를 불러오지 못했어요.",
+  "@historyErrorMessage": {
+    "description": "ChatApi.fetchSessions 실패 시 안내 문구"
+  },
+  "historyRetryButton": "다시 시도",
+  "@historyRetryButton": {
+    "description": "지난 대화 목록 조회 실패 시 재시도 버튼"
+  },
+  "historyUntitledSession": "제목 없는 대화",
+  "@historyUntitledSession": {
+    "description": "세션에 title이 없을 때 대신 보여줄 문구"
+  },
+  "historyResumeComingSoon": "대화 이어보기 기능은 준비 중이에요.",
+  "@historyResumeComingSoon": {
+    "description": "지난 대화 항목 탭 시 뜨는 안내 토스트 (ChatApi.fetchMessages 연동 전)"
   },
   "regionCardTitle": "{region} 여행지 추천",
   "@regionCardTitle": {
@@ -249,6 +277,31 @@
   "@regionQuietLabel": {
     "description": "지역 현황 카드의 한적한 관광지 칩 섹션 라벨"
   },
+  "chatCardAttractionListTitle": "{signguNm} {category} 목록",
+  "@chatCardAttractionListTitle": {
+    "description": "실 서버 채팅 카드(attraction_list) 제목",
+    "placeholders": {
+      "signguNm": {
+        "type": "String"
+      },
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "chatCardCrowdTitle": "{signguNm} 혼잡도 현황",
+  "@chatCardCrowdTitle": {
+    "description": "실 서버 채팅 카드(crowd) 제목",
+    "placeholders": {
+      "signguNm": {
+        "type": "String"
+      }
+    }
+  },
+  "chatCardNoDataMessage": "이 카드에 표시할 정보가 없어요.",
+  "@chatCardNoDataMessage": {
+    "description": "채팅 카드의 payload.status가 no_data이거나 has_data가 false일 때 안내 문구"
+  },
   "commonSettings": "설정",
   "@commonSettings": {
     "description": "설정 화면을 가리키는 문구 (아이콘 버튼 툴팁/화면 타이틀 공통)"
@@ -260,10 +313,6 @@
   "snsProviderKakao": "카카오",
   "@snsProviderKakao": {
     "description": "카카오 SNS 로그인 수단의 화면 표시명"
-  },
-  "snsProviderNaver": "네이버",
-  "@snsProviderNaver": {
-    "description": "네이버 SNS 로그인 수단의 화면 표시명"
   },
   "fontScaleSmall": "작게",
   "@fontScaleSmall": {
@@ -351,13 +400,9 @@
       }
     }
   },
-  "settingsDisconnectSnackbar": "계정 연결 끊기는 준비 중이에요.",
-  "@settingsDisconnectSnackbar": {
-    "description": "연결 끊기 확정 후 스낵바 문구. 아직 SDK 연동 전인 네이버 전용(mock 동작), 카카오는 settingsDisconnectError 참고"
-  },
   "settingsDisconnectError": "연결 끊기에 실패했어요. 잠시 후 다시 시도해주세요.",
   "@settingsDisconnectError": {
-    "description": "카카오 연결 끊기(UserApi.instance.unlink()) 실패 시 스낵바 문구"
+    "description": "연결 끊기(AuthService.withdraw()) 실패 시 스낵바 문구"
   },
   "settingsLogoutDialogTitle": "로그아웃",
   "@settingsLogoutDialogTitle": {

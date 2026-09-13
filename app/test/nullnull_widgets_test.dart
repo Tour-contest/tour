@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:nullnull/api/chat_api.dart';
 import 'package:nullnull/data/demo_script.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/screens/chat_screen.dart';
@@ -196,6 +197,7 @@ void main() {
         ),
         drawer: Builder(
           builder: (context) => AppDrawer(
+            chatApi: MockChatApi(),
             onNewChat: () {},
             onClose: () => Navigator.of(context).pop(),
           ),
@@ -213,11 +215,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     expect(find.text('카카오로 계속하기'), findsOneWidget);
-    expect(find.text('네이버로 계속하기'), findsOneWidget);
   });
 
   testWidgets('ChatScreen 빈 상태(S2)는 오버플로우 없이 렌더링된다', (tester) async {
-    await tester.pumpWidget(_screenHarness(const ChatScreen()));
+    await tester.pumpWidget(_screenHarness(ChatScreen(chatApi: MockChatApi())));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });

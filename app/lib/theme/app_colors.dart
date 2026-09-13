@@ -30,8 +30,6 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.busyChart,
     required this.kakaoContainer,
     required this.kakaoSymbol,
-    required this.naverContainer,
-    required this.naverForeground,
     required this.loginHeadlineGradientStart,
     required this.loginHeadlineGradientMid,
     required this.loginHeadlineGradientEnd,
@@ -94,12 +92,6 @@ class AppColors extends ThemeExtension<AppColors> {
 
   /// 카카오 로그인 버튼 심볼 색(#000000). 카카오 브랜드 가이드 준수용 예외.
   final Color kakaoSymbol;
-
-  /// 네이버 로그인 버튼 컨테이너 색(#03A94D). 네이버 브랜드 가이드 준수용 예외 — 다른 곳에서는 사용하지 않는다.
-  final Color naverContainer;
-
-  /// 네이버 로그인 버튼 로고/레이블 색(#FFFFFF). 네이버 브랜드 가이드 준수용 예외.
-  final Color naverForeground;
 
   /// 로그인 화면 그라디언트 헤드라인 상단 색(#A3F1F9, 0%).
   final Color loginHeadlineGradientStart;
@@ -172,8 +164,6 @@ class AppColors extends ThemeExtension<AppColors> {
     busyChart: Color(0xFFC8561D),
     kakaoContainer: Color(0xFFFEE500),
     kakaoSymbol: Color(0xFF000000),
-    naverContainer: Color(0xFF03A94D),
-    naverForeground: Color(0xFFFFFFFF),
     loginHeadlineGradientStart: Color(0xFFA3F1F9),
     loginHeadlineGradientMid: Color(0xFF6FC1FC),
     loginHeadlineGradientEnd: Color(0xFF309AE6),
@@ -215,8 +205,6 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? busyChart,
     Color? kakaoContainer,
     Color? kakaoSymbol,
-    Color? naverContainer,
-    Color? naverForeground,
     Color? loginHeadlineGradientStart,
     Color? loginHeadlineGradientMid,
     Color? loginHeadlineGradientEnd,
@@ -252,8 +240,6 @@ class AppColors extends ThemeExtension<AppColors> {
       busyChart: busyChart ?? this.busyChart,
       kakaoContainer: kakaoContainer ?? this.kakaoContainer,
       kakaoSymbol: kakaoSymbol ?? this.kakaoSymbol,
-      naverContainer: naverContainer ?? this.naverContainer,
-      naverForeground: naverForeground ?? this.naverForeground,
       loginHeadlineGradientStart:
           loginHeadlineGradientStart ?? this.loginHeadlineGradientStart,
       loginHeadlineGradientMid:
@@ -301,8 +287,6 @@ class AppColors extends ThemeExtension<AppColors> {
       busyChart: Color.lerp(busyChart, other.busyChart, t)!,
       kakaoContainer: Color.lerp(kakaoContainer, other.kakaoContainer, t)!,
       kakaoSymbol: Color.lerp(kakaoSymbol, other.kakaoSymbol, t)!,
-      naverContainer: Color.lerp(naverContainer, other.naverContainer, t)!,
-      naverForeground: Color.lerp(naverForeground, other.naverForeground, t)!,
       loginHeadlineGradientStart: Color.lerp(
           loginHeadlineGradientStart, other.loginHeadlineGradientStart, t)!,
       loginHeadlineGradientMid: Color.lerp(

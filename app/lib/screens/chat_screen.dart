@@ -4,18 +4,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:nullnull/api/api_client.dart';
+import 'package:nullnull/api/chat_api.dart';
+import 'package:nullnull/app_log.dart';
 import 'package:nullnull/app_router.dart';
 import 'package:nullnull/data/analytics_service.dart';
 import 'package:nullnull/data/demo_script.dart';
 import 'package:nullnull/data/demo_user.dart';
 import 'package:nullnull/data/login_preference.dart';
 import 'package:nullnull/data/logout_service.dart';
+import 'package:nullnull/data/user_profile_storage.dart';
 import 'package:nullnull/double_back_exit_mixin.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
 import 'package:nullnull/widgets/app_drawer.dart';
 import 'package:nullnull/widgets/app_header.dart';
+import 'package:nullnull/widgets/app_toast.dart';
 import 'package:nullnull/widgets/confirm_dialog.dart';
 import 'package:nullnull/widgets/push_drawer.dart';
 import 'package:nullnull/widgets/chat/chat_input_bar.dart';
@@ -24,6 +29,7 @@ import 'package:nullnull/widgets/chat/streaming_ai_message.dart';
 import 'package:nullnull/widgets/chat/user_message_bubble.dart';
 import 'package:nullnull/widgets/fade_slide_in.dart';
 import 'package:nullnull/widgets/nullnull/mascot.dart';
+import 'package:nullnull/widgets/nullnull/profile_avatar.dart';
 import 'package:nullnull/widgets/nullnull/theme_grid.dart';
 
 sealed class _ChatEntry {
@@ -37,14 +43,24 @@ class _UserChatEntry extends _ChatEntry {
 }
 
 class _AiChatEntry extends _ChatEntry {
-  _AiChatEntry(super.id, this.turn);
-  final AiTurn turn;
-  bool completed = false;
+  _AiChatEntry(super.id);
+
+  /// [ChatApi.sendMessage]의 SSE 이벤트가 도착하는 대로 실시간으로 자라는
+  /// 블록 목록(`_send`가 매 이벤트마다 `setState`로 채워 넣는다). 비어 있으면
+  /// 아직 첫 이벤트도 못 받은 상태(생각 중 표시).
+  final List<AiBlock> blocks = [];
+
+  /// 스트림이 끝까지(성공적으로) 도착했는지. `false`인 동안 커서가 깜빡인다.
+  bool done = false;
 }
 
 /// docs/DESIGN.md 화면 2·3: 채팅(빈 상태 / 대화).
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key});
+  const ChatScreen({super.key, this.chatApi});
+
+  /// 테스트/향후 실 연동 전환을 위한 주입 지점(`history_screen.dart`와 동일한
+  /// 패턴). 기본값은 실 서버(`nullnull.kr`) 연동.
+  final ChatApi? chatApi;
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -56,7 +72,13 @@ class _ChatScreenState extends State<ChatScreen>
   final _inputController = TextEditingController();
   final _scrollController = ScrollController();
   final _drawerKey = GlobalKey<PushDrawerState>();
-  int _scriptIndex = 0;
+  final _appDrawerKey = GlobalKey<AppDrawerState>();
+  // `nullnull.kr`(docs/API_SPEC.md `POST /api/v1/chat/stream`)에 실제로 붙는다.
+  // 로그인 후에는 `ApiClient.create()`가 붙이는 `Authorization` 헤더로 인증까지
+  // 됨을 확인함(로그인 전이거나 토큰 만료 시에는 401, `_send`가 실패 토스트만 띄움).
+  late final ChatApi _chatApi =
+      widget.chatApi ?? LoggingChatApi(DioChatApi(ApiClient.create()));
+  String? _sessionId;
   int _nextId = 0;
 
   @override
@@ -66,30 +88,92 @@ class _ChatScreenState extends State<ChatScreen>
     super.dispose();
   }
 
-  void _send(String text) {
-    final languageCode = Localizations.localeOf(context).languageCode;
+  /// `docs/API_SPEC.md`의 `POST /api/v1/chat/stream`을 [ChatApi.sendMessage]로
+  /// 호출해 SSE 이벤트를 순서대로 소비한다. 문장을 다 받은 뒤 한 번에 넘기는 대신,
+  /// [ChatDeltaEvent]/[ChatCardEvent]가 올 때마다 [_AiChatEntry.blocks]를 그
+  /// 자리에서 늘려 `setState`하므로 화면에는 실제로 서버가 보낸 텍스트가 도착하는
+  /// 속도 그대로 나타난다(더 이상 다 받고 나서 타이핑을 흉내 내지 않음). 카드가
+  /// 문장보다 먼저 도착할 수 있으므로 도착 순서 그대로 쌓는다. 실패해도 **자동
+  /// 재시도하지 않는다** — 사용자가 다시 입력해야 재요청된다.
+  void _send(String text) async {
+    final userEntryId = _nextId++;
+    final aiEntryId = _nextId++;
+    final aiEntry = _AiChatEntry(aiEntryId);
     setState(() {
-      _entries.add(_UserChatEntry(_nextId++, text));
-      _entries.add(_AiChatEntry(
-          _nextId++, DemoScript.turnFor(_scriptIndex, languageCode)));
-      _scriptIndex++;
+      _entries.add(_UserChatEntry(userEntryId, text));
+      _entries.add(aiEntry);
     });
     unawaited(AnalyticsService.logChatMessageSent());
+    _scrollToBottomSoon();
+
+    void appendDelta(String chunk) {
+      final blocks = aiEntry.blocks;
+      final last = blocks.isEmpty ? null : blocks.last;
+      if (last is TextBlock) {
+        blocks[blocks.length - 1] = TextBlock('${last.text}$chunk');
+      } else {
+        blocks.add(TextBlock(chunk));
+      }
+    }
+
+    try {
+      await for (final event in _chatApi.sendMessage(
+        text: text,
+        sessionId: _sessionId,
+      )) {
+        switch (event) {
+          case ChatMetaEvent(:final sessionId):
+            _sessionId = sessionId;
+          case ChatDeltaEvent(text: final chunk):
+            if (!mounted) return;
+            setState(() => appendDelta(chunk));
+            _scrollToBottomSoon();
+          case ChatCardEvent(:final type, :final payload):
+            final block =
+                event.demoBlock ?? ChatCardBlock(type: type, payload: payload);
+            if (!mounted) return;
+            setState(() => aiEntry.blocks.add(block));
+            _scrollToBottomSoon();
+          case ChatErrorEvent(:final message):
+            throw ChatApiException(message);
+          case ChatFinalEvent():
+          case ChatStatusEvent():
+          case ChatToolEvent():
+          case ChatSourcesEvent():
+          case ChatDoneEvent():
+          case ChatUnknownEvent():
+            break;
+        }
+      }
+    } catch (e, stackTrace) {
+      AppLog.logger.e('채팅 메시지 전송 실패', error: e, stackTrace: stackTrace);
+      if (!mounted) return;
+      setState(() => _entries.removeWhere((entry) => entry.id == aiEntryId));
+      AppToast.show(
+        AppLocalizations.of(context)!.chatSendFailedToast,
+        type: AppToastType.info,
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    setState(() => aiEntry.done = true);
     _scrollToBottomSoon();
   }
 
   void _regenerate(_AiChatEntry entry) {
     final index = _entries.indexOf(entry);
-    if (index == -1) return;
-    setState(() {
-      _entries[index] = _AiChatEntry(_nextId++, entry.turn);
-    });
+    if (index == -1 || entry.blocks.isEmpty) return;
+    final newEntry = _AiChatEntry(_nextId++)
+      ..blocks.addAll(entry.blocks)
+      ..done = true;
+    setState(() => _entries[index] = newEntry);
   }
 
   void _newChat() {
     setState(() {
       _entries.clear();
-      _scriptIndex = 0;
+      _sessionId = null;
     });
   }
 
@@ -111,6 +195,8 @@ class _ChatScreenState extends State<ChatScreen>
     return PushDrawer(
       key: _drawerKey,
       drawer: AppDrawer(
+        key: _appDrawerKey,
+        chatApi: _chatApi,
         onNewChat: _newChat,
         onClose: () => _drawerKey.currentState?.close(),
       ),
@@ -133,7 +219,10 @@ class _ChatScreenState extends State<ChatScreen>
                 AppHeader(
                   backgroundColor: colors.loginBackground,
                   leading: SvgPicture.asset('assets/images/icon_menu.svg'),
-                  onLeadingTap: () => _drawerKey.currentState?.open(),
+                  onLeadingTap: () {
+                    _appDrawerKey.currentState?.refresh();
+                    _drawerKey.currentState?.open();
+                  },
                   leadingTooltip: l10n.chatHistoryTooltip,
                   trailing: const Center(child: _ProfileAvatarButton()),
                 ),
@@ -164,6 +253,8 @@ class _ChatScreenState extends State<ChatScreen>
           child: FadeSlideIn(
             child: switch (entry) {
               _UserChatEntry(:final text) => UserMessageBubble(text: text),
+              _AiChatEntry() when entry.blocks.isEmpty =>
+                const _ThinkingIndicator(),
               _AiChatEntry() => ConstrainedBox(
                   constraints: BoxConstraints(
                       maxWidth: MediaQuery.of(context).size.width * 0.92),
@@ -172,17 +263,14 @@ class _ChatScreenState extends State<ChatScreen>
                     children: [
                       StreamingAiMessage(
                         key: ValueKey('stream-${entry.id}'),
-                        turn: entry.turn,
-                        onComplete: () {
-                          if (!mounted) return;
-                          setState(() => entry.completed = true);
-                          _scrollToBottomSoon();
-                        },
+                        blocks: entry.blocks,
+                        streaming: !entry.done,
                         onActionTap: _send,
                       ),
-                      if (entry.completed)
+                      if (entry.done)
                         MessageActionsRow(
-                          textToCopy: StreamingAiMessage.plainText(entry.turn),
+                          textToCopy:
+                              StreamingAiMessage.plainText(entry.blocks),
                           onRegenerate: () => _regenerate(entry),
                         ),
                     ],
@@ -192,6 +280,61 @@ class _ChatScreenState extends State<ChatScreen>
           ),
         );
       },
+    );
+  }
+}
+
+/// [ChatApi.sendMessage] 스트림의 첫 이벤트를 기다리는 동안 보여주는 안내.
+/// `StreamingAiMessage`의 "널널" 라벨 행과 같은 스타일(골드 점 + 라벨)을 쓴다.
+class _ThinkingIndicator extends StatefulWidget {
+  const _ThinkingIndicator();
+
+  @override
+  State<_ThinkingIndicator> createState() => _ThinkingIndicatorState();
+}
+
+class _ThinkingIndicatorState extends State<_ThinkingIndicator> {
+  bool _dotOn = true;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(milliseconds: 500), (_) {
+      if (!mounted) return;
+      setState(() => _dotOn = !_dotOn);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AnimatedOpacity(
+          duration: const Duration(milliseconds: 200),
+          opacity: _dotOn ? 1 : 0.2,
+          child: Container(
+            width: 5,
+            height: 5,
+            decoration:
+                BoxDecoration(color: colors.accent, shape: BoxShape.circle),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          l10n.chatThinkingLabel,
+          style: AppTextStyles.body(fontSize: 13, color: colors.ink),
+        ),
+      ],
     );
   }
 }
@@ -212,18 +355,34 @@ class _ProfileAvatarButtonState extends State<_ProfileAvatarButton> {
   static const double _slotSize = 44;
 
   SnsProvider _provider = SnsProvider.kakao;
+
+  // 카카오 로그인 성공 시 저장해둔 실제 닉네임/프로필 사진(`login_screen.dart`의
+  // `_saveKakaoProfile`). 없으면(네이버 mock 로그인, 동의 안 함 등) 기존처럼
+  // `DemoUser` 목업 닉네임의 첫 글자로 대체한다(`settings_screen.dart`의
+  // `_ProfileSummary`와 동일한 패턴).
+  UserProfile? _profile;
+
   final _menuLink = LayerLink();
   OverlayEntry? _menuEntry;
+
+  /// 로그아웃 요청(`LogoutService.logout`) 진행 중 화면 전체를 덮어 터치를
+  /// 막고 로딩 인디케이터를 보여주는 별도 오버레이(`settings_screen.dart`의
+  /// `_isLoggingOut` + `Stack`/`ColoredBox`와 같은 목적이지만, 이 위젯은 전체
+  /// 화면 `Scaffold`를 갖고 있지 않아 같은 `OverlayEntry` 메커니즘(`_menuEntry`
+  /// 참고)으로 구현한다).
+  OverlayEntry? _loadingEntry;
 
   @override
   void initState() {
     super.initState();
     _loadProvider();
+    _loadProfile();
   }
 
   @override
   void dispose() {
     _closeMenu();
+    _hideLoadingOverlay();
     super.dispose();
   }
 
@@ -231,6 +390,12 @@ class _ProfileAvatarButtonState extends State<_ProfileAvatarButton> {
     final provider = await LoginPreference.readLastProvider();
     if (!mounted || provider == null) return;
     setState(() => _provider = provider);
+  }
+
+  Future<void> _loadProfile() async {
+    final profile = await UserProfileStorage.read();
+    if (!mounted || profile == null) return;
+    setState(() => _profile = profile);
   }
 
   void _toggleMenu() {
@@ -256,6 +421,19 @@ class _ProfileAvatarButtonState extends State<_ProfileAvatarButton> {
     _menuEntry = null;
   }
 
+  void _showLoadingOverlay() {
+    final overlayState = Overlay.of(context);
+    final entry =
+        OverlayEntry(builder: (_) => const _FullScreenLoadingOverlay());
+    _loadingEntry = entry;
+    overlayState.insert(entry);
+  }
+
+  void _hideLoadingOverlay() {
+    _loadingEntry?.remove();
+    _loadingEntry = null;
+  }
+
   void _openSettings() {
     _closeMenu();
     context.pushNamed(RouteNames.settings);
@@ -273,7 +451,9 @@ class _ProfileAvatarButtonState extends State<_ProfileAvatarButton> {
       ),
     );
     if (confirmed != true || !mounted) return;
+    _showLoadingOverlay();
     await LogoutService.logout(_provider);
+    _hideLoadingOverlay();
     if (!mounted) return;
     context.goNamed(RouteNames.login);
   }
@@ -282,7 +462,8 @@ class _ProfileAvatarButtonState extends State<_ProfileAvatarButton> {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final languageCode = Localizations.localeOf(context).languageCode;
-    final nickname = DemoUser.nicknameFor(_provider, languageCode);
+    final nickname =
+        _profile?.nickname ?? DemoUser.nicknameFor(_provider, languageCode);
     return CompositedTransformTarget(
       link: _menuLink,
       child: GestureDetector(
@@ -291,14 +472,33 @@ class _ProfileAvatarButtonState extends State<_ProfileAvatarButton> {
         child: SizedBox(
           width: _slotSize,
           height: _slotSize,
-          child: Center(
-            child: Text(
-              nickname.substring(0, 1),
-              style: AppTextStyles.heading(
-                  fontSize: 18, color: colors.ink, weight: FontWeight.w600),
-            ),
+          child: ProfileAvatar(
+            size: _slotSize,
+            imageUrl: _profile?.profileImageUrl,
+            initial: nickname.substring(0, 1),
+            initialStyle: AppTextStyles.heading(
+                fontSize: 18, color: colors.ink, weight: FontWeight.w600),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// 로그아웃 진행 중 화면 전체를 덮는 로딩 오버레이. `login_screen.dart`의
+/// `_isLoggingIn` 오버레이(`ColoredBox` + `CircularProgressIndicator`)와 같은
+/// 모양이지만, 여기는 `Scaffold` 하나가 아니라 전역 `Overlay`에 직접 얹는
+/// 형태라 `Positioned.fill`로 화면 전체를 채운다.
+class _FullScreenLoadingOverlay extends StatelessWidget {
+  const _FullScreenLoadingOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return Positioned.fill(
+      child: ColoredBox(
+        color: colors.scrim,
+        child: const Center(child: CircularProgressIndicator()),
       ),
     );
   }
