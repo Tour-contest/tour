@@ -133,8 +133,11 @@ class ChatUnknownEvent extends ChatStreamEvent {
   String toString() => 'ChatUnknownEvent(type: $type, raw: $raw)';
 }
 
-/// `GET /api/v1/chat/sessions`의 세션 한 건. 필드명은 명세서에 예시가 없어
-/// `session_id`/`title`/`last_active_at`로 가정했다(확정되면 [fromJson]만 갱신하면 됨).
+/// `GET /api/v1/chat/sessions`의 세션 한 건. **[실서버로 확인함]** 필드명은
+/// 명세서에 예시가 없어 처음엔 `session_id`/`last_active_at`로 가정했으나,
+/// 실제로는 `id`(`session_id` 아님)였다 — 그 전까지는 실제로 세션이 있어도
+/// `fetchSessions`가 항상 빈 목록을 반환하고 있었음(파싱 실패가 조용히
+/// `null ?? []`로 흡수됨). `last_active_at`/`title`은 가정이 맞았다.
 class ChatSessionSummary {
   const ChatSessionSummary({
     required this.sessionId,
@@ -144,7 +147,7 @@ class ChatSessionSummary {
 
   factory ChatSessionSummary.fromJson(Map<String, dynamic> json) {
     return ChatSessionSummary(
-      sessionId: json['session_id'] as String? ?? '',
+      sessionId: json['id'] as String? ?? '',
       title: json['title'] as String?,
       lastActiveAt:
           DateTime.tryParse(json['last_active_at'] as String? ?? '')?.toLocal(),
@@ -162,8 +165,13 @@ class ChatSessionsPage {
   final bool hasMore;
 }
 
-/// `GET /api/v1/chat/sessions/{session_id}/messages`의 메시지 한 건. 필드명은
-/// [ChatSessionSummary]와 마찬가지로 아직 가정 값이다.
+/// `GET /api/v1/chat/sessions/{session_id}/messages`의 메시지 한 건.
+/// **[실서버로 확인함]** `id`/`role`/`created_at`은 가정이 맞았지만, 본문은
+/// `text`가 아니라 `content`였다. 실 응답에는 이 외에도 `session_id`(중복 정보라
+/// 안 씀)와 `tool_trace`(SSE `card` 이벤트와 동일한 `type`/`payload` 스키마의
+/// 카드 데이터 배열)가 함께 오는데, `tool_trace`는 아직 이 모델에 반영하지
+/// 않았다 — 지난 대화를 이어보면(`chat_screen.dart`의 `ChatResumeData`) 카드가
+/// 있었던 메시지는 텍스트만 복원되고 카드는 유실된다.
 class ChatMessage {
   const ChatMessage({
     required this.id,
@@ -174,9 +182,12 @@ class ChatMessage {
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
     return ChatMessage(
-      id: json['id'] as String? ?? '',
+      // [실서버로 확인함] `id`가 문자열(세션 id)이 아니라 숫자라 `as String?`이면
+      // 캐스팅 예외가 난다 — `toString()`으로 안전하게 변환.
+      id: json['id']?.toString() ?? '',
       role: json['role'] as String? ?? '',
-      text: json['text'] as String? ?? '',
+      // [실서버로 확인함] `text`가 아니라 `content`였다.
+      text: json['content'] as String? ?? '',
       createdAt:
           DateTime.tryParse(json['created_at'] as String? ?? '')?.toLocal(),
     );
@@ -483,13 +494,16 @@ class DioChatApi implements ChatApi {
       queryParameters: {'limit': limit, 'offset': offset},
     );
     final data = _unwrap(response, errorMessage: '세션 목록을 불러오지 못했어요.');
-    final sessions = ((data['sessions'] as List<dynamic>?) ?? const [])
+    // [실서버로 확인함] 목록 자체도 `sessions`가 아니라 `items`, `has_more`도
+    // 최상위가 아니라 `page.has_more`였다(`ChatSessionSummary.fromJson` 참고).
+    final sessions = ((data['items'] as List<dynamic>?) ?? const [])
         .cast<Map<String, dynamic>>()
         .map(ChatSessionSummary.fromJson)
         .toList();
+    final page = data['page'] as Map<String, dynamic>? ?? const {};
     return ChatSessionsPage(
       sessions: sessions,
-      hasMore: data['has_more'] as bool? ?? false,
+      hasMore: page['has_more'] as bool? ?? false,
     );
   }
 
@@ -503,7 +517,11 @@ class DioChatApi implements ChatApi {
       queryParameters: before == null ? null : {'before': before},
     );
     final data = _unwrap(response, errorMessage: '대화 이력을 불러오지 못했어요.');
-    final messages = ((data['messages'] as List<dynamic>?) ?? const [])
+    // [실서버로 확인함] 세션 목록과 마찬가지로 `messages`가 아니라 `items`.
+    // `next_before`(커서 페이징)는 응답에 페이지가 하나뿐이라 아직 실제로
+    // 등장하는 걸 확인 못해 기존 가정을 그대로 둠 — 세션 목록의 `page` 객체와
+    // 비슷한 위치일 가능성이 있으니, 페이징이 실제로 필요해지면 다시 확인할 것.
+    final messages = ((data['items'] as List<dynamic>?) ?? const [])
         .cast<Map<String, dynamic>>()
         .map(ChatMessage.fromJson)
         .toList();
