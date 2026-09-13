@@ -1,6 +1,9 @@
 // TODO: 실제 호출하면서 새로 확인되는 코드가 있으면 여기에 추가
 export const ERROR_CODE = {
   LOGIN_FAILED: 'LOGIN_FAILED',
+  FORBIDDEN: 'FORBIDDEN',
+  OAUTH_FAILED: 'OAUTH_FAILED',
+  INVALID_REQUEST: 'INVALID_REQUEST',
 } as const
 
 export type ErrorCode = (typeof ERROR_CODE)[keyof typeof ERROR_CODE]
