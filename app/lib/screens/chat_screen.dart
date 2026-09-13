@@ -42,6 +42,16 @@ class _UserChatEntry extends _ChatEntry {
   final String text;
 }
 
+/// `history_screen.dart`가 지난 대화를 이어보기 위해 `/chat` 라우트의 `extra`로
+/// 넘기는 데이터. `ChatMessage.role`이 `user`가 아니면 전부 AI 메시지로
+/// 취급한다(`docs/API_SPEC.md`에 실제 값 예시가 없어 가정, 실 데이터로 다른
+/// 값이 확인되면 이 가정만 바꾸면 됨).
+class ChatResumeData {
+  const ChatResumeData({required this.sessionId, required this.messages});
+  final String sessionId;
+  final List<ChatMessage> messages;
+}
+
 class _AiChatEntry extends _ChatEntry {
   _AiChatEntry(super.id);
 
@@ -56,11 +66,15 @@ class _AiChatEntry extends _ChatEntry {
 
 /// docs/DESIGN.md 화면 2·3: 채팅(빈 상태 / 대화).
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key, this.chatApi});
+  const ChatScreen({super.key, this.chatApi, this.resume});
 
   /// 테스트/향후 실 연동 전환을 위한 주입 지점(`history_screen.dart`와 동일한
   /// 패턴). 기본값은 실 서버(`nullnull.kr`) 연동.
   final ChatApi? chatApi;
+
+  /// `history_screen.dart`에서 지난 대화를 이어볼 때만 넘어온다. `null`이면
+  /// 평소처럼 빈 대화로 시작한다.
+  final ChatResumeData? resume;
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -80,6 +94,43 @@ class _ChatScreenState extends State<ChatScreen>
       widget.chatApi ?? LoggingChatApi(DioChatApi(ApiClient.create()));
   String? _sessionId;
   int _nextId = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    final resume = widget.resume;
+    if (resume == null) return;
+    _applyResume(resume);
+    _scrollToBottomSoon();
+  }
+
+  @override
+  void didUpdateWidget(covariant ChatScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // `history_screen.dart`가 `context.goNamed(RouteNames.chat, extra: ...)`로
+    // 넘어와도, go_router는 같은 `/chat` 경로라 페이지 키가 그대로라 이 State를
+    // 재사용한다(`initState`가 다시 불리지 않음) — `resume`이 바뀐 경우 여기서
+    // 직접 반영해야 한다.
+    final resume = widget.resume;
+    if (resume == null || resume == oldWidget.resume) return;
+    setState(() => _applyResume(resume));
+    _scrollToBottomSoon();
+  }
+
+  void _applyResume(ChatResumeData resume) {
+    _entries.clear();
+    _nextId = 0;
+    _sessionId = resume.sessionId;
+    for (final message in resume.messages) {
+      if (message.text.trim().isEmpty) continue;
+      final id = _nextId++;
+      _entries.add(message.role == 'user'
+          ? _UserChatEntry(id, message.text)
+          : (_AiChatEntry(id)
+            ..blocks.add(TextBlock(message.text))
+            ..done = true));
+    }
+  }
 
   @override
   void dispose() {

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import 'package:nullnull/api/api_client.dart';
 import 'package:nullnull/api/chat_api.dart';
 import 'package:nullnull/app_log.dart';
+import 'package:nullnull/app_router.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
+import 'package:nullnull/screens/chat_screen.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
 import 'package:nullnull/widgets/app_toast.dart';
@@ -13,11 +16,11 @@ import 'package:nullnull/widgets/nullnull/plain_header.dart';
 /// 지난 대화 목록 화면. `docs/API_SPEC.md`의 `GET /api/v1/chat/sessions`(최근
 /// 활동 순)를 [ChatApi.fetchSessions]로 호출해 보여준다. `docs/DESIGN.md`에는
 /// 아직 이 화면의 레이아웃 스펙이 없어 `place_detail_screen.dart`와 같은 다른
-/// 화면의 색상/타이포그래피 컨벤션을 그대로 따라 구성했다. 항목을 탭하면 대화를
-/// 이어보는 동작이 이상적이지만, 그러려면 `ChatApi.fetchMessages` 연동과
-/// `ChatScreen`이 기존 세션을 이어받는 기능이 별도로 필요해 아직은 안내
-/// 토스트만 띄우는 mock 동작이다(`place_detail_screen.dart`의 지도/전화 버튼과
-/// 동일한 패턴).
+/// 화면의 색상/타이포그래피 컨벤션을 그대로 따라 구성했다. 항목을 탭하면
+/// [ChatApi.fetchMessages]로 그 세션의 이력을 불러온 뒤 [ChatScreen]을
+/// [ChatResumeData]와 함께 `goNamed`로 띄운다(`ChatScreen`이 뒤로가기 시 앱을
+/// 종료하는 단일 홈 화면 전제라 `pushNamed`로 쌓지 않고 스택을 통째로
+/// 교체함 — 로그인 성공 때와 동일한 방식).
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key, this.chatApi});
 
@@ -30,13 +33,20 @@ class HistoryScreen extends StatefulWidget {
 
 class _HistoryScreenState extends State<HistoryScreen> {
   // `chat_screen.dart`와 동일하게 실 서버(`nullnull.kr`) 연동 상태를 유지한다.
-  // 인증 토큰 체계가 없어 `GET /api/v1/chat/sessions`도 401로 실패하는 상태이며,
-  // 화면은 이를 그대로 에러 안내 + 재시도 버튼으로 보여준다.
+  // 로그인 전이거나 액세스 토큰이 만료된 상태로 `GET /api/v1/chat/sessions`를
+  // 호출하면 401이 오는데, 화면은 이를 그대로 에러 안내 + 재시도 버튼으로
+  // 보여준다(`api_client.dart`의 `_AuthInterceptor`가 401을 가로채 자동으로
+  // 토큰을 갱신한 뒤 재시도하므로, 로그인된 상태에서는 정상 조회됨).
   late final ChatApi _chatApi =
       widget.chatApi ?? LoggingChatApi(DioChatApi(ApiClient.create()));
   List<ChatSessionSummary>? _sessions;
   bool _isLoading = true;
   bool _hasError = false;
+
+  /// 세션 이력 조회(`_openSession`) 진행 중에는 화면 터치를 막고 로딩
+  /// 인디케이터를 보여준다(`login_screen.dart`의 `_isLoggingIn`과 동일한
+  /// `PopScope` + `Stack`/`ColoredBox` 패턴).
+  bool _isOpeningSession = false;
 
   @override
   void initState() {
@@ -71,19 +81,53 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
   }
 
+  /// `ChatApi.fetchMessages`로 세션 이력을 불러와 [ChatScreen]을 이어보기
+  /// 상태로 띄운다. 실패하면 [historyResumeError] 토스트만 안내한다.
+  Future<void> _openSession(ChatSessionSummary session) async {
+    if (_isOpeningSession) return;
+    final l10n = AppLocalizations.of(context)!;
+    setState(() => _isOpeningSession = true);
+    try {
+      final page = await _chatApi.fetchMessages(sessionId: session.sessionId);
+      if (!mounted) return;
+      context.goNamed(
+        RouteNames.chat,
+        extra: ChatResumeData(
+            sessionId: session.sessionId, messages: page.messages),
+      );
+    } catch (e, stackTrace) {
+      AppLog.logger.e('대화 이력 조회 실패', error: e, stackTrace: stackTrace);
+      if (!mounted) return;
+      setState(() => _isOpeningSession = false);
+      AppToast.show(l10n.historyResumeError, type: AppToastType.info);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context)!;
-    return Scaffold(
-      backgroundColor: colors.paper,
-      body: SafeArea(
-        maintainBottomViewPadding: true,
-        child: Column(
-          children: [
-            PlainHeader(title: l10n.historyTitle),
-            Expanded(child: _buildBody(colors, l10n)),
-          ],
+    return PopScope(
+      canPop: !_isOpeningSession,
+      child: Scaffold(
+        backgroundColor: colors.paper,
+        body: SafeArea(
+          maintainBottomViewPadding: true,
+          child: Stack(
+            children: [
+              Column(
+                children: [
+                  PlainHeader(title: l10n.historyTitle),
+                  Expanded(child: _buildBody(colors, l10n)),
+                ],
+              ),
+              if (_isOpeningSession)
+                ColoredBox(
+                  color: colors.scrim,
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -110,8 +154,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       separatorBuilder: (_, __) => Container(height: 1, color: colors.divider),
       itemBuilder: (context, index) => _HistoryTile(
         session: sessions[index],
-        onTap: () => AppToast.show(l10n.historyResumeComingSoon,
-            type: AppToastType.info),
+        onTap: () => _openSession(sessions[index]),
       ),
     );
   }

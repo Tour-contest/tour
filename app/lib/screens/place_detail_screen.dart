@@ -1,25 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import 'package:nullnull/app_log.dart';
 import 'package:nullnull/data/demo_script.dart';
+import 'package:nullnull/data/map_launcher_service.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
 import 'package:nullnull/widgets/app_header.dart';
 import 'package:nullnull/widgets/app_icon.dart';
+import 'package:nullnull/widgets/app_toast.dart';
 import 'package:nullnull/widgets/skeleton_box.dart';
 
 /// TODO 제공 가능한 데이터로 추후 변경
 /// 채팅 내 장소 추천 아이템(예: 강경 근대거리) 탭 시 이동하는 장소 상세 화면.
-/// 지도/전화 SDK 연동 전 단계라 딥링크 버튼은 안내 스낵바만 띄우는 mock 동작.
 class PlaceDetailScreen extends StatelessWidget {
   const PlaceDetailScreen({super.key, required this.place});
 
   final PlaceRecommendation place;
 
-  void _showComingSoon(BuildContext context, String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+  /// [MapAppSheet]와 동일하게 좌표가 없어 장소명으로 검색하는 스킴을 쓴다.
+  /// 앱 미설치 시 [MapLauncherService]가 스토어로 대신 이동시키고, 그마저
+  /// 실패하면 `map_app_sheet.dart`와 같은 안내 문구를 띄운다.
+  Future<void> _openMap(
+      BuildContext context, Future<bool> Function() launch) async {
+    final unavailableMessage =
+        AppLocalizations.of(context)!.mapAppSheetUnavailable;
+    final opened = await launch();
+    if (opened) return;
+    AppToast.show(unavailableMessage, type: AppToastType.info);
+  }
+
+  Future<void> _call(BuildContext context) async {
+    final unavailableMessage =
+        AppLocalizations.of(context)!.placeDetailCallUnavailable;
+    final uri = Uri(scheme: 'tel', path: place.phone);
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+        return;
+      }
+    } catch (error) {
+      AppLog.logger.e('전화 앱 실행 실패: $uri', error: error);
+    }
+    AppToast.show(unavailableMessage, type: AppToastType.info);
   }
 
   @override
@@ -119,15 +144,19 @@ class PlaceDetailScreen extends StatelessWidget {
                         _OutlineButton(
                           label: l10n.placeDetailOpenInMapApp,
                           icon: AppIconShape.arrowUpRight,
-                          onTap: () => _showComingSoon(
-                              context, l10n.placeDetailMapComingSoon),
+                          onTap: () => _openMap(
+                              context,
+                              () =>
+                                  MapLauncherService.openKakaoMap(place.name)),
                         ),
                         const SizedBox(width: 10),
                         _OutlineButton(
                           label: l10n.placeDetailOpenInNaverMap,
                           icon: AppIconShape.arrowUpRight,
-                          onTap: () => _showComingSoon(
-                              context, l10n.placeDetailNaverMapComingSoon),
+                          onTap: () => _openMap(
+                              context,
+                              () =>
+                                  MapLauncherService.openNaverMap(place.name)),
                         ),
                       ],
                     ),
@@ -152,8 +181,7 @@ class PlaceDetailScreen extends StatelessWidget {
                     _OutlineButton(
                       label: l10n.placeDetailCallButton,
                       expand: true,
-                      onTap: () => _showComingSoon(
-                          context, l10n.placeDetailCallComingSoon),
+                      onTap: () => _call(context),
                     ),
                   ],
                 ),

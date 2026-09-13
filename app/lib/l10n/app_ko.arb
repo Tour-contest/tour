@@ -52,6 +52,10 @@
   "@loginKakaoError": {
     "description": "카카오 로그인 실패 시 스낵바 문구"
   },
+  "authSessionExpiredToast": "세션이 만료됐어요. 다시 로그인해주세요.",
+  "@authSessionExpiredToast": {
+    "description": "리프레시 토큰 만료/거절 등으로 서버가 갱신을 명시적으로 거절해 로그인 화면으로 자동 이동시킬 때 뜨는 토스트"
+  },
   "chatHistoryTooltip": "지난 대화",
   "@chatHistoryTooltip": {
     "description": "채팅 화면 좌측 상단 히스토리 이동 버튼 툴팁"
@@ -256,9 +260,9 @@
   "@historyUntitledSession": {
     "description": "세션에 title이 없을 때 대신 보여줄 문구"
   },
-  "historyResumeComingSoon": "대화 이어보기 기능은 준비 중이에요.",
-  "@historyResumeComingSoon": {
-    "description": "지난 대화 항목 탭 시 뜨는 안내 토스트 (ChatApi.fetchMessages 연동 전)"
+  "historyResumeError": "대화를 불러오지 못했어요. 잠시 후 다시 시도해주세요.",
+  "@historyResumeError": {
+    "description": "지난 대화 항목 탭 시 ChatApi.fetchMessages 조회 실패 안내 토스트"
   },
   "regionCardTitle": "{region} 여행지 추천",
   "@regionCardTitle": {
@@ -435,19 +439,11 @@
   },
   "placeDetailOpenInMapApp": "지도 앱에서 보기",
   "@placeDetailOpenInMapApp": {
-    "description": "지도 앱 딥링크 버튼(mock)"
-  },
-  "placeDetailMapComingSoon": "지도 앱 연동은 준비 중이에요.",
-  "@placeDetailMapComingSoon": {
-    "description": "지도 앱 딥링크 버튼 탭 시 스낵바"
+    "description": "카카오맵 딥링크 버튼"
   },
   "placeDetailOpenInNaverMap": "네이버 지도로 열기",
   "@placeDetailOpenInNaverMap": {
-    "description": "네이버 지도 딥링크 버튼(mock)"
-  },
-  "placeDetailNaverMapComingSoon": "네이버 지도 연동은 준비 중이에요.",
-  "@placeDetailNaverMapComingSoon": {
-    "description": "네이버 지도 딥링크 버튼 탭 시 스낵바"
+    "description": "네이버 지도 딥링크 버튼"
   },
   "placeDetailPhoneSection": "전화번호",
   "@placeDetailPhoneSection": {
@@ -455,11 +451,11 @@
   },
   "placeDetailCallButton": "전화 걸기",
   "@placeDetailCallButton": {
-    "description": "전화 걸기 버튼(mock)"
+    "description": "전화 걸기 버튼"
   },
-  "placeDetailCallComingSoon": "전화 연결은 준비 중이에요.",
-  "@placeDetailCallComingSoon": {
-    "description": "전화 걸기 버튼 탭 시 스낵바"
+  "placeDetailCallUnavailable": "전화 앱을 열 수 없어요.",
+  "@placeDetailCallUnavailable": {
+    "description": "전화 걸기 버튼 탭 시 다이얼러를 열지 못했을 때 안내 토스트"
   },
   "settingsSectionLanguage": "언어",
   "@settingsSectionLanguage": {

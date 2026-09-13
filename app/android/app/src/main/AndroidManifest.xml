@@ -80,5 +80,10 @@
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="nmap"/>
         </intent>
+        <!-- place_detail_screen.dart(전화 걸기)의 canLaunchUrl 확인용 -->
+        <intent>
+            <action android:name="android.intent.action.DIAL"/>
+            <data android:scheme="tel"/>
+        </intent>
     </queries>
 </manifest>

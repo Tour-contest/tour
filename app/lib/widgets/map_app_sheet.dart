@@ -8,7 +8,8 @@ import 'package:nullnull/widgets/app_toast.dart';
 
 /// "지도로 보기" 액션 시트(`assets/images/STEP 1 · 앱 선택 시트.png` 시안). 카카오맵/
 /// 네이버지도 중 하나를 고르면 [MapLauncherService]로 [placeName]을 검색해 연다.
-/// 두 앱 모두 미설치라 스킴 실행에 실패하면 [AppToast]로 안내한다.
+/// 앱이 미설치면 [MapLauncherService]가 스토어로 대신 이동시키고, 그마저
+/// 실패하면(브라우저조차 없는 극단적인 경우) [AppToast]로 안내한다.
 class MapAppSheet extends StatelessWidget {
   const MapAppSheet({super.key, required this.placeName});
 

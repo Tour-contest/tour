@@ -52,7 +52,8 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/${RouteNames.chat}',
       name: RouteNames.chat,
-      builder: (context, state) => const ChatScreen(),
+      builder: (context, state) =>
+          ChatScreen(resume: state.extra as ChatResumeData?),
     ),
     GoRoute(
       path: '/${RouteNames.history}',
