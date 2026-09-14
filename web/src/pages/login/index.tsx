@@ -1,5 +1,7 @@
 import { useActionState, useEffect, useState } from "react";
+import { Navigate } from "react-router";
 import clsx from "clsx";
+import { clearSession } from "@/api/tokenManager";
 import { useAuth, INITIAL_ADMIN_LOGIN_STATE } from "@/hooks/api";
 
 const DEV_LOGIN_NICKNAME = "테스터";
@@ -15,8 +17,8 @@ const buildKakaoAuthorizeUrl = (clientId: string) => {
     return url.toString();
 };
 
-const Login = () => {
-    const { handleAdminLogin, handleDevLogin, handleSocialLogin, fetchAuthenticateProvider } = useAuth();
+function Login() {
+    const { handleAdminLogin, handleDevLogin, fetchAuthenticateProvider } = useAuth();
 
     const [providerData, setProviderData] = useState<ResponseProviderData | null>(null);
 
@@ -30,27 +32,19 @@ const Login = () => {
         INITIAL_ADMIN_LOGIN_STATE,
     );
 
-    const [socialLoginState, dispatchSocialLogin, isSocialLoginPending] = useActionState(
-        handleSocialLogin,
-        INITIAL_ADMIN_LOGIN_STATE,
-    );
-
     useEffect(() => {
+        // 로그인 화면 진입 = 새 로그인의 시작점이므로 남아있는 세션을 먼저 비운다.
+        // provider 조회보다 앞서야 만료된 토큰으로 불필요한 refresh 가 돌지 않는다
+        clearSession();
         fetchAuthenticateProvider().then(setProviderData);
-    }, []);
-
-    // 카카오 인가 서버가 이 페이지로 돌아오면서 붙여준 code 를 잡아 콜백 API 호출
-    useEffect(() => {
-        const code = new URLSearchParams(window.location.search).get("code");
-        if (!code) return;
-
-        window.history.replaceState(null, "", window.location.pathname);
-        dispatchSocialLogin({ provider: "kakao", code, redirectUri: REDIRECT_URI });
     }, []);
 
     const handleKakaoLoginClick = (clientId: string) => {
         window.location.assign(buildKakaoAuthorizeUrl(clientId));
     };
+
+    // 권한별 최종 목적지는 라우터 가드가 다시 정리한다
+    if (adminLoginState.isSuccess || devLoginState.isSuccess) return <Navigate to="/" replace />;
 
     return (
         <div className={clsx("flex", "h-[100vh]", "items-center", "justify-center")}>
@@ -119,12 +113,6 @@ const Login = () => {
                 </button>
 
                 <div className={clsx("flex", "flex-col", "gap-[8px]", "border-t-[1px]", "border-[#e5e4e7]", "pt-[16px]")}>
-                    {socialLoginState.errorMessage && (
-                        <p className={clsx("text-[13px]", "text-[#ff3b30]")}>
-                            {socialLoginState.errorMessage}
-                        </p>
-                    )}
-
                     {providerData === null && (
                         <p className={clsx("text-[13px]", "text-[#6b6375]")}>로그인 수단 조회 중…</p>
                     )}
@@ -135,16 +123,14 @@ const Login = () => {
                         <button
                             key={item.provider}
                             type="button"
-                            disabled={isSocialLoginPending}
                             onClick={() => handleKakaoLoginClick(item.client_id)}
                             className={clsx(
                                 "rounded-[8px]",
                                 "bg-[#fee500]",
                                 "p-[8px]",
-                                "disabled:opacity-50",
                             )}
                         >
-                            {isSocialLoginPending ? "로그인 중…" : "카카오로 시작하기"}
+                            카카오로 시작하기
                         </button>
                     ))}
 
@@ -175,5 +161,5 @@ const Login = () => {
             </form>
         </div>
     );
-};
+}
 export default Login;

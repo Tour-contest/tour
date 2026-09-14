@@ -1,5 +1,7 @@
 import { isAxiosError } from "axios";
 import { adminAuthenticate, devAuthenticate, authenticateProviders, socialAuthenticate } from "@/service/auth";
+import { useAuthenticateStore } from "@/store/authenticate";
+import { useAuthorityStore } from "@/store/authority";
 import type { ErrorResponse } from "@/types/error";
 
 export type SocialLoginPayload = {
@@ -9,10 +11,12 @@ export type SocialLoginPayload = {
 };
 
 export type AdminLoginState = {
+    isSuccess: boolean;
     errorMessage: string | null;
 };
 
 export const INITIAL_ADMIN_LOGIN_STATE: AdminLoginState = {
+    isSuccess: false,
     errorMessage: null,
 };
 
@@ -24,6 +28,15 @@ const resolveAuthErrorMessage = (e: unknown, fallback: string): string => {
 };
 
 const useAuth = () => {
+    const setAuthenticate = useAuthenticateStore((state) => state.setAuthenticate);
+    const setAuthority = useAuthorityStore((state) => state.setAuthority);
+
+    // 로그인 수단(관리자/개발자/소셜)이 달라도 성공 응답 형태는 같으므로 반영 경로는 하나로 둔다
+    const applyAuthenticated = ({ data }: ResponseAutenticate) => {
+        setAuthenticate(data);
+        setAuthority(data.access_token);
+    };
+
     const fetchAuthenticateProvider = async (): Promise<ResponseProviderData | null> => {
         try {
             const res = await authenticateProviders();
@@ -43,11 +56,11 @@ const useAuth = () => {
 
         try {
             const res = await adminAuthenticate(loginId, password);
-            console.log({ res });
-            return { errorMessage: null };
+            applyAuthenticated(res);
+            return { isSuccess: true, errorMessage: null };
         } catch (e) {
             console.error(e);
-            return { errorMessage: resolveAuthErrorMessage(e, "로그인에 실패했습니다. 잠시 후 다시 시도해주세요.") };
+            return { isSuccess: false, errorMessage: resolveAuthErrorMessage(e, "로그인에 실패했습니다. 잠시 후 다시 시도해주세요.") };
         };
     };
 
@@ -58,11 +71,11 @@ const useAuth = () => {
     ): Promise<AdminLoginState> => {
         try {
             const res = await devAuthenticate(nickname);
-            console.log({ res });
-            return { errorMessage: null };
+            applyAuthenticated(res);
+            return { isSuccess: true, errorMessage: null };
         } catch (e) {
             console.error(e);
-            return { errorMessage: resolveAuthErrorMessage(e, "개발자 로그인에 실패했습니다.") };
+            return { isSuccess: false, errorMessage: resolveAuthErrorMessage(e, "개발자 로그인에 실패했습니다.") };
         };
     };
 
@@ -72,11 +85,11 @@ const useAuth = () => {
     ): Promise<AdminLoginState> => {
         try {
             const res = await socialAuthenticate(provider, code, redirectUri);
-            console.log({ res });
-            return { errorMessage: null };
+            applyAuthenticated(res);
+            return { isSuccess: true, errorMessage: null };
         } catch (e) {
             console.error(e);
-            return { errorMessage: resolveAuthErrorMessage(e, "소셜 로그인에 실패했습니다.") };
+            return { isSuccess: false, errorMessage: resolveAuthErrorMessage(e, "소셜 로그인에 실패했습니다.") };
         };
     };
 

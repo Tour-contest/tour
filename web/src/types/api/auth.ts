@@ -1,8 +1,10 @@
 declare global {
+    type UserRole = "admin" | "user";
+
     type UserInfo = {
         id: string;
-        nickname: string;
-        role: "admin" | "user";
+        nickname: string | null;
+        role: UserRole;
         provider: "kakao" | "local" | "dev"
     };
 
@@ -26,4 +28,13 @@ declare global {
     type ResponseAutenticate = ResponseSuccessData<ResponseAccessData>;
 
     type ResponseAutenticateProvider = ResponseSuccessData<ResponseProviderData>;
+
+    // access_token 페이로드 실측 기준 (개발자 로그인 admin / 카카오 로그인 user 양쪽 확인)
+    type AccessTokenPayload = {
+        sub: string;
+        role: UserRole;
+        typ: "access";
+        iat: number;
+        exp: number;
+    };
 };

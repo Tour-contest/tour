@@ -18,6 +18,11 @@ const socialAuthenticate = (provider: string, code: string, redirectUri: string)
         code,
         redirect_uri: redirectUri,
     })
-}
+};
 
-export { authenticateProviders, adminAuthenticate, devAuthenticate, socialAuthenticate };
+// 이 서버는 refresh_token 을 쿠키가 아니라 요청 바디로 받는다 (미전송 시 422 INVALID_INPUT)
+const requestRefresh = (refreshToken: string) => {
+    return requestModule.post<ResponseAutenticate>('/api/v1/auth/refresh', { refresh_token: refreshToken })
+;}
+
+export { authenticateProviders, adminAuthenticate, devAuthenticate, socialAuthenticate, requestRefresh };

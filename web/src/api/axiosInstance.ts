@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { authenticate, badRequest } from './exception'
+import attachRefreshToken from './attachRefreshToken'
 
 export const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -10,5 +11,9 @@ export const axiosInstance = axios.create({
   },
 })
 
+// Bearer 부착 + 선제 refresh (request)
+attachRefreshToken(axiosInstance)
+// error exception 400
 badRequest(axiosInstance)
+// error exception 401
 authenticate(axiosInstance)
