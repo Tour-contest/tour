@@ -17,16 +17,28 @@ import 'package:nullnull/widgets/app_icon.dart';
 /// 닫기를 원할 때 `Navigator.pop`이 아니라 [onClose]로 직접 닫아야 한다.
 /// "최근" 목록은 `history_screen.dart`와 같은 `GET /api/v1/chat/sessions`
 /// (`ChatApi.fetchSessions`)를 호출해 최근 세션 몇 개만 미리보기로 보여준다.
+/// 항목을 탭하면 `history_screen.dart`의 `_HistoryTile`과 동일하게 그
+/// 세션으로 이어보기를 시도한다(실제 조회/이동은 [onOpenSession] 콜백으로
+/// 위임, `## Architecture`의 `app_drawer.dart` 항목 참고).
 class AppDrawer extends StatefulWidget {
   const AppDrawer({
     super.key,
     required this.onNewChat,
     required this.onClose,
+    required this.onOpenSession,
     this.chatApi,
   });
 
   final VoidCallback onNewChat;
   final VoidCallback onClose;
+
+  /// "최근" 미리보기 목록 항목 탭 시 호출된다. 실제 `ChatApi.fetchMessages`
+  /// 조회와 `ChatScreen`으로의 이어보기 이동(성공 시 드로어 닫기 포함)은
+  /// `chat_screen.dart`가 처리한다(`ChatResumeData`가 그 파일에 정의돼 있어
+  /// 순환 참조를 피하기 위해 콜백으로 위임). 실패 시 안내와 로컬 로딩 상태
+  /// 해제까지 이 콜백 쪽에서 끝내고 나면, 이 위젯은 `_openingSessionId`만
+  /// 초기화한다.
+  final Future<void> Function(ChatSessionSummary session) onOpenSession;
 
   /// 테스트/향후 실 연동 전환을 위한 주입 지점(`history_screen.dart`와 동일한
   /// 패턴). `chat_screen.dart`는 자신이 쓰는 `_chatApi`를 그대로 넘겨 별도
@@ -51,6 +63,10 @@ class AppDrawerState extends State<AppDrawer> {
   List<ChatSessionSummary>? _sessions;
   bool _isLoading = true;
   bool _hasError = false;
+
+  /// 현재 이어보기 조회 중인 세션 id(중복 탭 방지 + 해당 항목에 로딩
+  /// 인디케이터 표시용). `null`이면 진행 중인 항목이 없다는 뜻.
+  String? _openingSessionId;
 
   @override
   void initState() {
@@ -86,6 +102,17 @@ class AppDrawerState extends State<AppDrawer> {
     widget.onClose();
   }
 
+  /// 목록 항목 탭 시 호출. 중복 탭은 무시하고, 콜백이 끝나면(성공/실패
+  /// 무관) 로딩 인디케이터를 해제한다 — 실패 안내와 드로어 닫기/이동은
+  /// [AppDrawer.onOpenSession] 쪽(`chat_screen.dart`)이 책임진다.
+  Future<void> _openSession(ChatSessionSummary session) async {
+    if (_openingSessionId != null) return;
+    setState(() => _openingSessionId = session.sessionId);
+    await widget.onOpenSession(session);
+    if (!mounted) return;
+    setState(() => _openingSessionId = null);
+  }
+
   void _openSettings() {
     widget.onClose();
     context.pushNamed(RouteNames.settings);
@@ -113,17 +140,17 @@ class AppDrawerState extends State<AppDrawer> {
             InkWell(
               onTap: _openHistory,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 10),
                 child: Row(
                   children: [
                     Text(
                       l10n.drawerRecentSection,
                       style: AppTextStyles.body(
-                          fontSize: 13, color: colors.ink600),
+                          fontSize: 16, color: colors.ink600),
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: 6),
                     AppIcon(AppIconShape.arrowUpRight,
-                        size: 11, color: colors.ink600),
+                        size: 13, color: colors.ink600),
                   ],
                 ),
               ),
@@ -184,13 +211,32 @@ class AppDrawerState extends State<AppDrawer> {
       itemCount: sessions.length,
       itemBuilder: (context, index) {
         final session = sessions[index];
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 9),
-          child: Text(
-            session.title ?? l10n.historyUntitledSession,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTextStyles.body(fontSize: 16, color: colors.ink),
+        final isOpening = _openingSessionId == session.sessionId;
+        return InkWell(
+          onTap: isOpening ? null : () => _openSession(session),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 9),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    session.title ?? l10n.historyUntitledSession,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.body(fontSize: 16, color: colors.ink),
+                  ),
+                ),
+                if (isOpening) ...[
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: colors.accent),
+                  ),
+                ],
+              ],
+            ),
           ),
         );
       },

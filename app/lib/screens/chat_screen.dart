@@ -248,6 +248,30 @@ class _ChatScreenState extends State<ChatScreen>
     });
   }
 
+  /// `AppDrawer`의 "최근" 미리보기 항목 탭 시 호출된다. `history_screen.dart`의
+  /// `_openSession`과 동일한 조회(`ChatApi.fetchMessages`) 후, 이 화면
+  /// 자신이 이미 `/chat`이므로 `goNamed`로 스택을 새로 쌓지 않고 `didUpdateWidget`이
+  /// `resume` 변경을 감지해 반영하는 기존 메커니즘을 그대로 이용한다. 성공
+  /// 시에만 드로어를 닫고, 실패하면 드로어를 연 채로 토스트만 안내해 사용자가
+  /// 다른 항목을 다시 시도할 수 있게 한다.
+  Future<void> _openDrawerSession(ChatSessionSummary session) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final page = await _chatApi.fetchMessages(sessionId: session.sessionId);
+      if (!mounted) return;
+      _drawerKey.currentState?.close();
+      context.goNamed(
+        RouteNames.chat,
+        extra: ChatResumeData(
+            sessionId: session.sessionId, messages: page.messages),
+      );
+    } catch (e, stackTrace) {
+      AppLog.logger.e('드로어에서 대화 이력 조회 실패', error: e, stackTrace: stackTrace);
+      if (!mounted) return;
+      AppToast.show(l10n.historyResumeError, type: AppToastType.info);
+    }
+  }
+
   void _scrollToBottomSoon() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollController.hasClients) return;
@@ -270,6 +294,7 @@ class _ChatScreenState extends State<ChatScreen>
         chatApi: _chatApi,
         onNewChat: _newChat,
         onClose: () => _drawerKey.currentState?.close(),
+        onOpenSession: _openDrawerSession,
       ),
       child: PopScope(
         canPop: false,

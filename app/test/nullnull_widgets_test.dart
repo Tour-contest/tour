@@ -200,6 +200,7 @@ void main() {
             chatApi: MockChatApi(),
             onNewChat: () {},
             onClose: () => Navigator.of(context).pop(),
+            onOpenSession: (_) async {},
           ),
         ),
       ),
