@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:nullnull/app_log.dart';
+import 'package:nullnull/app_router.dart';
 import 'package:nullnull/data/demo_script.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
+import 'package:nullnull/screens/attraction_detail_screen.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
 import 'package:nullnull/widgets/map_app_sheet.dart';
@@ -84,6 +87,7 @@ class AttractionListCardData {
 
 class AttractionItem {
   const AttractionItem({
+    required this.contentId,
     required this.title,
     required this.address,
   });
@@ -92,11 +96,13 @@ class AttractionItem {
     final addr1 = json['addr1'] as String? ?? '';
     final addr2 = json['addr2'] as String?;
     return AttractionItem(
+      contentId: json['content_id']?.toString() ?? '',
       title: json['title'] as String? ?? '',
       address: addr2 != null && addr2.isNotEmpty ? '$addr1 $addr2' : addr1,
     );
   }
 
+  final String contentId;
   final String title;
   final String address;
 }
@@ -158,17 +164,32 @@ class _AttractionListCardState extends State<_AttractionListCard> {
   }
 }
 
+/// 항목 탭 시 `content_id`가 있으면 `AttractionDetailScreen`으로 이동한다.
+/// 실서버가 `content_id`를 비워 보내는 것 같은 예외적인 경우에만(스펙상으로는
+/// 항상 옴) 기존처럼 이름으로 지도를 여는 `MapAppSheet`로 대체한다.
 class _AttractionRow extends StatelessWidget {
   const _AttractionRow({required this.item});
 
   final AttractionItem item;
+
+  void _open(BuildContext context) {
+    if (item.contentId.isEmpty) {
+      MapAppSheet.show(context, placeName: item.title);
+      return;
+    }
+    context.pushNamed(
+      RouteNames.attractionDetail,
+      extra: AttractionDetailArgs(
+          contentId: item.contentId, initialTitle: item.title),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context)!;
     return InkWell(
-      onTap: () => MapAppSheet.show(context, placeName: item.title),
+      onTap: () => _open(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -186,7 +207,7 @@ class _AttractionRow extends StatelessWidget {
           ],
           const SizedBox(height: 4),
           Text(
-            l10n.nulnulOpenInMap,
+            l10n.attractionListItemDetailCta,
             style:
                 AppTextStyles.body(fontSize: 11.5, color: colors.accentBright),
           ),
@@ -239,8 +260,16 @@ class _ShowMoreButton extends StatelessWidget {
   }
 }
 
-/// `card` 이벤트의 `type: "crowd"` 페이로드. `summary`/`samples`의 키(`혼잡`/`보통`/
-/// `한적`)를 [Level]로 매핑한다.
+/// `card` 이벤트의 `type: "crowd"` 페이로드. **[실서버로 확인함]** `summary`/
+/// `samples`의 키가 애초 가정했던 한글 라벨(`혼잡`/`보통`/`한적`)이 아니라
+/// 영문 키(`crowded`/`normal`/`quiet`)로 온다 — 이 파일이 그동안 한글만
+/// 비교하고 있어 영문 키는 전부 매치에 실패해 기본값(`Level.normal`)으로만
+/// 떨어졌고, 세 버킷이 전부 `Level.normal` 하나로 뭉개져 왔다(예: `crowded`
+/// 카운트/샘플이 실제로는 `Level.busy`가 아니라 `Level.normal`에 들어가고,
+/// 뒤이어 처리되는 `normal`/`quiet` 키가 같은 `Level.normal` 자리를 덮어써
+/// 마지막 키만 남는 식). `_levelFor`가 이제 영문 키를 우선 확인하고, 한글
+/// 라벨도 그대로 인식하도록(다른 소비처가 여전히 한글을 쓸 수 있어 방어적으로
+/// 겸용) 고쳤다.
 class CrowdCardData {
   const CrowdCardData({
     required this.signguNm,
@@ -269,9 +298,9 @@ class CrowdCardData {
     );
   }
 
-  static Level _levelFor(String koreanLabel) => switch (koreanLabel) {
-        '혼잡' => Level.busy,
-        '한적' => Level.quiet,
+  static Level _levelFor(String key) => switch (key) {
+        '혼잡' || 'crowded' || 'busy' => Level.busy,
+        '한적' || 'quiet' => Level.quiet,
         _ => Level.normal,
       };
 
@@ -281,17 +310,19 @@ class CrowdCardData {
 }
 
 class CrowdSample {
-  const CrowdSample({required this.name, required this.rate});
+  const CrowdSample({required this.name, required this.rate, this.contentId});
 
   factory CrowdSample.fromJson(Map<String, dynamic> json) {
     return CrowdSample(
       name: json['name'] as String? ?? '',
       rate: ((json['rate'] as num?) ?? 0).round(),
+      contentId: json['content_id']?.toString(),
     );
   }
 
   final String name;
   final int rate;
+  final String? contentId;
 }
 
 class _CrowdCard extends StatelessWidget {
@@ -373,17 +404,33 @@ class _SampleRow extends StatelessWidget {
   }
 }
 
+/// 탭 시 `content_id`가 있으면 `AttractionDetailScreen`으로 이동한다
+/// (`_AttractionRow`와 동일한 패턴). 없는 예외적인 경우에만 이름으로 지도를
+/// 여는 `MapAppSheet`로 대체한다.
 class _SampleChip extends StatelessWidget {
   const _SampleChip({required this.sample});
 
   final CrowdSample sample;
+
+  void _open(BuildContext context) {
+    final contentId = sample.contentId;
+    if (contentId == null || contentId.isEmpty) {
+      MapAppSheet.show(context, placeName: sample.name);
+      return;
+    }
+    context.pushNamed(
+      RouteNames.attractionDetail,
+      extra:
+          AttractionDetailArgs(contentId: contentId, initialTitle: sample.name),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     return InkWell(
       borderRadius: BorderRadius.circular(999),
-      onTap: () => MapAppSheet.show(context, placeName: sample.name),
+      onTap: () => _open(context),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(

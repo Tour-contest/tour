@@ -80,28 +80,58 @@ class AttractionSearchResult {
   final List<AttractionSummary> items;
 }
 
-/// `GET /api/v1/attractions/{content_id}`. 소개문 필드명(`overview`)은 아직
-/// 예시가 없어 관광공사 TourAPI의 관례적인 필드명을 근거로 가정했다.
+/// `attractions/{content_id}`의 "이용정보" 한 건(`data.info`는 이 형태의
+/// 배열로 온다 — `{label, value}`, **실서버로 확인함**).
+class AttractionInfoItem {
+  const AttractionInfoItem({required this.label, required this.value});
+
+  factory AttractionInfoItem.fromJson(Map<String, dynamic> json) {
+    return AttractionInfoItem(
+      label: json['label'] as String? ?? '',
+      value: json['value'] as String? ?? '',
+    );
+  }
+
+  final String label;
+  final String value;
+}
+
+/// `GET /api/v1/attractions/{content_id}`. [source]는 공공데이터 출처
+/// 표기 문구(예: "출처: ⓒ한국관광공사", **실서버로 확인함**).
 class AttractionDetail {
-  const AttractionDetail({required this.summary, this.overview});
+  const AttractionDetail(
+      {required this.summary,
+      this.overview,
+      this.info = const [],
+      this.source});
 
   factory AttractionDetail.fromJson(Map<String, dynamic> json) {
     return AttractionDetail(
       summary: AttractionSummary.fromJson(json),
       overview: json['overview'] as String?,
+      info: ((json['info'] as List<dynamic>?) ?? const [])
+          .cast<Map<String, dynamic>>()
+          .map(AttractionInfoItem.fromJson)
+          .toList(),
+      source: json['source'] as String?,
     );
   }
 
   final AttractionSummary summary;
   final String? overview;
+  final List<AttractionInfoItem> info;
+  final String? source;
 }
 
-/// `attractions/{content_id}/crowd`의 일자별 예측 혼잡도 한 건. [rate]는 `%`
-/// 기호 없는 숫자(집중률)이고, [level]은 `혼잡`/`보통`/`한적` 세 값만
-/// 온다(`docs/API_SPEC.md`).
+/// `attractions/{content_id}/crowd`의 일자별 예측 혼잡도 한 건. **[실서버로
+/// 확인함]** [weekday]는 서버가 이미 한글 요일 약자("월"/"화"/...)로 내려줘
+/// 클라이언트에서 `DateTime.weekday`로 다시 계산할 필요가 없다. [rate]는 `%`
+/// 기호 없는 숫자(집중률, 실제로는 소수라 배지 표시를 위해 반올림해 정수로
+/// 보관)이고, [level]은 `혼잡`/`보통`/`한적` 세 값만 온다.
 class AttractionCrowdDay {
   const AttractionCrowdDay({
     required this.date,
+    required this.weekday,
     required this.rate,
     required this.level,
   });
@@ -109,149 +139,345 @@ class AttractionCrowdDay {
   factory AttractionCrowdDay.fromJson(Map<String, dynamic> json) {
     return AttractionCrowdDay(
       date: DateTime.tryParse(json['date'] as String? ?? ''),
+      weekday: json['weekday'] as String? ?? '',
       rate: ((json['rate'] as num?) ?? 0).round(),
       level: levelForKoreanLabel(json['level'] as String?),
     );
   }
 
   final DateTime? date;
+  final String weekday;
   final int rate;
   final Level level;
 }
 
-/// 기간 요약(`days` 파라미터로 조회한 구간 전체의 평균 집중률/등급). 필드명은
-/// 예시가 없어 가정이다.
+/// 기간 요약(**실서버로 확인함**) — 애초 가정했던 `average_rate`/`level`이
+/// 아니라, 최고/최저 집중률과 그 날짜, 평균(`avg`)이다. `level`은 오지 않는다
+/// (서버가 등급을 안 매겨주므로 클라이언트에서 임의 기준으로 나누지 않음).
 class AttractionCrowdPeriodSummary {
   const AttractionCrowdPeriodSummary({
-    required this.averageRate,
-    required this.level,
+    this.peakDate,
+    required this.peakRate,
+    this.minDate,
+    required this.minRate,
+    required this.avg,
   });
 
   factory AttractionCrowdPeriodSummary.fromJson(Map<String, dynamic> json) {
     return AttractionCrowdPeriodSummary(
-      averageRate: ((json['average_rate'] as num?) ?? 0).round(),
-      level: levelForKoreanLabel(json['level'] as String?),
+      peakDate: DateTime.tryParse(json['peak_date'] as String? ?? ''),
+      peakRate: ((json['peak_rate'] as num?) ?? 0).round(),
+      minDate: DateTime.tryParse(json['min_date'] as String? ?? ''),
+      minRate: ((json['min_rate'] as num?) ?? 0).round(),
+      avg: ((json['avg'] as num?) ?? 0).round(),
     );
   }
 
-  final int averageRate;
-  final Level level;
+  final DateTime? peakDate;
+  final int peakRate;
+  final DateTime? minDate;
+  final int minRate;
+  final int avg;
 }
 
+/// **[실서버로 확인함]** 일자별 목록의 최상위 키가 애초 가정했던 `days`가
+/// 아니라 `series`였다 — 이전 코드는 이 키 불일치 때문에 매번 빈 목록을
+/// 반환하고 있었다. [matchedName]/[availableDays]/[signguNm]/[source]도
+/// 함께 확인돼 추가했다(`content_id`/`match_method`/`match_confidence`/
+/// `has_data`는 화면에 쓸 일이 없어 모델링하지 않음).
 class AttractionCrowdForecast {
-  const AttractionCrowdForecast({required this.days, this.summary});
+  const AttractionCrowdForecast({
+    required this.days,
+    this.summary,
+    this.matchedName,
+    this.availableDays,
+    this.signguNm,
+    this.source,
+  });
 
   factory AttractionCrowdForecast.fromJson(Map<String, dynamic> json) {
     final summaryJson = json['summary'] as Map<String, dynamic>?;
     return AttractionCrowdForecast(
-      days: ((json['days'] as List<dynamic>?) ?? const [])
+      days: ((json['series'] as List<dynamic>?) ?? const [])
           .cast<Map<String, dynamic>>()
           .map(AttractionCrowdDay.fromJson)
           .toList(),
       summary: summaryJson == null
           ? null
           : AttractionCrowdPeriodSummary.fromJson(summaryJson),
+      matchedName: json['matched_name'] as String?,
+      availableDays: (json['available_days'] as num?)?.toInt(),
+      signguNm: json['signgu_nm'] as String?,
+      source: json['source'] as String?,
     );
   }
 
   final List<AttractionCrowdDay> days;
   final AttractionCrowdPeriodSummary? summary;
+  final String? matchedName;
+  final int? availableDays;
+  final String? signguNm;
+  final String? source;
 }
 
-/// `attractions/{content_id}/alternatives`의 대안지 한 건. [rate]/[level]은
-/// 그 대안지 자체의 혼잡도다. 목록 순서는 서버가 혼잡도 우선으로 이미 정렬해
-/// 보내므로, 호출부는 유사도 등 다른 기준으로 **재정렬하면 안 된다**(`docs/API_SPEC.md`).
-class AttractionAlternative {
-  const AttractionAlternative({
-    required this.summary,
+/// 대안지 원본 관광지 자신의 현재 혼잡도(비교 기준). `data.base`
+/// (**실서버로 확인함**).
+class AttractionAlternativeBase {
+  const AttractionAlternativeBase({
+    required this.name,
     required this.rate,
     required this.level,
   });
 
-  factory AttractionAlternative.fromJson(Map<String, dynamic> json) {
-    return AttractionAlternative(
-      summary: AttractionSummary.fromJson(json),
+  factory AttractionAlternativeBase.fromJson(Map<String, dynamic> json) {
+    return AttractionAlternativeBase(
+      name: json['name'] as String? ?? '',
       rate: ((json['rate'] as num?) ?? 0).round(),
       level: levelForKoreanLabel(json['level'] as String?),
     );
   }
 
-  final AttractionSummary summary;
+  final String name;
   final int rate;
   final Level level;
 }
 
-/// 네이버 데이터랩 검색 관심도 추세(`attractions/{content_id}/interest`) 한
-/// 지점. 필드명은 네이버 데이터랩 검색어 트렌드 API의 관례(`period`/`ratio`)를
-/// 근거로 가정했다 — 이 프록시 엔드포인트가 그 값을 그대로 반환한다는 보장은
-/// 없어 실제 응답 확인 전까지는 가정이다.
-class InterestPoint {
-  const InterestPoint({required this.period, required this.ratio});
+/// 대안지 추천 사유(**실서버로 확인함**) — `same_category`가 `true`일 때만
+/// `similarity`(소개문 임베딩 유사도)가 오고, 아니면 `null`이다.
+class AttractionAlternativeReason {
+  const AttractionAlternativeReason({
+    required this.lowerBy,
+    required this.sameCategory,
+    required this.distanceKm,
+    this.similarity,
+  });
 
-  factory InterestPoint.fromJson(Map<String, dynamic> json) {
-    return InterestPoint(
-      period: DateTime.tryParse(json['period'] as String? ?? ''),
-      ratio: ((json['ratio'] as num?) ?? 0).toDouble(),
+  factory AttractionAlternativeReason.fromJson(Map<String, dynamic> json) {
+    return AttractionAlternativeReason(
+      lowerBy: ((json['lower_by'] as num?) ?? 0).toDouble(),
+      sameCategory: json['same_category'] as bool? ?? false,
+      distanceKm: ((json['distance_km'] as num?) ?? 0).toDouble(),
+      similarity: (json['similarity'] as num?)?.toDouble(),
     );
   }
 
-  final DateTime? period;
-  final double ratio;
+  final double lowerBy;
+  final bool sameCategory;
+  final double distanceKm;
+  final double? similarity;
+}
+
+/// `attractions/{content_id}/alternatives`의 대안지 한 건. **[실서버로 확인함]**
+/// `AttractionSummary`(`title`/`addr2`/`tel`/`mapx`/`mapy`/`tour_cd`/`signgu_cd`
+/// 등)를 그대로 쓸 수 있을 거라 가정했으나, 실제로는 제목 필드명이 `title`이
+/// 아니라 `name`이고 그 외 필드도 상당수 빠져 있어 별도 모델로 새로 뺐다.
+/// [rate]/[level]은 그 대안지 자체의 혼잡도다. 목록 순서는 서버가 혼잡도
+/// 우선으로 이미 정렬해 보내므로, 호출부는 유사도 등 다른 기준으로
+/// **재정렬하면 안 된다**(`docs/API_SPEC.md`).
+class AttractionAlternative {
+  const AttractionAlternative({
+    required this.contentId,
+    required this.name,
+    required this.rate,
+    required this.level,
+    this.date,
+    this.image,
+    this.addr1,
+    this.reason,
+  });
+
+  factory AttractionAlternative.fromJson(Map<String, dynamic> json) {
+    final reasonJson = json['reason'] as Map<String, dynamic>?;
+    return AttractionAlternative(
+      contentId: json['content_id']?.toString() ?? '',
+      name: json['name'] as String? ?? '',
+      rate: ((json['rate'] as num?) ?? 0).round(),
+      level: levelForKoreanLabel(json['level'] as String?),
+      date: DateTime.tryParse(json['date'] as String? ?? ''),
+      image: json['image'] as String?,
+      addr1: json['addr1'] as String?,
+      reason: reasonJson == null
+          ? null
+          : AttractionAlternativeReason.fromJson(reasonJson),
+    );
+  }
+
+  final String contentId;
+  final String name;
+  final int rate;
+  final Level level;
+  final DateTime? date;
+  final String? image;
+  final String? addr1;
+  final AttractionAlternativeReason? reason;
+}
+
+/// `GET .../alternatives` 전체 응답(**실서버로 확인함**). [base]는 원본
+/// 관광지 자신의 현재 혼잡도(비교 기준), [source]는 공공데이터 출처 표기
+/// 문구다. `sort_basis`/`relaxed`/`candidate_source`는 서버 내부 로직
+/// 설명용으로 보여 화면에 쓸 일이 없어 모델링하지 않았다.
+class AttractionAlternativesResult {
+  const AttractionAlternativesResult({
+    this.base,
+    required this.items,
+    this.signguNm,
+    this.source,
+  });
+
+  factory AttractionAlternativesResult.fromJson(Map<String, dynamic> json) {
+    final baseJson = json['base'] as Map<String, dynamic>?;
+    return AttractionAlternativesResult(
+      base: baseJson == null
+          ? null
+          : AttractionAlternativeBase.fromJson(baseJson),
+      items: ((json['items'] as List<dynamic>?) ?? const [])
+          .cast<Map<String, dynamic>>()
+          .map(AttractionAlternative.fromJson)
+          .toList(),
+      signguNm: json['signgu_nm'] as String?,
+      source: json['source'] as String?,
+    );
+  }
+
+  final AttractionAlternativeBase? base;
+  final List<AttractionAlternative> items;
+  final String? signguNm;
+  final String? source;
+}
+
+/// `attractions/{content_id}/interest`의 검색 관심도 요약 한 건.
+/// **[실서버로 확인함]** 애초 가정했던 시계열 포인트(`period`/`ratio`) 배열이
+/// 아니라, 최근 [weeks]주간의 방향성 요약(`trend`)과 증감률(`changePct`)
+/// 하나였다 — 네이버 데이터랩을 그대로 프록시하는 게 아니라 서버가 이미
+/// 요약해서 내려주는 형태. [trend]는 지금까지 `flat`만 확인됐고 `up`/`down`
+/// 같은 다른 값도 있을 가능성이 높아 exhaustive enum 대신 원문 문자열로
+/// 받아둔다(알 수 없는 값이 와도 화면이 깨지지 않도록).
+class AttractionInterestItem {
+  const AttractionInterestItem({
+    required this.name,
+    required this.trend,
+    required this.changePct,
+    required this.weeks,
+    required this.displayName,
+  });
+
+  factory AttractionInterestItem.fromJson(Map<String, dynamic> json) {
+    return AttractionInterestItem(
+      name: json['name'] as String? ?? '',
+      trend: json['trend'] as String? ?? '',
+      changePct: ((json['change_pct'] as num?) ?? 0).toDouble(),
+      weeks: (json['weeks'] as num?)?.toInt() ?? 0,
+      displayName: json['display_name'] as String? ?? '',
+    );
+  }
+
+  final String name;
+  final String trend;
+  final double changePct;
+  final int weeks;
+  final String displayName;
 }
 
 class AttractionInterestTrend {
-  const AttractionInterestTrend({required this.points});
+  const AttractionInterestTrend({required this.items});
 
   factory AttractionInterestTrend.fromJson(Map<String, dynamic> json) {
     return AttractionInterestTrend(
-      points: ((json['items'] as List<dynamic>?) ?? const [])
+      items: ((json['items'] as List<dynamic>?) ?? const [])
           .cast<Map<String, dynamic>>()
-          .map(InterestPoint.fromJson)
+          .map(AttractionInterestItem.fromJson)
           .toList(),
     );
   }
 
-  final List<InterestPoint> points;
+  final List<AttractionInterestItem> items;
 }
 
-/// `attractions/{content_id}/images`(캐러셀용 서브 이미지). 목록 자체가
-/// 문자열 URL인지 객체인지 예시가 없어 두 형태 모두 허용해 문자열만 뽑아낸다.
+/// `attractions/{content_id}/images`의 서브 이미지 한 건. **[실서버로
+/// 확인함]** `url`/`small`(썸네일)/`name`(캡션, 보통 관광지 이름과 동일)/
+/// `copyright`(이미지별 저작권 표시, 예: "공공누리 제1유형 (출처표시)") 구조로
+/// 온다 — `copyright`는 공공누리 라이선스 조건상 이미지별로 표기해야 할 수
+/// 있어 버리지 않고 모델에 담아둔다(화면에 아직 노출은 안 함).
+class AttractionImage {
+  const AttractionImage({
+    required this.url,
+    this.small,
+    this.name,
+    this.copyright,
+  });
+
+  factory AttractionImage.fromJson(Map<String, dynamic> json) {
+    return AttractionImage(
+      url: json['url'] as String? ?? '',
+      small: json['small'] as String?,
+      name: json['name'] as String?,
+      copyright: json['copyright'] as String?,
+    );
+  }
+
+  final String url;
+  final String? small;
+  final String? name;
+  final String? copyright;
+}
+
+/// `attractions/{content_id}/images`(캐러셀용 서브 이미지) 전체 응답.
 class AttractionImages {
-  const AttractionImages({required this.imageUrls});
+  const AttractionImages({required this.items, this.source});
 
   factory AttractionImages.fromJson(Map<String, dynamic> json) {
-    final items = (json['items'] as List<dynamic>?) ?? const [];
+    final rawItems = (json['items'] as List<dynamic>?) ?? const [];
     return AttractionImages(
-      imageUrls: items
-          .map((item) =>
-              item is String ? item : (item as Map<String, dynamic>)['url'])
-          .whereType<String>()
+      items: rawItems
+          .map((item) => item is String
+              ? AttractionImage(url: item)
+              : AttractionImage.fromJson(item as Map<String, dynamic>))
+          .where((image) => image.url.isNotEmpty)
           .toList(),
+      source: json['source'] as String?,
     );
   }
 
-  final List<String> imageUrls;
+  final List<AttractionImage> items;
+  final String? source;
+
+  /// `_ImageCarousel`이 쓰는 URL만 뽑은 목록(화면 쪽 변경을 줄이기 위한
+  /// 편의 getter).
+  List<String> get imageUrls => items.map((image) => image.url).toList();
 }
 
-/// `attractions/{content_id}/pet`(반려동물 동반 정보). `docs/API_SPEC.md`가
-/// "`no_data` 흔함"이라고만 언급하고 세부 필드는 주지 않아, 개별 필드로 모델링하는
-/// 대신 [status]만 뽑고 나머지는 [raw]에 그대로 담아둔다(`ChatToolEvent.raw`와
-/// 동일한 이유) — 화면에서 실제로 어떤 필드를 보여줄지 정해지면 그때 구체화한다.
+/// `attractions/{content_id}/pet`(반려동물 동반 정보). **[실서버로 확인함]**
+/// 최상위가 `status`/`items`/`source` 구조인 것은 확인됐다(`no_data`일 때
+/// `items`가 빈 배열) — 다만 [items] 안에 실제 정보가 있을 때의 항목 스키마는
+/// 아직 예시가 없어(`no_data` 사례만 확인) `List<dynamic>` 원본 그대로 두고,
+/// 값이 있는 예시가 오면 그때 구체화한다(`ChatToolEvent.raw`와 같은 이유).
 class AttractionPetInfo {
-  const AttractionPetInfo({required this.status, required this.raw});
+  const AttractionPetInfo({
+    required this.status,
+    required this.items,
+    this.source,
+  });
 
   factory AttractionPetInfo.fromJson(Map<String, dynamic> json) {
     return AttractionPetInfo(
-        status: json['status'] as String? ?? '', raw: json);
+      status: json['status'] as String? ?? '',
+      items: (json['items'] as List<dynamic>?) ?? const [],
+      source: json['source'] as String?,
+    );
   }
 
   final String status;
-  final Map<String, dynamic> raw;
+  final List<dynamic> items;
+  final String? source;
 
-  bool get hasData => status != 'no_data';
+  bool get hasData => status != 'no_data' && items.isNotEmpty;
 }
 
 /// `attractions/{content_id}/similar`(소개문 임베딩 코사인 유사도) 한 건.
+/// **[실서버로 확인함]** `AttractionSummary` 재사용 가정(`content_id`/`title`)이
+/// 그대로 맞았다 — `alternatives`(제목 필드가 `title`이 아니라 `name`)와 달리
+/// 이 엔드포인트는 애초 예상대로 옴. `similarity`도 0~1 범위 소수로 확인돼
+/// 화면의 `(similarity * 100).round()` 퍼센트 변환이 그대로 유효하다.
 class SimilarAttraction {
   const SimilarAttraction({required this.summary, required this.similarity});
 
@@ -332,9 +558,9 @@ abstract class AttractionsApi {
     DateTime? dateFrom,
   });
 
-  /// `GET /api/v1/attractions/{content_id}/alternatives?date=&limit=`. 응답
-  /// 순서를 그대로 유지해야 한다(재정렬 금지).
-  Future<List<AttractionAlternative>> fetchAlternatives({
+  /// `GET /api/v1/attractions/{content_id}/alternatives?date=&limit=`.
+  /// `items` 순서를 그대로 유지해야 한다(재정렬 금지).
+  Future<AttractionAlternativesResult> fetchAlternatives({
     required String contentId,
     DateTime? date,
     int? limit,
@@ -426,7 +652,7 @@ class LoggingAttractionsApi implements AttractionsApi {
   }
 
   @override
-  Future<List<AttractionAlternative>> fetchAlternatives({
+  Future<AttractionAlternativesResult> fetchAlternatives({
     required String contentId,
     DateTime? date,
     int? limit,
@@ -434,10 +660,10 @@ class LoggingAttractionsApi implements AttractionsApi {
     AppLog.logger.i(
         '[AttractionsApi] fetchAlternatives → contentId: $contentId, date: $date, limit: $limit');
     try {
-      final alternatives = await _inner.fetchAlternatives(
+      final result = await _inner.fetchAlternatives(
           contentId: contentId, date: date, limit: limit);
-      AppLog.logger.d('[AttractionsApi] ← ${alternatives.length}건');
-      return alternatives;
+      AppLog.logger.d('[AttractionsApi] ← ${result.items.length}건');
+      return result;
     } catch (e, stackTrace) {
       AppLog.logger.e('[AttractionsApi] fetchAlternatives 실패',
           error: e, stackTrace: stackTrace);
@@ -455,7 +681,7 @@ class LoggingAttractionsApi implements AttractionsApi {
     try {
       final trend =
           await _inner.fetchInterest(contentId: contentId, weeks: weeks);
-      AppLog.logger.d('[AttractionsApi] ← ${trend.points.length}건');
+      AppLog.logger.d('[AttractionsApi] ← ${trend.items.length}건');
       return trend;
     } catch (e, stackTrace) {
       AppLog.logger.e('[AttractionsApi] fetchInterest 실패',
@@ -590,7 +816,7 @@ class DioAttractionsApi implements AttractionsApi {
   }
 
   @override
-  Future<List<AttractionAlternative>> fetchAlternatives({
+  Future<AttractionAlternativesResult> fetchAlternatives({
     required String contentId,
     DateTime? date,
     int? limit,
@@ -603,11 +829,9 @@ class DioAttractionsApi implements AttractionsApi {
       },
     );
     final data = _unwrap(response, errorMessage: '대안 여행지를 불러오지 못했어요.');
-    // 서버가 이미 혼잡도 우선으로 정렬해 보내므로 여기서 재정렬하지 않는다.
-    return ((data['items'] as List<dynamic>?) ?? const [])
-        .cast<Map<String, dynamic>>()
-        .map(AttractionAlternative.fromJson)
-        .toList();
+    // `items` 순서는 서버가 이미 혼잡도 우선으로 정렬해 보내므로 여기서
+    // 재정렬하지 않는다.
+    return AttractionAlternativesResult.fromJson(data);
   }
 
   @override

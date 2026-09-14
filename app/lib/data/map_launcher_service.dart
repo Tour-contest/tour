@@ -35,6 +35,32 @@ class MapLauncherService {
         iosStoreUrl: _naverMapIosStore,
       );
 
+  /// 좌표(위도/경도)가 있는 지점을 정확히 짚어서 연다(`attraction_detail_screen.dart`
+  /// 처럼 `AttractionSummary.mapX`(경도)/`mapY`(위도)가 있는 경우 — 관광공사
+  /// TourAPI 관례상 `mapx`는 경도, `mapy`는 위도). 카카오맵은 `look` 스킴에
+  /// 좌표만 실어 보낸다(라벨 표시는 place id가 있어야 가능해 이 스킴으로는
+  /// 지원 안 됨). 네이버지도는 공식 문서의 `place` 스킴(`lat`/`lng`/`name`/`appname`)을
+  /// 그대로 쓴다.
+  static Future<bool> openKakaoMapAt(double lat, double lng) => _launch(
+        Uri(scheme: 'kakaomap', host: 'look', queryParameters: {
+          'p': '$lat,$lng',
+        }),
+        androidStoreUrl: _kakaoMapAndroidStore,
+        iosStoreUrl: _kakaoMapIosStore,
+      );
+
+  static Future<bool> openNaverMapAt(double lat, double lng, String name) =>
+      _launch(
+        Uri(scheme: 'nmap', host: 'place', queryParameters: {
+          'lat': '$lat',
+          'lng': '$lng',
+          'name': name,
+          'appname': AppInfo.package.packageName,
+        }),
+        androidStoreUrl: _naverMapAndroidStore,
+        iosStoreUrl: _naverMapIosStore,
+      );
+
   static Future<bool> _launch(
     Uri uri, {
     required String androidStoreUrl,

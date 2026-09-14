@@ -344,13 +344,16 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   /// `AreasApi.fetchOverview` 결과를 실 서버 `crowd` 카드와 같은 페이로드
-  /// 모양으로 변환한다(`AreaCrowdSnapshot`의 `Level` 매핑을 다시 한국어 키로
+  /// 모양으로 변환한다(`AreaCrowdSnapshot`의 `Level` 매핑을 다시 문자열 키로
   /// 되돌리는 이유: `ChatCardView`의 `CrowdCardData.fromJson`이 그 키를 기대함).
+  /// **[실서버로 확인함]** 실 서버 `crowd` 카드의 키는 한글 라벨이 아니라
+  /// 영문(`crowded`/`normal`/`quiet`)이라, 이 폴백이 만드는 카드도 실 카드와
+  /// 완전히 같은 모양이 되도록 영문 키로 맞췄다.
   ChatCardBlock _crowdCard(AreaCrowdSnapshot snapshot) {
     String levelKey(Level level) => switch (level) {
-          Level.busy => '혼잡',
-          Level.quiet => '한적',
-          Level.normal => '보통',
+          Level.busy => 'crowded',
+          Level.quiet => 'quiet',
+          Level.normal => 'normal',
         };
     return ChatCardBlock(type: 'crowd', payload: {
       'status': 'ok',
@@ -543,33 +546,10 @@ class _ChatScreenState extends State<ChatScreen>
 /// `StreamingAiMessage`의 "널널" 라벨 행과 같은 스타일(골드 점 + 라벨)을 쓴다.
 /// [label]이 있으면(`ChatStatusEvent`로 받은 진행 상태) 그걸, 없으면 기본
 /// 문구(`chatThinkingLabel`)를 보여준다.
-class _ThinkingIndicator extends StatefulWidget {
+class _ThinkingIndicator extends StatelessWidget {
   const _ThinkingIndicator({this.label});
 
   final String? label;
-
-  @override
-  State<_ThinkingIndicator> createState() => _ThinkingIndicatorState();
-}
-
-class _ThinkingIndicatorState extends State<_ThinkingIndicator> {
-  bool _dotOn = true;
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    _timer = Timer.periodic(const Duration(milliseconds: 500), (_) {
-      if (!mounted) return;
-      setState(() => _dotOn = !_dotOn);
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -578,19 +558,10 @@ class _ThinkingIndicatorState extends State<_ThinkingIndicator> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        AnimatedOpacity(
-          duration: const Duration(milliseconds: 200),
-          opacity: _dotOn ? 1 : 0.2,
-          child: Container(
-            width: 5,
-            height: 5,
-            decoration:
-                BoxDecoration(color: colors.accent, shape: BoxShape.circle),
-          ),
-        ),
+        const Mascot(size: 16),
         const SizedBox(width: 6),
         Text(
-          widget.label ?? l10n.chatThinkingLabel,
+          label ?? l10n.chatThinkingLabel,
           style: AppTextStyles.body(fontSize: 13, color: colors.ink),
         ),
       ],
@@ -613,7 +584,9 @@ class _ProfileAvatarButtonState extends State<_ProfileAvatarButton> {
   // 팝업이 실제 보이는 아이콘 바로 아래에 붙도록 한다.
   static const double _slotSize = 44;
 
-  SnsProvider _provider = SnsProvider.kakao;
+  // 지원하는 SNS 로그인 수단이 카카오 하나뿐이라 항상 이 값으로 고정한다
+  // ("최근 로그인" 수단 저장 기능은 삭제됨).
+  final SnsProvider _provider = SnsProvider.kakao;
 
   // 카카오 로그인 성공 시 저장해둔 실제 닉네임/프로필 사진(`login_screen.dart`의
   // `_saveKakaoProfile`). 없으면(네이버 mock 로그인, 동의 안 함 등) 기존처럼
@@ -634,7 +607,6 @@ class _ProfileAvatarButtonState extends State<_ProfileAvatarButton> {
   @override
   void initState() {
     super.initState();
-    _loadProvider();
     _loadProfile();
   }
 
@@ -643,12 +615,6 @@ class _ProfileAvatarButtonState extends State<_ProfileAvatarButton> {
     _closeMenu();
     _hideLoadingOverlay();
     super.dispose();
-  }
-
-  Future<void> _loadProvider() async {
-    final provider = await LoginPreference.readLastProvider();
-    if (!mounted || provider == null) return;
-    setState(() => _provider = provider);
   }
 
   Future<void> _loadProfile() async {
@@ -893,7 +859,9 @@ class _EmptyState extends StatefulWidget {
 }
 
 class _EmptyStateState extends State<_EmptyState> {
-  SnsProvider _provider = SnsProvider.kakao;
+  // 지원하는 SNS 로그인 수단이 카카오 하나뿐이라 항상 이 값으로 고정한다
+  // ("최근 로그인" 수단 저장 기능은 삭제됨).
+  final SnsProvider _provider = SnsProvider.kakao;
 
   // `_ProfileAvatarButtonState`/`settings_screen.dart`의 `_ProfileSummary`와
   // 동일한 패턴 — 카카오 로그인으로 받아온 실제 닉네임이 있으면 그걸, 없으면
@@ -903,14 +871,7 @@ class _EmptyStateState extends State<_EmptyState> {
   @override
   void initState() {
     super.initState();
-    _loadProvider();
     _loadProfile();
-  }
-
-  Future<void> _loadProvider() async {
-    final provider = await LoginPreference.readLastProvider();
-    if (!mounted || provider == null) return;
-    setState(() => _provider = provider);
   }
 
   Future<void> _loadProfile() async {

@@ -44,10 +44,6 @@
   "@loginInviteCaption": {
     "description": "로그인 화면 하단 초대 카드 캡션"
   },
-  "loginRecentBadge": "최근 로그인",
-  "@loginRecentBadge": {
-    "description": "최근 사용한 SNS 로그인 버튼 위 뱃지"
-  },
   "loginKakaoError": "카카오 로그인에 실패했어요. 잠시 후 다시 시도해주세요.",
   "@loginKakaoError": {
     "description": "카카오 로그인 실패 시 스낵바 문구"
@@ -485,6 +481,114 @@
   "placeDetailCallUnavailable": "전화 앱을 열 수 없어요.",
   "@placeDetailCallUnavailable": {
     "description": "전화 걸기 버튼 탭 시 다이얼러를 열지 못했을 때 안내 토스트"
+  },
+  "attractionListItemDetailCta": "자세히 보기 ›",
+  "@attractionListItemDetailCta": {
+    "description": "attraction_list 카드 항목 하단 상세 화면 진입 문구"
+  },
+  "attractionDetailTitle": "관광지 정보",
+  "@attractionDetailTitle": {
+    "description": "관광지 상세 화면 헤더 기본 타이틀(상세 조회 전/제목 없을 때)"
+  },
+  "attractionDetailNotFound": "관광지 정보를 찾을 수 없어요.",
+  "@attractionDetailNotFound": {
+    "description": "관광지 상세 조회 404/503 응답 시 안내"
+  },
+  "attractionDetailLoadError": "관광지 정보를 불러오지 못했어요.",
+  "@attractionDetailLoadError": {
+    "description": "관광지 상세/혼잡도 조회 실패 시 안내(재시도 버튼과 함께)"
+  },
+  "attractionDetailCrowdSection": "혼잡도 예보",
+  "@attractionDetailCrowdSection": {
+    "description": "관광지 상세 화면 혼잡도 그래프 섹션 라벨"
+  },
+  "attractionDetailCrowdDaysOption": "{days}일",
+  "@attractionDetailCrowdDaysOption": {
+    "description": "혼잡도 그래프 기간 선택 pill(7일/14일/28일)",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "attractionDetailCrowdSummary": "평균 {avg}% · 최고 {peakDate} {peakRate}% · 최저 {minDate} {minRate}%",
+  "@attractionDetailCrowdSummary": {
+    "description": "혼잡도 그래프 아래 기간 요약(평균/최고/최저)",
+    "placeholders": {
+      "avg": {
+        "type": "int"
+      },
+      "peakDate": {
+        "type": "String"
+      },
+      "peakRate": {
+        "type": "int"
+      },
+      "minDate": {
+        "type": "String"
+      },
+      "minRate": {
+        "type": "int"
+      }
+    }
+  },
+  "attractionDetailInfoSection": "이용정보",
+  "@attractionDetailInfoSection": {
+    "description": "관광지 상세 화면 이용정보(+지도에서 보기) 섹션 라벨"
+  },
+  "attractionDetailIntroSection": "상세 소개",
+  "@attractionDetailIntroSection": {
+    "description": "관광지 상세 화면 소개문 섹션 라벨"
+  },
+  "attractionDetailAlternativesSection": "함께 찾는 곳",
+  "@attractionDetailAlternativesSection": {
+    "description": "관광지 상세 화면 대안 여행지 섹션 라벨"
+  },
+  "attractionDetailPetSection": "반려동물 동반 정보",
+  "@attractionDetailPetSection": {
+    "description": "관광지 상세 화면 반려동물 동반 정보 섹션 라벨"
+  },
+  "attractionDetailPetNoData": "반려동물 동반 정보가 없어요.",
+  "@attractionDetailPetNoData": {
+    "description": "반려동물 동반 정보가 no_data이거나 표시할 필드가 없을 때 안내"
+  },
+  "attractionDetailSimilarSection": "비슷한 관광지",
+  "@attractionDetailSimilarSection": {
+    "description": "관광지 상세 화면 비슷한 관광지 섹션 라벨"
+  },
+  "attractionDetailSimilarityLabel": "{percent}% 유사",
+  "@attractionDetailSimilarityLabel": {
+    "description": "비슷한 관광지 각 행의 유사도 표시",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "attractionDetailInterestSection": "검색 관심도",
+  "@attractionDetailInterestSection": {
+    "description": "관광지 상세 화면 검색 관심도 섹션 라벨"
+  },
+  "attractionDetailInterestTrendUp": "상승",
+  "@attractionDetailInterestTrendUp": {
+    "description": "검색 관심도 trend가 up일 때 라벨"
+  },
+  "attractionDetailInterestTrendDown": "하락",
+  "@attractionDetailInterestTrendDown": {
+    "description": "검색 관심도 trend가 down일 때 라벨"
+  },
+  "attractionDetailInterestTrendFlat": "보합",
+  "@attractionDetailInterestTrendFlat": {
+    "description": "검색 관심도 trend가 flat이거나 알 수 없는 값일 때 기본 라벨"
+  },
+  "attractionDetailInterestWeeksLabel": "최근 {weeks}주 기준",
+  "@attractionDetailInterestWeeksLabel": {
+    "description": "검색 관심도 요약이 집계된 기간",
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
   },
   "settingsSectionLanguage": "언어",
   "@settingsSectionLanguage": {

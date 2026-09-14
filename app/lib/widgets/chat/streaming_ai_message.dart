@@ -8,6 +8,7 @@ import 'package:nullnull/theme/app_text_styles.dart';
 import 'package:nullnull/widgets/nullnull/alternative_card.dart';
 import 'package:nullnull/widgets/nullnull/chat_card_view.dart';
 import 'package:nullnull/widgets/nullnull/forecast_card.dart';
+import 'package:nullnull/widgets/nullnull/mascot.dart';
 import 'package:nullnull/widgets/nullnull/no_data_card.dart';
 import 'package:nullnull/widgets/nullnull/region_card.dart';
 
@@ -134,30 +135,11 @@ class _StreamingAiMessageState extends State<StreamingAiMessage> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
     final blocks = _visible;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Container(
-              width: 5,
-              height: 5,
-              decoration:
-                  BoxDecoration(color: colors.accent, shape: BoxShape.circle),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              '널널',
-              style: AppTextStyles.body(
-                fontSize: 9.5,
-                color: colors.accentBright,
-                letterSpacing: 1.6,
-              ),
-            ),
-          ],
-        ),
+        const Mascot(size: 16),
         const SizedBox(height: 7),
         for (var i = 0; i < blocks.length; i++)
           _BlockView(

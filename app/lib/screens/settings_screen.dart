@@ -71,10 +71,10 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  // 프로토타입 단계라 실제 로그인 세션이 없으므로, 로그인 화면에서 저장한
-  // 마지막 SNS 로그인 수단을 로그인된 계정으로 간주한다. 저장된 값이 없으면
-  // 카카오로 로그인했다고 가정한다.
-  SnsProvider _provider = SnsProvider.kakao;
+  // 프로토타입 단계라 실제 로그인 세션이 없고, 지원하는 SNS 로그인 수단도
+  // 카카오 하나뿐이라 항상 이 값으로 고정한다("최근 로그인" 수단 저장 기능은
+  // 삭제됨).
+  final SnsProvider _provider = SnsProvider.kakao;
 
   // 카카오 로그인 성공 시 받아와 저장해둔 실제 닉네임/프로필 사진(`login_screen.dart`
   // `_saveKakaoProfile`). 없으면(동의 안 함, 조회 실패 등) `_ProfileSummary`가
@@ -89,14 +89,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    _loadProvider();
     _loadProfile();
-  }
-
-  Future<void> _loadProvider() async {
-    final provider = await LoginPreference.readLastProvider();
-    if (!mounted || provider == null) return;
-    setState(() => _provider = provider);
   }
 
   Future<void> _loadProfile() async {

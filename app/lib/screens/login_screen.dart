@@ -28,25 +28,10 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  SnsProvider? _lastProvider;
-
   ///  진행 중에는 화면 터치·뒤로가기를 막는다.
   bool _isLoggingIn = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadLastProvider();
-  }
-
-  Future<void> _loadLastProvider() async {
-    final provider = await LoginPreference.readLastProvider();
-    if (!mounted) return;
-    setState(() => _lastProvider = provider);
-  }
-
   Future<void> _completeLogin(SnsProvider provider) async {
-    await LoginPreference.saveLastProvider(provider);
     unawaited(AnalyticsService.logLogin(provider));
     if (!mounted) return;
     context.goNamed(RouteNames.chat);
@@ -260,7 +245,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                 colors.kakaoSymbol, BlendMode.srcIn),
                           ),
                           label: l10n.loginKakaoButton,
-                          showRecentBadge: _lastProvider == SnsProvider.kakao,
                           onTap: _isLoggingIn ? null : _loginWithKakao,
                           backgroundColor: colors.kakaoContainer,
                           labelColor: colors.kakaoLabel,
@@ -287,7 +271,6 @@ class _SnsLoginButton extends StatelessWidget {
   const _SnsLoginButton({
     required this.icon,
     required this.label,
-    required this.showRecentBadge,
     required this.onTap,
     required this.backgroundColor,
     required this.labelColor,
@@ -300,7 +283,6 @@ class _SnsLoginButton extends StatelessWidget {
 
   final Widget icon;
   final String label;
-  final bool showRecentBadge;
   final VoidCallback? onTap;
 
   /// 각 SNS 브랜드 가이드에 따른 버튼 채움 색.
@@ -310,58 +292,32 @@ class _SnsLoginButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        SizedBox(
-          width: _width,
-          height: _height,
-          child: OutlinedButton(
-            onPressed: onTap,
-            style: OutlinedButton.styleFrom(
-              backgroundColor: backgroundColor,
-              side: BorderSide.none,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(_borderRadius)),
-              padding: EdgeInsets.zero,
-              overlayColor: colors.accentTint08,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                icon,
-                const SizedBox(width: _iconGap),
-                Text(
-                  label,
-                  style: AppTextStyles.heading(
-                      fontSize: 14, weight: FontWeight.w600, color: labelColor),
-                ),
-              ],
-            ),
-          ),
+    return SizedBox(
+      width: _width,
+      height: _height,
+      child: OutlinedButton(
+        onPressed: onTap,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: backgroundColor,
+          side: BorderSide.none,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(_borderRadius)),
+          padding: EdgeInsets.zero,
+          overlayColor: colors.accentTint08,
         ),
-        if (showRecentBadge)
-          Positioned(
-            top: -9,
-            right: 14,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: colors.paper,
-                borderRadius: BorderRadius.circular(99),
-                border: Border.all(color: colors.accent),
-              ),
-              child: Text(
-                AppLocalizations.of(context)!.loginRecentBadge,
-                style: AppTextStyles.body(
-                  fontSize: 9.5,
-                  color: colors.accentBright,
-                  letterSpacing: .4,
-                ),
-              ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            icon,
+            const SizedBox(width: _iconGap),
+            Text(
+              label,
+              style: AppTextStyles.heading(
+                  fontSize: 14, weight: FontWeight.w600, color: labelColor),
             ),
-          ),
-      ],
+          ],
+        ),
+      ),
     );
   }
 }

@@ -8,6 +8,7 @@ import 'package:nullnull/screens/history_screen.dart';
 import 'package:nullnull/screens/login_screen.dart';
 import 'package:nullnull/screens/onboarding_screen.dart';
 import 'package:nullnull/screens/place_detail_screen.dart';
+import 'package:nullnull/screens/attraction_detail_screen.dart';
 import 'package:nullnull/screens/settings_screen.dart';
 import 'package:nullnull/screens/splash_screen.dart';
 import 'package:nullnull/screens/web_view_screen.dart';
@@ -29,6 +30,7 @@ class RouteNames {
   static const settings = 'settings';
   static const place = 'place';
   static const webView = 'webView';
+  static const attractionDetail = 'attractionDetail';
 }
 
 final GoRouter appRouter = GoRouter(
@@ -79,6 +81,15 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) {
         final args = state.extra as WebViewRouteArgs;
         return WebViewScreen(title: args.title, url: args.url);
+      },
+    ),
+    GoRoute(
+      path: '/${RouteNames.attractionDetail}',
+      name: RouteNames.attractionDetail,
+      builder: (context, state) {
+        final args = state.extra as AttractionDetailArgs;
+        return AttractionDetailScreen(
+            contentId: args.contentId, initialTitle: args.initialTitle);
       },
     ),
   ],
