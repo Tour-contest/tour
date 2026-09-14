@@ -153,6 +153,10 @@
   "@chatInputSendTooltip": {
     "description": "채팅 입력바 전송 버튼 툴팁"
   },
+  "chatInputStopTooltip": "응답 생성 중지",
+  "@chatInputStopTooltip": {
+    "description": "AI 응답 생성 중일 때 전송 버튼 자리에 뜨는 정지 버튼 툴팁"
+  },
   "chatCongestionLabel": "혼잡도 {percent}%",
   "@chatCongestionLabel": {
     "description": "추천 장소 카드의 혼잡도 배지",
@@ -177,6 +181,10 @@
   "congestionLevelVeryBusy": "매우 혼잡",
   "@congestionLevelVeryBusy": {
     "description": "혼잡도 배지: 매우 혼잡(집중률 75 이상)"
+  },
+  "congestionScoreSuffix": "점",
+  "@congestionScoreSuffix": {
+    "description": "CongestionBadge 점수 뒤에 붙는 단위(\"한적 23점\"처럼). 언어별로 다르거나 없을 수 있어 별도 키로 분리"
   },
   "forecastTooltip": "{weekday}요일 집중률 {score} · {level}",
   "@forecastTooltip": {
@@ -271,6 +279,15 @@
         "type": "String"
       },
       "category": {
+        "type": "String"
+      }
+    }
+  },
+  "chatCardCrowdOverviewTitle": "{signguNm} 오늘 현황",
+  "@chatCardCrowdOverviewTitle": {
+    "description": "crowd 카드 맨 위 도넛 차트 카드의 제목",
+    "placeholders": {
+      "signguNm": {
         "type": "String"
       }
     }
@@ -537,6 +554,40 @@
   "attractionDetailAlternativesSection": "함께 찾는 곳",
   "@attractionDetailAlternativesSection": {
     "description": "관광지 상세 화면 대안 여행지 섹션 라벨"
+  },
+  "alternativeRankLabel": "함께 찾는 곳 {rank}위",
+  "@alternativeRankLabel": {
+    "description": "AlternativeCard 상단 랭킹 라벨",
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "alternativeReasonLabel": "{lowerBy}점 낮음 · {distanceKm}km",
+  "@alternativeReasonLabel": {
+    "description": "AlternativeCard의 추천 사유(원본 대비 혼잡도 차이, 거리) — 소수 첫째 자리까지 미리 포맷한 문자열을 넘긴다",
+    "placeholders": {
+      "lowerBy": {
+        "type": "String"
+      },
+      "distanceKm": {
+        "type": "String"
+      }
+    }
+  },
+  "alternativeDetailLinkLabel": "자세히 보기 ›",
+  "@alternativeDetailLinkLabel": {
+    "description": "AlternativeCard 하단 안내 문구(카드 자체가 상세 화면으로 이동하는 탭 영역이라 별도 탭 핸들러는 없음). 원래 \"지도에서 보기\"였다가 실제로는 지도가 아니라 상세 화면으로 이동해 사용자 요청으로 문구 교체"
+  },
+  "chatCardAlternativesTitle": "{name} 대신 가볼만한 곳",
+  "@chatCardAlternativesTitle": {
+    "description": "실 서버 채팅 카드(alternatives) 제목 — base가 있을 때",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "attractionDetailPetSection": "반려동물 동반 정보",
   "@attractionDetailPetSection": {

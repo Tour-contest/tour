@@ -10,7 +10,9 @@ import 'package:nullnull/screens/attraction_detail_screen.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
 import 'package:nullnull/widgets/map_app_sheet.dart';
+import 'package:nullnull/widgets/nullnull/alternatives_section.dart';
 import 'package:nullnull/widgets/nullnull/card_container.dart';
+import 'package:nullnull/widgets/nullnull/congestion_badge.dart';
 import 'package:nullnull/widgets/nullnull/crowd_bar_chart.dart';
 import 'package:nullnull/widgets/nullnull/region_donut_chart.dart';
 
@@ -22,7 +24,10 @@ import 'package:nullnull/widgets/nullnull/region_donut_chart.dart';
 /// 유무로 두 모양을 겸한다: 지역 전체 혼잡도([CrowdCardData], `summary`/`samples`)와
 /// 사용자가 관광지명으로 물어봐 매칭된 관광지별 혼잡도 예보([CrowdMatchCardData],
 /// `items[].series`/`summary` — `attractions/{content_id}/crowd`와 필드명이
-/// 같아 그 모델을 재사용).
+/// 같아 그 모델을 재사용). `type: "alternatives"`는 `attractions/{content_id}/alternatives`
+/// REST 응답과 필드명이 완전히 같아 그 모델([AttractionAlternativesResult])을
+/// 그대로 재사용한다. `type: "detail"`은 그릴 UI가 없어 의도적으로 스킵한다
+/// (알려지지 않은 타입에 대한 경고 로그도 남기지 않음 — 알고 있는 타입이라).
 class ChatCardView extends StatelessWidget {
   const ChatCardView({super.key, required this.block});
 
@@ -34,8 +39,11 @@ class ChatCardView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // `payload.status`가 `no_data`이거나 `has_data:false`면 보여줄 정보가
+    // 없다는 뜻이라, 안내 문구조차 없이 카드를 완전히 숨긴다(사용자 요청 —
+    // 이전엔 `_NoDataMessage`로 안내 카드를 대신 그렸음).
     if (!_hasData) {
-      return const _NoDataMessage();
+      return const SizedBox.shrink();
     }
     return switch (block.type) {
       'attraction_list' => _AttractionListCard(
@@ -47,6 +55,12 @@ class ChatCardView extends StatelessWidget {
       'crowd' => block.payload['items'] is List
           ? _CrowdMatchCard(data: CrowdMatchCardData.fromJson(block.payload))
           : _CrowdCard(data: CrowdCardData.fromJson(block.payload)),
+      'alternatives' => _AlternativesCard(
+          data: AttractionAlternativesResult.fromJson(block.payload)),
+      // `detail` 타입은 카드로 그릴 UI가 없어 의도적으로 스킵한다(사용자
+      // 요청) — `_unsupported()`(아직 모르는 타입 대상, 경고 로그를 남김)와
+      // 달리 이미 알고 있는 타입이라 로그 없이 조용히 아무것도 그리지 않는다.
+      'detail' => const SizedBox.shrink(),
       _ => _unsupported(),
     };
   }
@@ -54,22 +68,6 @@ class ChatCardView extends StatelessWidget {
   Widget _unsupported() {
     AppLog.logger.w('[ChatCardView] 지원하지 않는 카드 타입: ${block.type}');
     return const SizedBox.shrink();
-  }
-}
-
-class _NoDataMessage extends StatelessWidget {
-  const _NoDataMessage();
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    final l10n = AppLocalizations.of(context)!;
-    return CardContainer(
-      child: Text(
-        l10n.chatCardNoDataMessage,
-        style: AppTextStyles.body(color: colors.ink600),
-      ),
-    );
   }
 }
 
@@ -151,11 +149,16 @@ class _AttractionListCardState extends State<_AttractionListCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            l10n.chatCardAttractionListTitle(
-                widget.data.signguNm, widget.data.category),
-            style: AppTextStyles.heading(fontSize: 14, color: colors.ink),
-          ),
+          // `signgu_nm`/`category`가 둘 다 비어있으면 "{signguNm} {category}
+          // 목록"이 앞뒤 공백만 남은 " 목록"으로 어색하게 보이므로, 그럴 땐
+          // 제목 자체를 아예 그리지 않는다(사용자 요청).
+          if (widget.data.signguNm.isNotEmpty ||
+              widget.data.category.isNotEmpty)
+            Text(
+              l10n.chatCardAttractionListTitle(
+                  widget.data.signguNm, widget.data.category),
+              style: AppTextStyles.heading(fontSize: 16, color: colors.ink),
+            ),
           for (final item in visibleItems) ...[
             const SizedBox(height: 12),
             _AttractionRow(item: item),
@@ -208,7 +211,7 @@ class _AttractionRow extends StatelessWidget {
           Text(
             item.title,
             style:
-                AppTextStyles.heading(fontSize: 14, color: colors.accentBright),
+                AppTextStyles.heading(fontSize: 16, color: colors.accentBright),
           ),
           if (item.address.isNotEmpty) ...[
             const SizedBox(height: 2),
@@ -367,7 +370,19 @@ class _CrowdCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CardContainer(child: RegionDonutChart(counts: data.counts)),
+        CardContainer(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.chatCardCrowdOverviewTitle(data.signguNm),
+                style: AppTextStyles.heading(fontSize: 16, color: colors.ink),
+              ),
+              const SizedBox(height: 10),
+              RegionDonutChart(counts: data.counts),
+            ],
+          ),
+        ),
         const SizedBox(height: 10),
         CardContainer(
           child: Column(
@@ -375,7 +390,7 @@ class _CrowdCard extends StatelessWidget {
             children: [
               Text(
                 l10n.chatCardCrowdTitle(data.signguNm),
-                style: AppTextStyles.heading(fontSize: 14, color: colors.ink),
+                style: AppTextStyles.heading(fontSize: 16, color: colors.ink),
               ),
               if (popular.isNotEmpty) ...[
                 const SizedBox(height: 14),
@@ -463,7 +478,7 @@ class _SampleChip extends StatelessWidget {
           borderRadius: BorderRadius.circular(999),
         ),
         child: Text(
-          '${sample.name} ${sample.rate}',
+          sample.name,
           style: AppTextStyles.tabularNums(
             AppTextStyles.body(fontSize: 12, color: colors.ink),
           ),
@@ -591,7 +606,7 @@ class _CrowdMatchItemCard extends StatelessWidget {
                 Text(
                   item.name,
                   style:
-                  AppTextStyles.heading(fontSize: 14.5, color: colors.ink).copyWith(fontWeight: FontWeight.w600),
+                  AppTextStyles.heading(fontSize: 16, color: colors.ink).copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -619,6 +634,65 @@ class _CrowdMatchItemCard extends StatelessWidget {
           ],
         ],
       )
+    );
+  }
+}
+
+/// `type: "alternatives"` 카드 — `attractions/{content_id}/alternatives`
+/// REST 응답과 필드명이 완전히 같아(`base`/`items`/`signgu_nm`/`source`)
+/// [AttractionAlternativesResult]를 그대로 재사용한다. `items`가 비어있으면
+/// 보여줄 게 없으므로 카드 자체를 숨긴다(`_CrowdCard`의 빈 데이터 처리와
+/// 동일한 방침).
+class _AlternativesCard extends StatelessWidget {
+  const _AlternativesCard({required this.data});
+
+  final AttractionAlternativesResult data;
+
+  void _open(BuildContext context, String contentId, String title) {
+    if (contentId.isEmpty) {
+      MapAppSheet.show(context, placeName: title);
+      return;
+    }
+    context.pushNamed(
+      RouteNames.attractionDetail,
+      extra: AttractionDetailArgs(contentId: contentId, initialTitle: title),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (data.items.isEmpty) return const SizedBox.shrink();
+    final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final base = data.base;
+    return CardContainer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            base != null
+                ? l10n.chatCardAlternativesTitle(base.name)
+                : l10n.attractionDetailAlternativesSection,
+            style: AppTextStyles.heading(fontSize: 16, color: colors.ink),
+          ),
+          // if (base != null) ...[
+          //   const SizedBox(height: 8),
+          //   CongestionBadge(level: base.level, score: base.rate),
+          // ],
+          const SizedBox(height: 12),
+          AlternativesSection(
+            items: data.items,
+            onTap: (contentId, title) => _open(context, contentId, title),
+          ),
+          if (data.source != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              data.source!,
+              style: AppTextStyles.body(fontSize: 11, color: colors.ink600),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

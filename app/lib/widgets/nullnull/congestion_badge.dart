@@ -5,6 +5,10 @@ import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
 
+/// 등급 + 집중률 점수 배지(예: "한적 23점"). 점수 뒤 단위(`congestionScoreSuffix`,
+/// 한국어만 "점")는 언어별로 다를 수 있어 l10n으로 분리했다(영어는 빈 문자열이라
+/// "Quiet 23"처럼 단위 없이 나온다). `attraction_detail_screen.dart`/`chat_card_view.dart`/
+/// `alternatives_section.dart`가 공유한다.
 class CongestionBadge extends StatelessWidget {
   const CongestionBadge({super.key, required this.level, required this.score});
 
@@ -35,7 +39,7 @@ class CongestionBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(99),
       ),
       child: Text(
-        '$text $score',
+        '$text $score${l10n.congestionScoreSuffix}',
         style: AppTextStyles.tabularNums(
           AppTextStyles.body(fontSize: 10.5, color: foreground),
         ),

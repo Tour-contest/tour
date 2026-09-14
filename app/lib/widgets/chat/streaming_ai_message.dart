@@ -138,7 +138,7 @@ class _StreamingAiMessageState extends State<StreamingAiMessage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Mascot(size: 16),
+        const Mascot(size: 48),
         const SizedBox(height: 7),
         for (var i = 0; i < blocks.length; i++)
           _BlockView(

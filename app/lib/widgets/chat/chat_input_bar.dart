@@ -10,11 +10,26 @@ import 'package:nullnull/widgets/voice_listening_toast.dart';
 
 /// docs/DESIGN.md: "입력바(상단 헤어라인): 첨부 클립 아이콘 · pill 입력창 · 원형 전송 버튼".
 class ChatInputBar extends StatefulWidget {
-  const ChatInputBar(
-      {super.key, required this.controller, required this.onSend});
+  const ChatInputBar({
+    super.key,
+    required this.controller,
+    required this.onSend,
+    this.isGenerating = false,
+    this.onStop,
+  });
 
   final TextEditingController controller;
   final ValueChanged<String> onSend;
+
+  /// AI 응답이 현재 생성 중인지. `true`면 전송 버튼이 정지 아이콘
+  /// (`chat_stop.svg`)으로 바뀌고, 탭/엔터 시 [onSend] 대신 [onStop]을
+  /// 호출한다(사용자 요청 — 응답 생성 중에도 다른 메시지를 보낼 수 없게
+  /// 막고, 대신 지금 생성 중인 응답을 멈출 수 있게 함). 입력창(`TextField`)도
+  /// 이 값이 `true`인 동안 `enabled: false`로 비활성화한다(사용자 요청).
+  final bool isGenerating;
+
+  /// [isGenerating]이 `true`일 때 정지 버튼 탭 시 호출된다.
+  final VoidCallback? onStop;
 
   @override
   State<ChatInputBar> createState() => _ChatInputBarState();
@@ -44,6 +59,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
   }
 
   void _submit() {
+    if (widget.isGenerating) return;
     final text = widget.controller.text.trim();
     if (text.isEmpty) return;
     widget.onSend(text);
@@ -133,6 +149,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
               child: TextField(
                 controller: widget.controller,
                 focusNode: _focusNode,
+                enabled: !widget.isGenerating,
                 onSubmitted: (_) => _submit(),
                 textInputAction: TextInputAction.send,
                 style: AppTextStyles.body(fontSize: 16, color: colors.ink),
@@ -156,11 +173,15 @@ class _ChatInputBarState extends State<ChatInputBar> {
             ),
             const SizedBox(width: 9),
             Tooltip(
-              message: l10n.chatInputSendTooltip,
+              message: widget.isGenerating
+                  ? l10n.chatInputStopTooltip
+                  : l10n.chatInputSendTooltip,
               child: GestureDetector(
-                onTap: _submit,
+                onTap: widget.isGenerating ? widget.onStop : _submit,
                 behavior: HitTestBehavior.opaque,
-                child: SvgPicture.asset('assets/images/chat_submit.svg'),
+                child: SvgPicture.asset(widget.isGenerating
+                    ? 'assets/images/chat_stop.svg'
+                    : 'assets/images/chat_submit.svg'),
               ),
             ),
           ],

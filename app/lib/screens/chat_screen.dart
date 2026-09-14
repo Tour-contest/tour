@@ -137,6 +137,12 @@ class _ChatScreenState extends State<ChatScreen>
   String? _sessionId;
   int _nextId = 0;
 
+  /// 현재 AI 응답을 생성 중이면(=`_send`가 SSE 스트림을 구독 중이면) 그
+  /// 스트림을 취소하는 콜백이 담긴다. `null`이면 생성 중이 아니라는 뜻 —
+  /// `ChatInputBar`가 이 값의 유무로 전송/정지 버튼을 바꾼다.
+  VoidCallback? _stopGeneration;
+  bool get _isGenerating => _stopGeneration != null;
+
   @override
   void initState() {
     super.initState();
@@ -176,6 +182,10 @@ class _ChatScreenState extends State<ChatScreen>
 
   @override
   void dispose() {
+    // 화면을 떠날 때 진행 중인 SSE 스트림이 있으면 정리한다(연결을 그대로
+    // 열어두지 않도록) — `_stopGeneration`의 후속 콜백들은 전부 `mounted`를
+    // 먼저 확인하므로 이 시점에 호출해도 안전하다.
+    _stopGeneration?.call();
     _inputController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -187,14 +197,24 @@ class _ChatScreenState extends State<ChatScreen>
   /// 대로 화면에 반영하지 않고 로컬 [buffer]에만 모아둔다 — 화면에는 대신
   /// [ChatStatusEvent]의 라벨([_AiChatEntry.statusLabel])만 실시간으로
   /// 갱신해 진행 상황을 보여준다. [ChatSourcesEvent]도 마찬가지로
-  /// [capturedSources]에만 모아둔다. 스트림이 완전히 끝나면(`await for` 정상
-  /// 종료, 즉 `final`/`done`까지 다 옴) 모아둔 블록·출처를 한 번에
-  /// [_AiChatEntry]에 채워 넣는다 — 그 순간 `StreamingAiMessage`가 처음
-  /// 마운트되어 타이핑 연출은 그 위젯이 직접 담당한다(`onRevealComplete`가
-  /// 끝나면 [_AiChatEntry.done]을 켜는 것도 `_buildThread`에서 처리). 카드가
-  /// 문장보다 먼저 도착할 수 있으므로 buffer에는 도착 순서 그대로 쌓는다.
-  /// 실패해도 **자동 재시도하지 않는다** — 사용자가 다시 입력해야 재요청된다.
-  void _send(String text) async {
+  /// [capturedSources]에만 모아둔다. 스트림이 완전히 끝나면(정상 종료, 즉
+  /// `final`/`done`까지 다 옴) 모아둔 블록·출처를 한 번에 [_AiChatEntry]에
+  /// 채워 넣는다 — 그 순간 `StreamingAiMessage`가 처음 마운트되어 타이핑
+  /// 연출은 그 위젯이 직접 담당한다(`onRevealComplete`가 끝나면
+  /// [_AiChatEntry.done]을 켜는 것도 `_buildThread`에서 처리). 카드가 문장보다
+  /// 먼저 도착할 수 있으므로 buffer에는 도착 순서 그대로 쌓는다. 실패해도
+  /// **자동 재시도하지 않는다** — 사용자가 다시 입력해야 재요청된다.
+  ///
+  /// 이미 생성 중이면(`_isGenerating`) 무시한다 — `ChatInputBar`가 생성
+  /// 중일 땐 버튼을 정지 아이콘으로 바꿔 이 경로로 다시 들어오지 않게
+  /// 막지만, 방어적으로 한 번에 하나의 스트림만 열리도록 확인한다.
+  /// `await for` 대신 `.listen()`으로 직접 구독을 들고 있는 이유는, 사용자가
+  /// "정지" 버튼을 눌렀을 때 [StreamSubscription.cancel]로 SSE 연결 자체를
+  /// 끊어야 하기 때문(`DioChatApi._streamEvents`가 내부에서 `await for`로
+  /// 응답 바이트 스트림을 읽고 있어, 이 구독을 취소하면 그 안쪽 스트림
+  /// 구독까지 함께 취소되어 실제로 커넥션이 닫힌다).
+  void _send(String text) {
+    if (_isGenerating) return;
     final userEntryId = _nextId++;
     final aiEntryId = _nextId++;
     final aiEntry = _AiChatEntry(aiEntryId);
@@ -207,6 +227,7 @@ class _ChatScreenState extends State<ChatScreen>
 
     final buffer = <AiBlock>[];
     final capturedSources = <Map<String, dynamic>>[];
+    var stoppedByUser = false;
 
     void appendDelta(String chunk) {
       final last = buffer.isEmpty ? null : buffer.last;
@@ -217,36 +238,81 @@ class _ChatScreenState extends State<ChatScreen>
       }
     }
 
-    try {
-      await for (final event in _chatApi.sendMessage(
-        text: text,
-        sessionId: _sessionId,
-      )) {
-        switch (event) {
-          case ChatMetaEvent(:final sessionId):
-            _sessionId = sessionId;
-          case ChatStatusEvent(:final message):
-            if (!mounted) return;
-            setState(() => aiEntry.statusLabel = message);
-            _scrollToBottomSoon();
-          case ChatDeltaEvent(text: final chunk):
-            appendDelta(chunk);
-          case ChatCardEvent(:final type, :final payload):
-            buffer.add(
-                event.demoBlock ?? ChatCardBlock(type: type, payload: payload));
-          case ChatSourcesEvent(:final sources):
-            capturedSources.addAll(sources);
-          case ChatErrorEvent(:final message):
-            throw ChatApiException(message);
-          case ChatFinalEvent():
-          case ChatToolEvent():
-          case ChatDoneEvent():
-          case ChatUnknownEvent():
-            break;
-        }
+    final completer = Completer<void>();
+    // `completeWithError`가 아래에서 만들어질 `subscription`을 참조해야 해서
+    // (에러 발생 시 직접 취소하기 위해), 먼저 선언만 해두고 `.listen()` 결과로
+    // 나중에 대입한다(자기 참조 구독 취소의 표준적인 패턴).
+    late final StreamSubscription<ChatStreamEvent> subscription;
+    void completeWithError(Object error, [StackTrace? stackTrace]) {
+      if (completer.isCompleted) return;
+      // `ChatErrorEvent`는 스트림 자체의 에러가 아니라 정상적으로 온 데이터
+      // 이벤트라 `cancelOnError`가 자동으로 구독을 끊어주지 않으므로 직접
+      // 취소한다(이미 스트림 레벨 에러로 취소된 경우엔 그냥 중복 호출이라
+      // 안전하게 무시됨).
+      subscription.cancel();
+      completer.completeError(error, stackTrace ?? StackTrace.current);
+    }
+
+    subscription = _chatApi
+        .sendMessage(text: text, sessionId: _sessionId)
+        .listen((event) {
+      switch (event) {
+        case ChatMetaEvent(:final sessionId):
+          _sessionId = sessionId;
+        case ChatStatusEvent(:final message):
+          if (!mounted) return;
+          setState(() => aiEntry.statusLabel = message);
+          _scrollToBottomSoon();
+        case ChatDeltaEvent(text: final chunk):
+          appendDelta(chunk);
+        case ChatCardEvent(:final type, :final payload):
+          buffer.add(
+              event.demoBlock ?? ChatCardBlock(type: type, payload: payload));
+        case ChatSourcesEvent(:final sources):
+          capturedSources.addAll(sources);
+        case ChatErrorEvent(:final message):
+          completeWithError(ChatApiException(message));
+        case ChatFinalEvent():
+        case ChatToolEvent():
+        case ChatDoneEvent():
+        case ChatUnknownEvent():
+          break;
       }
-    } catch (e, stackTrace) {
+    }, onError: completeWithError, onDone: () {
+      if (!completer.isCompleted) completer.complete();
+    }, cancelOnError: true);
+
+    setState(() {
+      _stopGeneration = () {
+        stoppedByUser = true;
+        subscription.cancel();
+        if (!completer.isCompleted) completer.complete();
+      };
+    });
+
+    completer.future.then((_) {
+      if (mounted) setState(() => _stopGeneration = null);
+      if (!mounted) return;
+      // 아직 아무것도 안 온 채로(=`_ThinkingIndicator`가 떠 있는 채로) 멈춘
+      // 경우엔 보여줄 게 없으므로 엔트리 자체를 지운다 — 그대로 두면
+      // `entry.blocks`가 계속 비어있어 더 이상 갱신되지 않는 "생각 중" 표시가
+      // 화면에 영영 멈춰 남게 된다.
+      if (stoppedByUser && buffer.isEmpty && capturedSources.isEmpty) {
+        setState(() => _entries.removeWhere((entry) => entry.id == aiEntryId));
+        return;
+      }
+      setState(() {
+        aiEntry.blocks.addAll(buffer);
+        aiEntry.sources.addAll(capturedSources);
+        // 사용자가 직접 멈춘 경우 지금까지 모인 걸 곧바로 다 보여준다(타이핑
+        // 연출 없이) — 이미 멈추기로 한 응답을 다시 글자 단위로 재생하는 건
+        // 어색하다.
+        if (stoppedByUser) aiEntry.done = true;
+      });
+      _scrollToBottomSoon();
+    }, onError: (Object e, StackTrace stackTrace) {
       AppLog.logger.e('채팅 메시지 전송 실패', error: e, stackTrace: stackTrace);
+      if (mounted) setState(() => _stopGeneration = null);
       if (!mounted) return;
       // 문장/카드를 하나도 못 받은 채(=아직 사용자에게 보여줄 게 없는 채) 끝났고,
       // 분당 10회 제한(429)처럼 다시 눌러야 하는 상황이 아니면 대체 흐름을
@@ -264,15 +330,7 @@ class _ChatScreenState extends State<ChatScreen>
         AppLocalizations.of(context)!.chatSendFailedToast,
         type: AppToastType.info,
       );
-      return;
-    }
-
-    if (!mounted) return;
-    setState(() {
-      aiEntry.blocks.addAll(buffer);
-      aiEntry.sources.addAll(capturedSources);
     });
-    _scrollToBottomSoon();
   }
 
   /// `ChatFallbackPrompt`의 "다른 방식으로 찾아보기" 버튼 탭 시 호출된다.
@@ -479,7 +537,12 @@ class _ChatScreenState extends State<ChatScreen>
                         : _buildThread(),
                   ),
                 ),
-                ChatInputBar(controller: _inputController, onSend: _send),
+                ChatInputBar(
+                  controller: _inputController,
+                  onSend: _send,
+                  isGenerating: _isGenerating,
+                  onStop: _stopGeneration,
+                ),
               ],
             ),
           ),
@@ -548,10 +611,43 @@ class _ChatScreenState extends State<ChatScreen>
 /// `StreamingAiMessage`의 "널널" 라벨 행과 같은 스타일(골드 점 + 라벨)을 쓴다.
 /// [label]이 있으면(`ChatStatusEvent`로 받은 진행 상태) 그걸, 없으면 기본
 /// 문구(`chatThinkingLabel`)를 보여준다.
-class _ThinkingIndicator extends StatelessWidget {
+/// 응답이 아직 하나도 안 온(=`entry.blocks`가 비어있는) 동안만 보이는 표시.
+/// 이 상태임을 알아보기 쉽도록 마스코트를 천천히 위아래로 움직인다(사용자
+/// 요청) — 실제 응답이 오기 시작해(`entry.blocks`가 채워져) `StreamingAiMessage`로
+/// 넘어가는 순간 이 위젯째 사라지므로, 애니메이션도 자연히 함께 멈춘다.
+/// `StreamingAiMessage` 헤더의 마스코트는 별도 요청으로 애니메이션을 뺐던
+/// 적이 있어(`## Architecture` 참고) 이 위젯에는 적용하지 않는다.
+class _ThinkingIndicator extends StatefulWidget {
   const _ThinkingIndicator({this.label});
 
   final String? label;
+
+  @override
+  State<_ThinkingIndicator> createState() => _ThinkingIndicatorState();
+}
+
+class _ThinkingIndicatorState extends State<_ThinkingIndicator>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _bob;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    )..repeat(reverse: true);
+    _bob = Tween<double>(begin: -3, end: 3).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -560,10 +656,17 @@ class _ThinkingIndicator extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Mascot(size: 16),
-        const SizedBox(width: 6),
+        AnimatedBuilder(
+          animation: _bob,
+          builder: (context, child) => Transform.translate(
+            offset: Offset(0, _bob.value),
+            child: child,
+          ),
+          child: const Mascot(size: 48),
+        ),
+        const SizedBox(width: 12),
         Text(
-          label ?? l10n.chatThinkingLabel,
+          widget.label ?? l10n.chatThinkingLabel,
           style: AppTextStyles.body(fontSize: 13, color: colors.ink),
         ),
       ],

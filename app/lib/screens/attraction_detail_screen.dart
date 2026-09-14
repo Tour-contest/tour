@@ -14,6 +14,7 @@ import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
 import 'package:nullnull/widgets/app_icon.dart';
 import 'package:nullnull/widgets/app_toast.dart';
+import 'package:nullnull/widgets/nullnull/alternatives_section.dart';
 import 'package:nullnull/widgets/nullnull/congestion_badge.dart';
 import 'package:nullnull/widgets/nullnull/crowd_bar_chart.dart';
 import 'package:nullnull/widgets/nullnull/plain_header.dart';
@@ -352,7 +353,7 @@ class _AttractionDetailScreenState extends State<AttractionDetailScreen> {
                 ),
                 const SizedBox(height: 10),
               ],
-              _AlternativesSection(
+              AlternativesSection(
                 items: _alternatives!.items,
                 onTap: _openAttraction,
               ),
@@ -774,95 +775,6 @@ class _OutlineButton extends StatelessWidget {
 /// 7. 함께 찾는 곳 — 가로 스크롤 카드형 목록. [items] 순서는 서버가 이미
 /// 혼잡도 우선으로 정렬해 보낸 것이라 **재정렬하지 않고 그대로** 그린다
 /// (`docs/API_SPEC.md`의 "구현 주의").
-class _AlternativesSection extends StatelessWidget {
-  const _AlternativesSection({required this.items, required this.onTap});
-
-  final List<AttractionAlternative> items;
-  final void Function(String contentId, String title) onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 168,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        itemCount: items.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
-        itemBuilder: (context, index) {
-          final item = items[index];
-          return _AlternativeCard(
-            item: item,
-            onTap: () => onTap(item.contentId, item.name),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _AlternativeCard extends StatelessWidget {
-  const _AlternativeCard({required this.item, required this.onTap});
-
-  final AttractionAlternative item;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        width: 140,
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: colors.surfaceMuted,
-          border: Border.all(color: colors.surfaceMutedBorder),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: AspectRatio(
-                aspectRatio: 4 / 3,
-                child: item.image == null
-                    ? SkeletonBox(
-                        child:
-                            AppIcon(AppIconShape.image, color: colors.ink600),
-                      )
-                    : CachedNetworkImage(
-                        imageUrl: item.image!,
-                        fit: BoxFit.cover,
-                        placeholder: (_, __) => SkeletonBox(
-                          child:
-                              AppIcon(AppIconShape.image, color: colors.ink600),
-                        ),
-                        errorWidget: (_, __, ___) => SkeletonBox(
-                          child:
-                              AppIcon(AppIconShape.image, color: colors.ink600),
-                        ),
-                      ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              item.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.heading(fontSize: 13, color: colors.ink),
-            ),
-            const SizedBox(height: 4),
-            CongestionBadge(level: item.level, score: item.rate),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 /// 8. 반려동물 동반 정보. `status`가 `no_data`면(`AttractionPetInfo.hasData`가
 /// `false`) 정보가 없다는 안내만, 있으면 원본 필드(`raw`)를 키-값으로 나열한다
 /// (필드 스키마가 정해지지 않아 `_InfoSection`과 동일한 방식으로 처리).
