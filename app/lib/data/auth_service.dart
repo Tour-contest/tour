@@ -129,7 +129,7 @@ class AuthService {
   }
 
   /// `DELETE /api/v1/me`. 회원 탈퇴(카카오 연결 해제까지 서버가 함께 처리,
-  /// `docs/API_SPEC.md` 참고) — `settings_screen.dart`의 "연결 끊기"가 호출한다.
+  /// `docs/API_SPEC.md` 참고) — `settings_screen.dart`의 "회원 탈퇴"가 호출한다.
   /// [logout]과 달리 실패해도 로컬 토큰을 지우지 않는다 — 계정이 실제로
   /// 지워지지 않았는데 로그아웃 상태로 보이면 다시 로그인해야 하는 등 혼란만
   /// 커지므로, 실패는 [AuthException]으로 알려 호출부가 재시도 안내만 하게
@@ -147,7 +147,7 @@ class AuthService {
     );
     final envelope = response.data;
     if (envelope?['success'] != true) {
-      throw AuthException(envelope?['message'] as String? ?? '연결 끊기에 실패했어요.');
+      throw AuthException(envelope?['message'] as String? ?? '회원 탈퇴에 실패했어요.');
     }
     await AuthTokenStorage.clear();
   }

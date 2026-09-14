@@ -150,10 +150,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       await AuthService.withdraw();
       await UserProfileStorage.clear();
-      AppLog.logger.i('연결 끊기(회원 탈퇴) 성공');
+      AppLog.logger.i('회원 탈퇴 성공');
       return true;
     } catch (error) {
-      AppLog.logger.e('연결 끊기 실패', error: error);
+      AppLog.logger.e('회원 탈퇴 실패', error: error);
       if (!context.mounted) return false;
       if (!await ConnectivityService().isOnline()) return false;
       if (!context.mounted) return false;
@@ -455,7 +455,7 @@ class _SnsIcon extends StatelessWidget {
       );
 }
 
-/// "연결된 계정" 행. 연결 끊기 버튼 탭 시 확인 팝업을 띄운다.
+/// "연결된 계정" 행. 회원 탈퇴 버튼 탭 시 확인 팝업을 띄운다.
 class _ConnectedAccountRow extends StatelessWidget {
   const _ConnectedAccountRow({
     required this.provider,

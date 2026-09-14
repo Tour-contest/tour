@@ -4,7 +4,7 @@ import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
 
-/// 2버튼(취소 / 확인) 확인 팝업. "연결 끊기"·"로그아웃"처럼 제목·설명·확인
+/// 2버튼(취소 / 확인) 확인 팝업. "회원 탈퇴"·"로그아웃"처럼 제목·설명·확인
 /// 버튼 문구만 다른 확인 다이얼로그에서 공용으로 사용한다(`SettingsScreen`,
 /// 채팅 화면 헤더의 프로필 메뉴 "로그아웃").
 class ConfirmDialog extends StatelessWidget {
