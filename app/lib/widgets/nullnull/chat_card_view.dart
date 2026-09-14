@@ -104,26 +104,53 @@ class AttractionItem {
 /// 목록 카드. 혼잡도 정보가 없는 카드라(응답 문장에서도 안내됨) 배지 없이
 /// 이름·주소만 보여주고, 각 항목은 이름으로 지도 검색만 연결한다(좌표는 있지만
 /// `MapLauncherService`가 아직 이름 검색 스킴만 지원 — `## 아키텍처` 참고).
-class _AttractionListCard extends StatelessWidget {
+/// 항목이 [_collapsedCount]개보다 많으면 처음엔 그만큼만 보여주고
+/// "더보기"/"접기" 버튼(`_ShowMoreButton`)으로 펼치고 줄일 수 있다(응답 카드가
+/// 무한정 길어지지 않도록).
+class _AttractionListCard extends StatefulWidget {
   const _AttractionListCard({required this.data});
 
   final AttractionListCardData data;
 
   @override
+  State<_AttractionListCard> createState() => _AttractionListCardState();
+}
+
+class _AttractionListCardState extends State<_AttractionListCard> {
+  static const _collapsedCount = 3;
+
+  bool _expanded = false;
+
+  @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context)!;
+    final items = widget.data.items;
+    final hiddenCount = items.length - _collapsedCount;
+    final visibleItems =
+        _expanded || hiddenCount <= 0 ? items : items.take(_collapsedCount);
     return CardContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            l10n.chatCardAttractionListTitle(data.signguNm, data.category),
+            l10n.chatCardAttractionListTitle(
+                widget.data.signguNm, widget.data.category),
             style: AppTextStyles.heading(fontSize: 14, color: colors.ink),
           ),
-          for (final item in data.items) ...[
+          for (final item in visibleItems) ...[
             const SizedBox(height: 12),
             _AttractionRow(item: item),
+          ],
+          if (hiddenCount > 0) ...[
+            const SizedBox(height: 14),
+            Divider(height: 1, color: colors.divider),
+            const SizedBox(height: 12),
+            _ShowMoreButton(
+              expanded: _expanded,
+              hiddenCount: hiddenCount,
+              onTap: () => setState(() => _expanded = !_expanded),
+            ),
           ],
         ],
       ),
@@ -164,6 +191,49 @@ class _AttractionRow extends StatelessWidget {
                 AppTextStyles.body(fontSize: 11.5, color: colors.accentBright),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// "더보기"/"접기" 버튼. 개별 항목의 순수 텍스트 링크(`_AttractionRow`의
+/// "지도에서 보기 ↗")와 혼동되지 않도록, `_SampleChip`(`crowd` 카드)과 같은
+/// 배경·테두리(`colors.surfaceMuted`/`surfaceMutedBorder`)를 준 별도 버튼
+/// 영역으로 분리했다.
+class _ShowMoreButton extends StatelessWidget {
+  const _ShowMoreButton({
+    required this.expanded,
+    required this.hiddenCount,
+    required this.onTap,
+  });
+
+  final bool expanded;
+  final int hiddenCount;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: colors.surfaceMuted,
+          border: Border.all(color: colors.surfaceMutedBorder),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Center(
+          child: Text(
+            expanded
+                ? l10n.chatCardShowLess
+                : l10n.chatCardShowMore(hiddenCount),
+            style: AppTextStyles.body(fontSize: 12.5, color: colors.ink),
+          ),
+        ),
       ),
     );
   }

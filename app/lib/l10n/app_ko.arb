@@ -141,6 +141,10 @@
   "@chatInputVoiceUnavailable": {
     "description": "음성 인식 초기화 실패(권한 거부·기기 미지원) 시 안내 토스트"
   },
+  "chatInputVoiceError": "음성 인식 중 문제가 발생했어요. 다시 시도해 주세요.",
+  "@chatInputVoiceError": {
+    "description": "권한은 있지만 듣는 도중 오류(네트워크 오류, 인식 타임아웃 등)로 음성 입력이 중단됐을 때 안내 토스트"
+  },
   "chatInputVoiceListeningTitle": "듣고 있어요",
   "@chatInputVoiceListeningTitle": {
     "description": "음성 입력 중 하단에 뜨는 VoiceListeningToast 안내 문구 첫 줄(14px)"
@@ -152,18 +156,6 @@
   "chatInputSendTooltip": "전송",
   "@chatInputSendTooltip": {
     "description": "채팅 입력바 전송 버튼 툴팁"
-  },
-  "chatActionCopy": "복사",
-  "@chatActionCopy": {
-    "description": "AI 답변 복사 버튼(복사 전)"
-  },
-  "chatActionCopied": "복사됨",
-  "@chatActionCopied": {
-    "description": "AI 답변 복사 버튼(복사 직후 1.5초)"
-  },
-  "chatActionRegenerate": "다시 생성",
-  "@chatActionRegenerate": {
-    "description": "AI 답변 다시 생성 버튼"
   },
   "chatCongestionLabel": "혼잡도 {percent}%",
   "@chatCongestionLabel": {
@@ -321,6 +313,19 @@
   "chatCardNoDataMessage": "이 카드에 표시할 정보가 없어요.",
   "@chatCardNoDataMessage": {
     "description": "채팅 카드의 payload.status가 no_data이거나 has_data가 false일 때 안내 문구"
+  },
+  "chatCardShowMore": "{count}개 더보기",
+  "@chatCardShowMore": {
+    "description": "attraction_list 카드가 접혀 있을 때(상위 3개만 표시) 나머지 항목 개수와 함께 보여주는 펼치기 버튼",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatCardShowLess": "접기",
+  "@chatCardShowLess": {
+    "description": "attraction_list 카드가 펼쳐져 있을 때 다시 상위 3개만 보이게 접는 버튼"
   },
   "commonSettings": "설정",
   "@commonSettings": {

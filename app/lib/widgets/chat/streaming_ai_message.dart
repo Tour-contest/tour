@@ -45,11 +45,6 @@ class StreamingAiMessage extends StatefulWidget {
   /// 쓰인다).
   final VoidCallback? onRevealProgress;
 
-  /// 액션(복사) 등에서 쓸 순수 텍스트.
-  static String plainText(List<AiBlock> blocks) {
-    return blocks.whereType<TextBlock>().map((b) => b.text).join('\n\n');
-  }
-
   @override
   State<StreamingAiMessage> createState() => _StreamingAiMessageState();
 }

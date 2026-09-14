@@ -55,7 +55,11 @@ class _ChatInputBarState extends State<ChatInputBar> {
   /// 입력창 텍스트를 갱신하며, 탭 당시 이미 입력돼 있던 텍스트 뒤에 이어붙인다.
   /// 최종 결과(`isFinal`)가 나오면 음성 입력을 멈추고 곧바로 전송까지
   /// 트리거한다(엔터를 직접 치는 것과 동일) — 최종 결과가 빈 문자열이면
-  /// `_submit`의 빈 텍스트 가드에 걸려 아무 일도 일어나지 않는다.
+  /// `_submit`의 빈 텍스트 가드에 걸려 아무 일도 일어나지 않는다. 권한 거부로
+  /// 초기화 자체가 실패하면 `chatInputVoiceUnavailable` 토스트를, 권한은 있지만
+  /// 듣는 도중 오류(네트워크 오류·인식 타임아웃 등)로 중단되면
+  /// `chatInputVoiceError` 토스트를 띄운다(전자는 아직 `_isListening`이 켜지기
+  /// 전이라 구분됨).
   Future<void> _toggleVoiceInput() async {
     if (_isListening) {
       await _stopVoiceInput();
@@ -64,7 +68,17 @@ class _ChatInputBarState extends State<ChatInputBar> {
 
     final unavailableMessage =
         AppLocalizations.of(context)!.chatInputVoiceUnavailable;
-    final available = await _speechToText.initialize();
+    final errorMessage = AppLocalizations.of(context)!.chatInputVoiceError;
+    final available = await _speechToText.initialize(
+      onError: (_) {
+        // 권한 거부는 `initialize()`가 `false`를 반환하는 시점(아래)에서 이미
+        // 처리하므로, 여기서는 그 이후(`_isListening`이 켜진 뒤) 듣는 도중
+        // 발생하는 오류만 다룬다.
+        if (!mounted || !_isListening) return;
+        _stopVoiceInput();
+        AppToast.show(errorMessage, type: AppToastType.info);
+      },
+    );
     if (!available) {
       AppToast.show(unavailableMessage, type: AppToastType.info);
       return;

@@ -28,7 +28,6 @@ import 'package:nullnull/widgets/confirm_dialog.dart';
 import 'package:nullnull/widgets/push_drawer.dart';
 import 'package:nullnull/widgets/chat/chat_fallback_prompt.dart';
 import 'package:nullnull/widgets/chat/chat_input_bar.dart';
-import 'package:nullnull/widgets/chat/message_actions_row.dart';
 import 'package:nullnull/widgets/chat/streaming_ai_message.dart';
 import 'package:nullnull/widgets/chat/user_message_bubble.dart';
 import 'package:nullnull/widgets/fade_slide_in.dart';
@@ -229,6 +228,7 @@ class _ChatScreenState extends State<ChatScreen>
           case ChatStatusEvent(:final message):
             if (!mounted) return;
             setState(() => aiEntry.statusLabel = message);
+            _scrollToBottomSoon();
           case ChatDeltaEvent(text: final chunk):
             appendDelta(chunk);
           case ChatCardEvent(:final type, :final payload):
@@ -374,16 +374,6 @@ class _ChatScreenState extends State<ChatScreen>
     });
   }
 
-  void _regenerate(_AiChatEntry entry) {
-    final index = _entries.indexOf(entry);
-    if (index == -1 || entry.blocks.isEmpty) return;
-    final newEntry = _AiChatEntry(_nextId++)
-      ..blocks.addAll(entry.blocks)
-      ..sources.addAll(entry.sources)
-      ..done = true;
-    setState(() => _entries[index] = newEntry);
-  }
-
   void _newChat() {
     setState(() {
       _entries.clear();
@@ -415,14 +405,28 @@ class _ChatScreenState extends State<ChatScreen>
     }
   }
 
-  void _scrollToBottomSoon() {
+  /// 바닥으로 스크롤한다. [animate]가 `true`면 부드럽게 애니메이션하고,
+  /// `false`면 즉시 이동(`jumpTo`)한다 — `onRevealProgress`처럼 타이핑 연출
+  /// 중 20ms 간격으로 계속 호출되는 경우 매번 새 `animateTo`를 걸면 이전
+  /// 애니메이션이 그때마다 취소돼(특히 실기기에서 프레임이 밀리면 그 간격조차
+  /// 안 지켜져) 화면이 거의 못 움직이고 멈춘 것처럼 보인다 — 그런 고빈도
+  /// 호출에는 `animate: false`로 즉시 스냅시켜 매 프레임 바닥에 붙어 있게
+  /// 한다(이 정도 빈도면 매번 즉시 이동해도 눈에는 부드럽게 흘러내리는 것처럼
+  /// 보인다). 메시지 전송 직후·응답 완료 시처럼 드물게 호출되는 곳만 그대로
+  /// 애니메이션을 유지한다.
+  void _scrollToBottomSoon({bool animate = true}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollController.hasClients) return;
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOut,
-      );
+      final target = _scrollController.position.maxScrollExtent;
+      if (animate) {
+        _scrollController.animateTo(
+          target,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        );
+      } else {
+        _scrollController.jumpTo(target);
+      }
     });
   }
 
@@ -515,7 +519,8 @@ class _ChatScreenState extends State<ChatScreen>
                         streaming: !entry.done,
                         sources: entry.sources,
                         onActionTap: _send,
-                        onRevealProgress: _scrollToBottomSoon,
+                        onRevealProgress: () =>
+                            _scrollToBottomSoon(animate: false),
                         onRevealComplete: entry.done
                             ? null
                             : () {
@@ -523,12 +528,6 @@ class _ChatScreenState extends State<ChatScreen>
                                 setState(() => entry.done = true);
                               },
                       ),
-                      if (entry.done)
-                        MessageActionsRow(
-                          textToCopy:
-                              StreamingAiMessage.plainText(entry.blocks),
-                          onRegenerate: () => _regenerate(entry),
-                        ),
                     ],
                   ),
                 ),
