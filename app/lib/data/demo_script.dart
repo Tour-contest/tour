@@ -23,7 +23,6 @@ class PlaceRecommendation {
     required this.phone,
     required this.introduction,
     this.category,
-    this.travelMinutes,
     this.imageUrl,
   });
 
@@ -34,8 +33,6 @@ class PlaceRecommendation {
   Level get level => levelForScore(congestionPercent);
 
   final String? category;
-
-  final int? travelMinutes;
 
   /// 상세 화면 이미지 영역용 네트워크 이미지 URL. 실제 이미지 소스 연동 전 단계라
   /// 아직 값이 없고(null), 로딩 전/실패 시 [SkeletonBox]로 대체된다.
@@ -77,15 +74,6 @@ class Forecast {
   DailyScore get peak => days.reduce((a, b) => a.score >= b.score ? a : b);
 }
 
-class Alternative {
-  const Alternative({required this.rank, required this.spot});
-
-  final int rank;
-  final PlaceRecommendation spot;
-
-  Level get level => spot.level;
-}
-
 class RegionStatus {
   const RegionStatus({
     required this.region,
@@ -113,12 +101,6 @@ class TextBlock extends AiBlock {
 class ForecastBlock extends AiBlock {
   const ForecastBlock(this.forecast);
   final Forecast forecast;
-}
-
-class AlternativesBlock extends AiBlock {
-  const AlternativesBlock(this.items, {this.excludedNote});
-  final List<Alternative> items;
-  final String? excludedNote;
 }
 
 class RegionBlock extends AiBlock {
@@ -178,54 +160,6 @@ class DemoScript {
     ],
   );
 
-  static const List<Alternative> _alternativesKo = [
-    Alternative(
-      rank: 1,
-      spot: PlaceRecommendation(
-        name: '오크밸리 빌리지센터',
-        description: '강원 원주 · 리조트 안 산책로가 있는 복합관광시설',
-        congestionPercent: 27,
-        location: '강원 원주시 지정면',
-        address: '강원특별자치도 원주시 지정면 오크밸리2길 66',
-        phone: '033-730-3500',
-        introduction: '골프장과 함께 조성된 리조트 단지 안 복합관광시설이에요. 넓은 잔디 마당과 '
-            '산책로가 있어 아이와 함께 여유롭게 걷기 좋아요.',
-        category: '복합관광시설',
-        travelMinutes: 12,
-      ),
-    ),
-    Alternative(
-      rank: 2,
-      spot: PlaceRecommendation(
-        name: '소금산그랜드밸리',
-        description: '강원 원주 · 협곡을 가로지르는 스카이타워 전망대',
-        congestionPercent: 33,
-        location: '강원 원주시 지정면',
-        address: '강원특별자치도 원주시 지정면 소금산길 12',
-        phone: '033-749-4930',
-        introduction: '간현관광지 인근 협곡을 가로지르는 스카이타워 전망대예요. 아찔한 유리 바닥 '
-            '전망대에서 섬강 협곡을 내려다볼 수 있어요.',
-        category: '기타관광',
-        travelMinutes: 8,
-      ),
-    ),
-    Alternative(
-      rank: 3,
-      spot: PlaceRecommendation(
-        name: '원주소금산출렁다리',
-        description: '강원 원주 · 100m 높이의 국내 최장급 출렁다리',
-        congestionPercent: 45,
-        location: '강원 원주시 지정면',
-        address: '강원특별자치도 원주시 지정면 소금산길 26',
-        phone: '033-737-4995',
-        introduction: '지상 100m 높이에서 섬강을 가로지르는 국내 최장급 출렁다리예요. 간현관광지와 '
-            '이어져 있지만 이른 아침에는 상대적으로 한적해요.',
-        category: '기타관광',
-        travelMinutes: 3,
-      ),
-    ),
-  ];
-
   static const _regionStatusKo = RegionStatus(
     region: '원주시',
     counts: {Level.quiet: 11, Level.normal: 7, Level.busy: 3},
@@ -280,12 +214,6 @@ class DemoScript {
       TextBlock('간현관광지는 이번 토요일(8월 23일)에 붐빌 것 같아요.'),
       TextBlock('집중률 76점으로 혼잡 구간이고, 일요일도 68점이라 주말 내내 붐빌 전망이에요.'),
       ForecastBlock(_forecastKo),
-      TextBlock('이번 주말, 간현관광지 대신 여기는 어때요?'),
-      AlternativesBlock(
-        _alternativesKo,
-        excludedNote: '숙박·음식 연관지는 추천에서 제외했어요 (카페·리조트 등 7곳)',
-      ),
-      TextBlock('셋 다 같은 원주라 이동도 편해요. 더 알아볼까요?'),
     ]),
     AiTurn([
       TextBlock('원주시의 오늘 현황이에요.'),
@@ -331,60 +259,6 @@ class DemoScript {
       DailyScore(date: '08-24', weekdayLabel: 'Sun', score: 68),
     ],
   );
-
-  static const List<Alternative> _alternativesEn = [
-    Alternative(
-      rank: 1,
-      spot: PlaceRecommendation(
-        name: 'Oakvalley Village Center',
-        description:
-            'Wonju, Gangwon · A resort attraction with quiet walking paths',
-        congestionPercent: 27,
-        location: 'Jijeong-myeon, Wonju, Gangwon',
-        address: '강원특별자치도 원주시 지정면 오크밸리2길 66',
-        phone: '033-730-3500',
-        introduction:
-            'A mixed-use attraction inside a golf resort complex. Wide '
-            'lawns and walking trails make it a relaxed spot for a family '
-            'stroll.',
-        category: 'Mixed-use attraction',
-        travelMinutes: 12,
-      ),
-    ),
-    Alternative(
-      rank: 2,
-      spot: PlaceRecommendation(
-        name: 'Sogeumsan Grand Valley',
-        description: 'Wonju, Gangwon · A sky tower observatory over the gorge',
-        congestionPercent: 33,
-        location: 'Jijeong-myeon, Wonju, Gangwon',
-        address: '강원특별자치도 원주시 지정면 소금산길 12',
-        phone: '033-749-4930',
-        introduction:
-            'A sky tower observatory over the gorge near Ganhyeon. Its '
-            'glass-floor deck looks straight down onto the Seomgang gorge.',
-        category: 'Other attraction',
-        travelMinutes: 8,
-      ),
-    ),
-    Alternative(
-      rank: 3,
-      spot: PlaceRecommendation(
-        name: 'Wonju Sogeumsan Suspension Bridge',
-        description:
-            'Wonju, Gangwon · One of the longest suspension bridges in Korea',
-        congestionPercent: 45,
-        location: 'Jijeong-myeon, Wonju, Gangwon',
-        address: '강원특별자치도 원주시 지정면 소금산길 26',
-        phone: '033-737-4995',
-        introduction: "One of Korea's longest suspension bridges, crossing the "
-            'Seomgang 100m up. It shares the site with Ganhyeon, but it is '
-            'noticeably quieter in the early morning.',
-        category: 'Other attraction',
-        travelMinutes: 3,
-      ),
-    ),
-  ];
 
   static const _regionStatusEn = RegionStatus(
     region: 'Wonju',
@@ -447,15 +321,6 @@ class DemoScript {
       TextBlock('The congestion score is 76 — the busy range — and Sunday is '
           'at 68, so expect crowds all weekend.'),
       ForecastBlock(_forecastEn),
-      TextBlock('This weekend, how about one of these instead of Ganhyeon?'),
-      AlternativesBlock(
-        _alternativesEn,
-        excludedNote:
-            'I\'ve excluded lodging and dining spots from these picks (7 '
-            'cafés, resorts, etc.)',
-      ),
-      TextBlock('All three are in Wonju, so getting around is easy too — '
-          'want to know more?'),
     ]),
     AiTurn([
       TextBlock("Here's today's overall status for Wonju."),

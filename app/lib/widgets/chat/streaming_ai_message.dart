@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:nullnull/data/demo_script.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
-import 'package:nullnull/widgets/nullnull/alternative_card.dart';
 import 'package:nullnull/widgets/nullnull/chat_card_view.dart';
 import 'package:nullnull/widgets/nullnull/forecast_card.dart';
 import 'package:nullnull/widgets/nullnull/mascot.dart';
@@ -236,10 +235,6 @@ class _BlockView extends StatelessWidget {
       ForecastBlock(:final forecast) => Padding(
           padding: const EdgeInsets.only(top: 12),
           child: ForecastCard(forecast: forecast),
-        ),
-      AlternativesBlock(:final items, :final excludedNote) => Padding(
-          padding: const EdgeInsets.only(top: 12),
-          child: AlternativesSection(items: items, excludedNote: excludedNote),
         ),
       RegionBlock(:final status) => Padding(
           padding: const EdgeInsets.only(top: 12),

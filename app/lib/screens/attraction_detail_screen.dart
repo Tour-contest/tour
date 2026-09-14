@@ -8,7 +8,6 @@ import 'package:nullnull/api/api_client.dart';
 import 'package:nullnull/api/attractions_api.dart';
 import 'package:nullnull/app_log.dart';
 import 'package:nullnull/app_router.dart';
-import 'package:nullnull/data/demo_script.dart' show Level;
 import 'package:nullnull/data/map_launcher_service.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/theme/app_colors.dart';
@@ -16,6 +15,7 @@ import 'package:nullnull/theme/app_text_styles.dart';
 import 'package:nullnull/widgets/app_icon.dart';
 import 'package:nullnull/widgets/app_toast.dart';
 import 'package:nullnull/widgets/nullnull/congestion_badge.dart';
+import 'package:nullnull/widgets/nullnull/crowd_bar_chart.dart';
 import 'package:nullnull/widgets/nullnull/plain_header.dart';
 import 'package:nullnull/widgets/skeleton_box.dart';
 
@@ -577,7 +577,7 @@ class _CrowdSection extends StatelessWidget {
   final VoidCallback onRetry;
 
   String _formatDate(DateTime? date) =>
-      date == null ? '' : '${date.month}/${date.day}';
+      date == null ? '' : '${date.month}월 ${date.day}일';
 
   @override
   Widget build(BuildContext context) {
@@ -611,7 +611,7 @@ class _CrowdSection extends StatelessWidget {
           Text(l10n.chatCardNoDataMessage,
               style: AppTextStyles.body(color: colors.ink600))
         else ...[
-          _CrowdBarChart(days: forecast!.days),
+          CrowdBarChart(days: forecast!.days),
           if (forecast!.summary != null) ...[
             const SizedBox(height: 12),
             Text(
@@ -661,128 +661,6 @@ class _DayOptionPill extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// [AttractionCrowdDay] 목록을 가로 스크롤 막대 그래프로 그린다. 막대 색은
-/// 그 날의 등급(`Level`)에 따라 달라진다(`혼잡`/`보통`/`한적` 색상 토큰).
-/// 날짜 수가 많아져도(28일) 막대 폭을 고정해 가독성을 유지하고, 그만큼
-/// 가로 스크롤로 훑어보게 한다.
-class _CrowdBarChart extends StatelessWidget {
-  const _CrowdBarChart({required this.days});
-
-  final List<AttractionCrowdDay> days;
-
-  static const _barAreaHeight = 108.0;
-  static const _gridValues = [0, 30, 50, 70, 90];
-  static const _axisWidth = 24.0;
-  static const _barSlotWidth = 28.0;
-
-  Color _barColor(AppColors colors, Level level) => switch (level) {
-        Level.busy => colors.busyChart,
-        Level.normal => colors.normalChart,
-        Level.quiet => colors.quietChart,
-      };
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          height: _barAreaHeight,
-          width: _axisWidth,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              for (final value in _gridValues)
-                Positioned(
-                  bottom: _barAreaHeight * (value / 100) - 6,
-                  left: 0,
-                  child: Text(
-                    value == 90 ? '90+' : '$value',
-                    style: AppTextStyles.tabularNums(AppTextStyles.body(
-                        fontSize: 9.5, color: colors.ink600)),
-                  ),
-                ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            child: SizedBox(
-              width: _barSlotWidth * days.length,
-              child: Column(
-                children: [
-                  SizedBox(
-                    height: _barAreaHeight,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        for (final value in _gridValues)
-                          Positioned(
-                            bottom: _barAreaHeight * (value / 100),
-                            left: 0,
-                            right: 0,
-                            child: Container(height: 1, color: colors.divider),
-                          ),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            for (final day in days)
-                              SizedBox(
-                                width: _barSlotWidth,
-                                child: Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(horizontal: 3),
-                                  child: Align(
-                                    alignment: Alignment.bottomCenter,
-                                    child: FractionallySizedBox(
-                                      heightFactor:
-                                          (day.rate.clamp(0, 100) / 100)
-                                              .clamp(0.02, 1.0),
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: _barColor(colors, day.level),
-                                          borderRadius:
-                                              const BorderRadius.vertical(
-                                                  top: Radius.circular(3)),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      for (final day in days)
-                        SizedBox(
-                          width: _barSlotWidth,
-                          child: Text(
-                            day.weekday,
-                            textAlign: TextAlign.center,
-                            style: AppTextStyles.body(
-                                fontSize: 9.5, color: colors.ink600),
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

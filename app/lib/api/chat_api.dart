@@ -388,11 +388,6 @@ class MockChatApi implements ChatApi {
             type: 'forecast',
             payload: {'status': 'ok', 'has_data': true, 'demoBlock': block},
           );
-        case AlternativesBlock():
-          yield ChatCardEvent(
-            type: 'alternatives',
-            payload: {'status': 'ok', 'has_data': true, 'demoBlock': block},
-          );
         case RegionBlock():
           yield ChatCardEvent(
             type: 'region',

@@ -9,7 +9,6 @@ import 'package:nullnull/screens/chat_screen.dart';
 import 'package:nullnull/screens/login_screen.dart';
 import 'package:nullnull/theme/app_theme.dart';
 import 'package:nullnull/widgets/app_drawer.dart';
-import 'package:nullnull/widgets/nullnull/alternative_card.dart';
 import 'package:nullnull/widgets/nullnull/congestion_badge.dart';
 import 'package:nullnull/widgets/nullnull/forecast_card.dart';
 import 'package:nullnull/widgets/nullnull/mascot.dart';
@@ -68,37 +67,6 @@ const _forecast = Forecast(
   ],
 );
 
-const _alternatives = [
-  Alternative(
-    rank: 1,
-    spot: PlaceRecommendation(
-      name: '오크밸리 빌리지센터',
-      description: '테스트',
-      congestionPercent: 27,
-      location: '강원 원주시 지정면',
-      address: '강원특별자치도 원주시 지정면 오크밸리2길 66',
-      phone: '033-730-3500',
-      introduction: '테스트용 소개.',
-      category: '복합관광시설',
-      travelMinutes: 12,
-    ),
-  ),
-  Alternative(
-    rank: 2,
-    spot: PlaceRecommendation(
-      name: '소금산그랜드밸리',
-      description: '테스트',
-      congestionPercent: 33,
-      location: '강원 원주시 지정면',
-      address: '강원특별자치도 원주시 지정면 소금산길 12',
-      phone: '033-749-4930',
-      introduction: '테스트용 소개.',
-      category: '기타관광',
-      travelMinutes: 8,
-    ),
-  ),
-];
-
 const _regionStatus = RegionStatus(
   region: '원주시',
   counts: {Level.quiet: 11, Level.normal: 7, Level.busy: 3},
@@ -136,16 +104,6 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     expect(find.text('간현관광지'), findsOneWidget);
-  });
-
-  testWidgets('AlternativesSection은 오버플로우 없이 렌더링된다', (tester) async {
-    await tester.pumpWidget(_harness(const AlternativesSection(
-      items: _alternatives,
-      excludedNote: '숙박·음식 연관지는 추천에서 제외했어요 (카페·리조트 등 7곳)',
-    )));
-    await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
-    expect(find.text('오크밸리 빌리지센터'), findsOneWidget);
   });
 
   testWidgets('RegionCard는 오버플로우 없이 렌더링된다', (tester) async {

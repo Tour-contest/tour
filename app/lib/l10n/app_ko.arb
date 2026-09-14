@@ -193,28 +193,6 @@
       }
     }
   },
-  "alternativeRankLabel": "함께 찾는 곳 {rank}위",
-  "@alternativeRankLabel": {
-    "description": "대안 추천 카드 상단 랭킹 라벨",
-    "placeholders": {
-      "rank": {
-        "type": "int"
-      }
-    }
-  },
-  "alternativeTravelMinutes": "차로 {minutes}분",
-  "@alternativeTravelMinutes": {
-    "description": "대안 추천 카드의 이동 시간 표기",
-    "placeholders": {
-      "minutes": {
-        "type": "int"
-      }
-    }
-  },
-  "nulnulOpenInMap": "지도에서 보기 ↗",
-  "@nulnulOpenInMap": {
-    "description": "대안 추천 카드의 지도 딥링크 버튼. 탭하면 MapAppSheet(앱 선택 시트)가 뜬다"
-  },
   "mapAppSheetTitle": "{placeName} 지도로 보기",
   "@mapAppSheetTitle": {
     "description": "지도 앱 선택 시트 제목",
@@ -297,7 +275,7 @@
       }
     }
   },
-  "chatCardCrowdTitle": "{signguNm} 혼잡도 현황",
+  "chatCardCrowdTitle": "{signguNm} 여행지 추천",
   "@chatCardCrowdTitle": {
     "description": "실 서버 채팅 카드(crowd) 제목",
     "placeholders": {
@@ -305,6 +283,14 @@
         "type": "String"
       }
     }
+  },
+  "chatCardCrowdPopularLabel": "인기 관광지",
+  "@chatCardCrowdPopularLabel": {
+    "description": "crowd 카드의 인기 관광지 섹션 라벨(samples.crowded, 비어있으면 samples.normal로 대체)"
+  },
+  "chatCardCrowdQuietLabel": "한적한 관광지",
+  "@chatCardCrowdQuietLabel": {
+    "description": "crowd 카드의 한적한 관광지 섹션 라벨(samples.quiet)"
   },
   "chatCardNoDataMessage": "이 카드에 표시할 정보가 없어요.",
   "@chatCardNoDataMessage": {
@@ -511,7 +497,7 @@
       }
     }
   },
-  "attractionDetailCrowdSummary": "평균 {avg}% · 최고 {peakDate} {peakRate}% · 최저 {minDate} {minRate}%",
+  "attractionDetailCrowdSummary": "평균 {avg} · 최고 {peakDate} {peakRate} · 최저 {minDate} {minRate}",
   "@attractionDetailCrowdSummary": {
     "description": "혼잡도 그래프 아래 기간 요약(평균/최고/최저)",
     "placeholders": {

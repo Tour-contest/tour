@@ -36,6 +36,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.loginSubheadline,
     required this.voiceListeningHint,
     required this.graphite,
+    required this.crowdChartBackground,
   });
 
   final Color paper;
@@ -111,6 +112,9 @@ class AppColors extends ThemeExtension<AppColors> {
   /// #292C36. 용도 미정 — 값만 우선 등록, 사용처가 정해지면 이름·용도를 갱신할 것.
   final Color graphite;
 
+  /// `CrowdBarChart`(혼잡도 막대 그래프) 배경색(#333743).
+  final Color crowdChartBackground;
+
   Color get ink800 => ink.withAlpha(230);
 
   Color get ink700 => const Color(0xFFA9B6BF);
@@ -170,6 +174,7 @@ class AppColors extends ThemeExtension<AppColors> {
     loginSubheadline: Color(0xFF7D8899),
     voiceListeningHint: Color(0xFF737B87),
     graphite: Color(0xFF292C36),
+    crowdChartBackground: Color(0xFF333743),
   );
 
   static AppColors of(BuildContext context) {
@@ -211,6 +216,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? loginSubheadline,
     Color? voiceListeningHint,
     Color? graphite,
+    Color? crowdChartBackground,
   }) {
     return AppColors(
       paper: paper ?? this.paper,
@@ -249,6 +255,7 @@ class AppColors extends ThemeExtension<AppColors> {
       loginSubheadline: loginSubheadline ?? this.loginSubheadline,
       voiceListeningHint: voiceListeningHint ?? this.voiceListeningHint,
       graphite: graphite ?? this.graphite,
+      crowdChartBackground: crowdChartBackground ?? this.crowdChartBackground,
     );
   }
 
@@ -298,6 +305,8 @@ class AppColors extends ThemeExtension<AppColors> {
       voiceListeningHint:
           Color.lerp(voiceListeningHint, other.voiceListeningHint, t)!,
       graphite: Color.lerp(graphite, other.graphite, t)!,
+      crowdChartBackground:
+          Color.lerp(crowdChartBackground, other.crowdChartBackground, t)!,
     );
   }
 }
