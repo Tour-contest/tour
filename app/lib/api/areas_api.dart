@@ -5,10 +5,12 @@ import 'package:nullnull/app_config.dart';
 import 'package:nullnull/app_log.dart';
 import 'package:nullnull/data/demo_script.dart' show Level;
 
-/// `GET /api/v1/areas`/`.../resolve`의 시군구 한 건. `docs/API_SPEC.md`에 예시
-/// 페이로드가 없어 필드명은 이미 확정된 `card.payload`(`attraction_list`/`crowd`)의
-/// `signgu_cd`/`signgu_nm` 표기를 따르고, 시도 필드명(`sido_cd`/`sido_nm`)은 같은
-/// 명명 규칙을 근거로 가정했다 — 실제 응답으로 확인되면 이 `fromJson`만 갱신하면 됨.
+/// `GET /api/v1/areas`/`.../resolve`의 시군구 한 건. `signgu_cd`/`signgu_nm`은
+/// 이미 확정된 `card.payload`(`attraction_list`/`crowd`)의 표기를 따르고,
+/// `sido_cd`는 같은 명명 규칙을 근거로 한 가정이다. `sido_nm`은 **[실서버로
+/// 확인함]** — `GET /api/v1/areas`에서는 항목마다 오지 않고 상위 그룹
+/// (`AreaSidoGroup.sidoNm`)에 한 번만 오므로, `DioAreasApi.fetchAreas()`가
+/// 평탄화하며 각 항목에 채워 넣는다.
 class AreaCode {
   const AreaCode({
     required this.signguCd,
@@ -30,6 +32,26 @@ class AreaCode {
   final String signguNm;
   final String? sidoCd;
   final String? sidoNm;
+}
+
+/// `GET /api/v1/areas` 응답 `data`의 시도 그룹 한 건. **[실서버로 확인함]**
+/// `data`가 `{"충청남도": [...]}` 같은 맵이 아니라 `[{"sido_nm": "충청남도",
+/// "items": [...]}]` 배열로 온다 — `DioAreasApi.fetchAreas()`가 이 그룹을
+/// [AreaCode] 평탄 리스트로 펼치며 [sidoNm]을 각 항목에 채워 넣는다.
+class AreaSidoGroup {
+  const AreaSidoGroup({required this.sidoNm, required this.items});
+
+  factory AreaSidoGroup.fromJson(Map<String, dynamic> json) {
+    return AreaSidoGroup(
+      sidoNm: json['sido_nm'] as String? ?? '',
+      items: ((json['items'] as List<dynamic>?) ?? const [])
+          .cast<Map<String, dynamic>>()
+          .toList(),
+    );
+  }
+
+  final String sidoNm;
+  final List<Map<String, dynamic>> items;
 }
 
 /// `GET /api/v1/areas/resolve`의 결과. [status]가 `ambiguous`면 [candidates]가
@@ -117,9 +139,14 @@ class AreaCrowdSnapshot {
     );
   }
 
-  static Level _levelFor(String koreanLabel) => switch (koreanLabel) {
-        '혼잡' => Level.busy,
-        '한적' => Level.quiet,
+  /// **[실서버로 확인함]** `summary`/`samples`의 키가 한글 라벨(`혼잡`/`보통`/
+  /// `한적`)에서 영문 키(`crowded`/`normal`/`quiet`)로 바뀌었다 — 아래 두
+  /// 값만 인식하던 이전 코드는 신형 응답에서 전부 기본값(`Level.normal`)으로
+  /// 뭉개진다. `widgets/nullnull/chat_card_view.dart`의 `CrowdCardData._levelFor`가
+  /// 겪은 것과 동일한 버그라 같은 방식(영문 우선, 한글도 겸용)으로 고쳤다.
+  static Level _levelFor(String key) => switch (key) {
+        '혼잡' || 'crowded' || 'busy' => Level.busy,
+        '한적' || 'quiet' => Level.quiet,
         _ => Level.normal,
       };
 
@@ -130,21 +157,55 @@ class AreaCrowdSnapshot {
   final Map<Level, List<AreaCrowdSample>> samples;
 }
 
-/// `GET /api/v1/areas/{signgu_cd}/visitors`의 주 단위 방문자 수 한 건. 필드명은
-/// 아직 예시가 없어 가정이다.
+/// 방문자 구분(현지인/외지인/외국인). **[반영함]** 응답의 구분 키가 한글
+/// 라벨을 가리키던 알파벳 키(`a`=현지인/`b`=외지인/`c`=외국인)에서 영문
+/// 의미 키(`local`/`outsider`/`foreigner`)로 바뀌었다 — 그 외 알려지지 않은
+/// 키는 [other]로 묶는다(`docs/API_SPEC.md`에 아직 예시가 없어, 알려진 세
+/// 키 외에는 방어적으로 겸용 처리).
+enum VisitorType { local, outsider, foreigner, other }
+
+VisitorType _visitorTypeFor(String key) => switch (key) {
+      'local' => VisitorType.local,
+      'outsider' => VisitorType.outsider,
+      'foreigner' => VisitorType.foreigner,
+      _ => VisitorType.other,
+    };
+
+/// `GET /api/v1/areas/{signgu_cd}/visitors`의 주 단위 방문자 수 한 건. `week_start`
+/// 외의 숫자 필드는 전부 방문자 구분별 카운트로 보고 [byType]에 모으고,
+/// [visitors]는 응답에 총합이 따로 오면 그 값을, 없으면 [byType] 합으로
+/// 채운다 — `docs/API_SPEC.md`에 예시가 없어 구분 키 이름만 확정(위 [VisitorType]
+/// 참고)이고 나머지는 가정이다.
 class WeeklyVisitorPoint {
-  const WeeklyVisitorPoint({required this.weekStart, required this.visitors});
+  const WeeklyVisitorPoint({
+    required this.weekStart,
+    required this.visitors,
+    required this.byType,
+  });
 
   factory WeeklyVisitorPoint.fromJson(Map<String, dynamic> json) {
+    final byType = <VisitorType, int>{};
+    for (final entry in json.entries) {
+      if (entry.key == 'week_start' || entry.key == 'visitors') continue;
+      final value = entry.value;
+      if (value is num) {
+        final type = _visitorTypeFor(entry.key);
+        byType[type] = (byType[type] ?? 0) + value.toInt();
+      }
+    }
+    final total = (json['visitors'] as num?)?.toInt() ??
+        byType.values.fold<int>(0, (sum, value) => sum + value);
     return WeeklyVisitorPoint(
       weekStart:
           DateTime.tryParse(json['week_start'] as String? ?? '')?.toLocal(),
-      visitors: ((json['visitors'] as num?) ?? 0).toInt(),
+      visitors: total,
+      byType: byType,
     );
   }
 
   final DateTime? weekStart;
   final int visitors;
+  final Map<VisitorType, int> byType;
 }
 
 /// `GET /api/v1/areas/{signgu_cd}/visitors` 응답. `docs/API_SPEC.md`가 "약 2개월
@@ -320,11 +381,17 @@ class DioAreasApi implements AreasApi {
   @override
   Future<List<AreaCode>> fetchAreas() async {
     final response = await _get<Map<String, dynamic>>(AppConfig.areasEndpoint);
-    final data = _unwrap(response, errorMessage: '지역 목록을 불러오지 못했어요.');
-    return ((data['items'] as List<dynamic>?) ?? const [])
+    final groups = _unwrapList(response, errorMessage: '지역 목록을 불러오지 못했어요.')
         .cast<Map<String, dynamic>>()
-        .map(AreaCode.fromJson)
-        .toList();
+        .map(AreaSidoGroup.fromJson);
+    return [
+      for (final group in groups)
+        for (final item in group.items)
+          AreaCode.fromJson({
+            ...item,
+            'sido_nm': item['sido_nm'] ?? group.sidoNm,
+          }),
+    ];
   }
 
   @override
@@ -397,8 +464,10 @@ class DioAreasApi implements AreasApi {
     }
   }
 
-  /// 공통 응답 봉투를 언래핑한다(`ChatApi._unwrap`과 동일한 규칙).
-  Map<String, dynamic> _unwrap(
+  /// 공통 응답 봉투에서 `success`를 확인한다(`ChatApi._unwrap`과 동일한 규칙).
+  /// `data`의 실제 타입(`Map`/`List`)은 엔드포인트마다 달라 [_unwrap]/
+  /// [_unwrapList]가 각자 캐스팅한다.
+  Map<String, dynamic> _checkSuccess(
     Response<Map<String, dynamic>> response, {
     required String errorMessage,
   }) {
@@ -409,6 +478,23 @@ class DioAreasApi implements AreasApi {
         retriable: envelope?['retriable'] as bool? ?? false,
       );
     }
-    return envelope?['data'] as Map<String, dynamic>? ?? const {};
+    return envelope ?? const {};
+  }
+
+  Map<String, dynamic> _unwrap(
+    Response<Map<String, dynamic>> response, {
+    required String errorMessage,
+  }) {
+    final envelope = _checkSuccess(response, errorMessage: errorMessage);
+    return envelope['data'] as Map<String, dynamic>? ?? const {};
+  }
+
+  /// `GET /api/v1/areas`처럼 `data`가 배열로 오는 응답용.
+  List<dynamic> _unwrapList(
+    Response<Map<String, dynamic>> response, {
+    required String errorMessage,
+  }) {
+    final envelope = _checkSuccess(response, errorMessage: errorMessage);
+    return envelope['data'] as List<dynamic>? ?? const [];
   }
 }
