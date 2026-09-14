@@ -1,10 +1,13 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:nullnull/api/api_client.dart';
+import 'package:nullnull/api/areas_api.dart';
+import 'package:nullnull/api/attractions_api.dart';
 import 'package:nullnull/api/chat_api.dart';
 import 'package:nullnull/app_log.dart';
 import 'package:nullnull/app_router.dart';
@@ -23,6 +26,7 @@ import 'package:nullnull/widgets/app_header.dart';
 import 'package:nullnull/widgets/app_toast.dart';
 import 'package:nullnull/widgets/confirm_dialog.dart';
 import 'package:nullnull/widgets/push_drawer.dart';
+import 'package:nullnull/widgets/chat/chat_fallback_prompt.dart';
 import 'package:nullnull/widgets/chat/chat_input_bar.dart';
 import 'package:nullnull/widgets/chat/message_actions_row.dart';
 import 'package:nullnull/widgets/chat/streaming_ai_message.dart';
@@ -72,11 +76,30 @@ class _AiChatEntry extends _ChatEntry {
   /// `ChatSourcesEvent`로 받은 출처 목록(각 항목 `{name, note}`). 타이핑
   /// 연출이 끝난 뒤 `StreamingAiMessage` 하단에 보여준다.
   final List<Map<String, dynamic>> sources = [];
+
+  /// `null`이면 평소처럼 진행 중(`blocks`가 비어있으면 생각 중 표시,
+  /// 채워지면 `StreamingAiMessage`). SSE가 [blocks]를 하나도 못 채운 채
+  /// 에러로 끝나면(레이트리밋 제외) `_send`가 이 값을 [ChatFallbackState.offered]로
+  /// 바꿔 `_ThinkingIndicator` 대신 `ChatFallbackPrompt`를 보여준다
+  /// (`## Architecture`의 `_send` 문서 참고). 대체 조회가 성공하면 [blocks]를
+  /// 채우고 다시 `null`로 되돌려 기존 렌더링 경로를 그대로 탄다.
+  ChatFallbackState? fallbackState;
+
+  /// [fallbackState]가 [ChatFallbackState.offered]일 때 사용자가 버튼을
+  /// 탭하면 이 원본 입력으로 `AttractionsApi.search`/`AreasApi.resolve`를
+  /// 시도한다.
+  String fallbackQuery = '';
 }
 
 /// docs/DESIGN.md 화면 2·3: 채팅(빈 상태 / 대화).
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key, this.chatApi, this.resume});
+  const ChatScreen({
+    super.key,
+    this.chatApi,
+    this.resume,
+    this.areasApi,
+    this.attractionsApi,
+  });
 
   /// 테스트/향후 실 연동 전환을 위한 주입 지점(`history_screen.dart`와 동일한
   /// 패턴). 기본값은 실 서버(`nullnull.kr`) 연동.
@@ -85,6 +108,11 @@ class ChatScreen extends StatefulWidget {
   /// `history_screen.dart`에서 지난 대화를 이어볼 때만 넘어온다. `null`이면
   /// 평소처럼 빈 대화로 시작한다.
   final ChatResumeData? resume;
+
+  /// SSE 에러 대체 흐름(`_runFallbackSearch`)에서 쓰는 `AreasApi`/`AttractionsApi`.
+  /// [chatApi]와 동일한 테스트 주입 패턴. 기본값은 실 서버 연동.
+  final AreasApi? areasApi;
+  final AttractionsApi? attractionsApi;
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -102,6 +130,11 @@ class _ChatScreenState extends State<ChatScreen>
   // 됨을 확인함(로그인 전이거나 토큰 만료 시에는 401, `_send`가 실패 토스트만 띄움).
   late final ChatApi _chatApi =
       widget.chatApi ?? LoggingChatApi(DioChatApi(ApiClient.create()));
+  // SSE 에러 대체 흐름(`_runFallbackSearch`)에서만 쓴다.
+  late final AreasApi _areasApi =
+      widget.areasApi ?? LoggingAreasApi(DioAreasApi(ApiClient.create()));
+  late final AttractionsApi _attractionsApi = widget.attractionsApi ??
+      LoggingAttractionsApi(DioAttractionsApi(ApiClient.create()));
   String? _sessionId;
   int _nextId = 0;
 
@@ -215,6 +248,17 @@ class _ChatScreenState extends State<ChatScreen>
     } catch (e, stackTrace) {
       AppLog.logger.e('채팅 메시지 전송 실패', error: e, stackTrace: stackTrace);
       if (!mounted) return;
+      // 문장/카드를 하나도 못 받은 채(=아직 사용자에게 보여줄 게 없는 채) 끝났고,
+      // 분당 10회 제한(429)처럼 다시 눌러야 하는 상황이 아니면 대체 흐름을
+      // 제안한다 — 이미 부분 답변이 떠 있으면 지금처럼 그냥 실패로 끝낸다.
+      final isRateLimited = e is DioException && e.response?.statusCode == 429;
+      if (buffer.isEmpty && !isRateLimited) {
+        setState(() {
+          aiEntry.fallbackQuery = text;
+          aiEntry.fallbackState = ChatFallbackState.offered;
+        });
+        return;
+      }
       setState(() => _entries.removeWhere((entry) => entry.id == aiEntryId));
       AppToast.show(
         AppLocalizations.of(context)!.chatSendFailedToast,
@@ -229,6 +273,105 @@ class _ChatScreenState extends State<ChatScreen>
       aiEntry.sources.addAll(capturedSources);
     });
     _scrollToBottomSoon();
+  }
+
+  /// `ChatFallbackPrompt`의 "다른 방식으로 찾아보기" 버튼 탭 시 호출된다.
+  /// `entry.fallbackQuery`(원본 사용자 입력)를 `AttractionsApi.search`에 먼저
+  /// 시도하고, 결과가 없으면 `AreasApi.resolve`(+ 단일 지역이면 `fetchOverview`)를
+  /// 시도하는 best-effort 매칭이다 — 의도 파악 로직 없이 원문 그대로 넘긴다.
+  /// `resolve`가 `ambiguous`면(선택 UI가 아직 없어) 자동으로 후보를 고르지
+  /// 않고 그대로 실패로 처리한다(`docs/API_SPEC.md`의 "구현 주의").
+  Future<void> _runFallbackSearch(_AiChatEntry entry) async {
+    setState(() => entry.fallbackState = ChatFallbackState.searching);
+    try {
+      final searchResult =
+          await _attractionsApi.search(keyword: entry.fallbackQuery);
+      if (searchResult.items.isNotEmpty) {
+        _applyFallbackResult(
+            entry, _attractionListCard(entry.fallbackQuery, searchResult));
+        return;
+      }
+
+      final resolved = await _areasApi.resolve(query: entry.fallbackQuery);
+      final area = resolved.area;
+      if (resolved.status == 'ok' && area != null) {
+        final overview = await _areasApi.fetchOverview(signguCd: area.signguCd);
+        _applyFallbackResult(entry, _crowdCard(overview));
+        return;
+      }
+
+      if (!mounted) return;
+      setState(() => entry.fallbackState = ChatFallbackState.exhausted);
+    } catch (e, stackTrace) {
+      AppLog.logger.e('대체 흐름 조회 실패', error: e, stackTrace: stackTrace);
+      if (!mounted) return;
+      setState(() => entry.fallbackState = ChatFallbackState.exhausted);
+    }
+  }
+
+  /// 대체 흐름이 뭔가를 찾았을 때, 새 카드 UI를 따로 만드는 대신 캡션
+  /// 문장(`chatFallbackResultCaption`) + 카드를 [entry.blocks]에 채워 넣고
+  /// [fallbackState]를 되돌려 기존 `StreamingAiMessage`/`ChatCardView` 렌더링
+  /// 경로를 그대로 태운다(`_buildThread` 참고).
+  void _applyFallbackResult(_AiChatEntry entry, ChatCardBlock card) {
+    if (!mounted) return;
+    setState(() {
+      entry.fallbackState = null;
+      entry.blocks
+        ..add(
+            TextBlock(AppLocalizations.of(context)!.chatFallbackResultCaption))
+        ..add(card);
+      entry.done = true;
+    });
+  }
+
+  /// `AttractionsApi.search` 결과를 실 서버 `attraction_list` 카드와 같은
+  /// 페이로드 모양(`docs/API_SPEC.md`의 `### chat`에서 확인됨)으로 변환해
+  /// 기존 `ChatCardView`가 그대로 그릴 수 있게 한다. `category`엔 원본 검색어를
+  /// 넣어 제목이 자연스럽게 읽히도록 한다(실 카드의 `category`처럼 태그성
+  /// 문구는 아니지만, 이 화면에선 사용자가 뭘 물어봤는지 보여주는 편이 낫다).
+  ChatCardBlock _attractionListCard(
+      String query, AttractionSearchResult result) {
+    return ChatCardBlock(type: 'attraction_list', payload: {
+      'status': 'ok',
+      'category': query,
+      'signgu_nm': result.items.first.signguNm ?? '',
+      'items': [
+        for (final item in result.items)
+          {'title': item.title, 'addr1': item.addr1, 'addr2': item.addr2},
+      ],
+    });
+  }
+
+  /// `AreasApi.fetchOverview` 결과를 실 서버 `crowd` 카드와 같은 페이로드
+  /// 모양으로 변환한다(`AreaCrowdSnapshot`의 `Level` 매핑을 다시 한국어 키로
+  /// 되돌리는 이유: `ChatCardView`의 `CrowdCardData.fromJson`이 그 키를 기대함).
+  ChatCardBlock _crowdCard(AreaCrowdSnapshot snapshot) {
+    String levelKey(Level level) => switch (level) {
+          Level.busy => '혼잡',
+          Level.quiet => '한적',
+          Level.normal => '보통',
+        };
+    return ChatCardBlock(type: 'crowd', payload: {
+      'status': 'ok',
+      'signgu_nm': snapshot.signguNm,
+      'summary': {
+        for (final entry in snapshot.counts.entries)
+          levelKey(entry.key): entry.value,
+      },
+      'samples': {
+        for (final entry in snapshot.samples.entries)
+          levelKey(entry.key): [
+            for (final sample in entry.value)
+              {
+                'name': sample.name,
+                'rate': sample.rate,
+                'content_id': sample.contentId,
+                'image': sample.image,
+              },
+          ],
+      },
+    });
   }
 
   void _regenerate(_AiChatEntry entry) {
@@ -343,14 +486,23 @@ class _ChatScreenState extends State<ChatScreen>
       itemCount: _entries.length,
       itemBuilder: (context, index) {
         final entry = _entries[index];
+        final l10n = AppLocalizations.of(context)!;
         return Padding(
           key: ValueKey(entry.id),
           padding: const EdgeInsets.only(bottom: 20),
           child: FadeSlideIn(
             child: switch (entry) {
               _UserChatEntry(:final text) => UserMessageBubble(text: text),
-              _AiChatEntry() when entry.blocks.isEmpty =>
+              _AiChatEntry()
+                  when entry.blocks.isEmpty && entry.fallbackState == null =>
                 _ThinkingIndicator(label: entry.statusLabel),
+              _AiChatEntry() when entry.blocks.isEmpty => ChatFallbackPrompt(
+                  state: entry.fallbackState!,
+                  offeredMessage: l10n.chatFallbackOfferedMessage,
+                  exhaustedMessage: l10n.chatFallbackExhaustedMessage,
+                  actionLabel: l10n.chatFallbackActionLabel,
+                  onSearch: () => _runFallbackSearch(entry),
+                ),
               _AiChatEntry() => ConstrainedBox(
                   constraints: BoxConstraints(
                       maxWidth: MediaQuery.of(context).size.width * 0.92),

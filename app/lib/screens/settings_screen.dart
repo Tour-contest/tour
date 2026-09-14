@@ -14,6 +14,7 @@ import 'package:nullnull/data/logout_service.dart';
 import 'package:nullnull/data/user_profile_storage.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/main.dart';
+import 'package:nullnull/screens/web_view_screen.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_locale_controller.dart';
 import 'package:nullnull/theme/app_text_scale_controller.dart';
@@ -110,6 +111,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
           content: Text(AppLocalizations.of(context)!.settingsContactCopied)),
+    );
+  }
+
+  void _openWebView(BuildContext context,
+      {required String title, required String url}) {
+    context.pushNamed(
+      RouteNames.webView,
+      extra: WebViewRouteArgs(title: title, url: url),
     );
   }
 
@@ -264,6 +273,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           trailingText:
                               '${AppInfo.package.version} (${AppInfo.package.buildNumber})',
                           isFirst: true,
+                        ),
+                        _SettingsRow(
+                          label: l10n.settingsPrivacyPolicy,
+                          onTap: () => _openWebView(
+                            context,
+                            title: l10n.settingsPrivacyPolicy,
+                            url: AppInfo.privacyPolicyUrl,
+                          ),
+                        ),
+                        _SettingsRow(
+                          label: l10n.settingsTermsOfService,
+                          onTap: () => _openWebView(
+                            context,
+                            title: l10n.settingsTermsOfService,
+                            url: AppInfo.termsOfServiceUrl,
+                          ),
                         ),
                         _SettingsRow(
                           label: l10n.settingsContact,

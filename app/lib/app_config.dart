@@ -1,9 +1,6 @@
 /// 백엔드/외부 서비스 연동 설정. [baseUrl]/[healthzEndpoint]/[attributionEndpoint]와
-/// `chat*Endpoint`/`auth*Endpoint` 계열은 `docs/API_SPEC.md`로 확정된 실제 값이다. [congestionEndpoint]/
-/// [alternativesEndpoint]는 아직 이 문서에 경로가 정리되지 않아 `docs/design_handoff_storyboard.md`에
-/// 언급된 기능 ID(F-01 등)를 근거로 임시로 붙여 둔 플레이스홀더다(확정된 [healthzEndpoint]처럼
-/// `/api/v1` 프리픽스가 붙을 가능성이 높으니, `docs/API_SPEC.md`에 해당 섹션이 채워지면 실제
-/// 값으로 교체할 것).
+/// `chat*Endpoint`/`auth*Endpoint`/`area*Endpoint`/`attraction*Endpoint` 계열은
+/// `docs/API_SPEC.md`로 확정된 실제 값이다.
 class AppConfig {
   AppConfig._();
 
@@ -43,9 +40,47 @@ class AppConfig {
   /// 내 정보 조회(`GET`)/회원 탈퇴(`DELETE`, 카카오 연결 해제 포함). 인증 필요.
   static const String meEndpoint = '/api/v1/me';
 
-  static const String congestionEndpoint = '/v1/congestion';
+  /// 시도별 시군구 전체 목록(캐시 가능한 기준정보).
+  static const String areasEndpoint = '/api/v1/areas';
 
-  static const String alternativesEndpoint = '/v1/places/alternatives';
+  /// 지역명 → 코드 변환.
+  static const String areasResolveEndpoint = '/api/v1/areas/resolve';
+
+  static String areaOverviewEndpoint(String signguCd) =>
+      '/api/v1/areas/$signguCd/overview';
+
+  static String areaCrowdingEndpoint(String signguCd) =>
+      '/api/v1/areas/$signguCd/crowding';
+
+  static String areaVisitorsEndpoint(String signguCd) =>
+      '/api/v1/areas/$signguCd/visitors';
+
+  static const String attractionsSearchEndpoint = '/api/v1/attractions/search';
+
+  static String attractionEndpoint(String contentId) =>
+      '/api/v1/attractions/$contentId';
+
+  static String attractionCrowdEndpoint(String contentId) =>
+      '/api/v1/attractions/$contentId/crowd';
+
+  static String attractionAlternativesEndpoint(String contentId) =>
+      '/api/v1/attractions/$contentId/alternatives';
+
+  static String attractionInterestEndpoint(String contentId) =>
+      '/api/v1/attractions/$contentId/interest';
+
+  static String attractionImagesEndpoint(String contentId) =>
+      '/api/v1/attractions/$contentId/images';
+
+  static String attractionPetEndpoint(String contentId) =>
+      '/api/v1/attractions/$contentId/pet';
+
+  static String attractionSimilarEndpoint(String contentId) =>
+      '/api/v1/attractions/$contentId/similar';
+
+  /// 최근 본 관광지 목록 조회(`GET`)/전체 삭제(`DELETE`, 개별 삭제 없음).
+  static const String recentAttractionsEndpoint =
+      '/api/v1/me/recent-attractions';
 
   /// 카카오 로그인 SDK(`kakao_flutter_sdk_user`) 초기화용 네이티브 앱 키.
   /// 카카오 디벨로퍼스 콘솔(내 애플리케이션 > 앱 키)에서 발급받은 값.

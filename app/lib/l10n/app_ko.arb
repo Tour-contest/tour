@@ -81,6 +81,22 @@
   "@chatSendFailedToast": {
     "description": "채팅 메시지 전송(ChatApi.sendMessage) 실패 시 뜨는 토스트 문구"
   },
+  "chatFallbackOfferedMessage": "지금은 실시간 답변을 만들지 못했어요",
+  "@chatFallbackOfferedMessage": {
+    "description": "SSE가 버퍼를 하나도 못 채운 채 에러로 끝났을 때(레이트리밋 제외) 대체 흐름을 제안하는 문구"
+  },
+  "chatFallbackActionLabel": "다른 방식으로 찾아보기",
+  "@chatFallbackActionLabel": {
+    "description": "chatFallbackOfferedMessage 아래 버튼 레이블(AreasApi/AttractionsApi로 best-effort 조회 시작)"
+  },
+  "chatFallbackExhaustedMessage": "정보를 찾지 못했어요. 다른 질문으로 다시 물어봐주세요.",
+  "@chatFallbackExhaustedMessage": {
+    "description": "대체 흐름(AreasApi/AttractionsApi 조회)도 결과를 못 찾았을 때(not_found/ambiguous) 안내 문구"
+  },
+  "chatFallbackResultCaption": "실시간 답변 대신 관련 정보를 찾아봤어요.",
+  "@chatFallbackResultCaption": {
+    "description": "대체 흐름으로 찾은 결과가 AI가 생성한 답변이 아니라 직접 조회한 결과임을 알리는 카드 상단 캡션"
+  },
   "chatThemeWellnessTitle": "웰니스 여행지",
   "@chatThemeWellnessTitle": {
     "description": "채팅 빈 상태(S3) 테마 그리드 - 웰니스 여행지 카드 제목"
@@ -378,6 +394,14 @@
   "settingsContactCopied": "클립보드에 복사되었습니다.",
   "@settingsContactCopied": {
     "description": "문의 이메일 복사 후 스낵바 문구"
+  },
+  "settingsPrivacyPolicy": "개인정보처리방침",
+  "@settingsPrivacyPolicy": {
+    "description": "설정 화면 개인정보처리방침 행 라벨(웹뷰로 이동)"
+  },
+  "settingsTermsOfService": "서비스 이용약관",
+  "@settingsTermsOfService": {
+    "description": "설정 화면 서비스 이용약관 행 라벨(웹뷰로 이동)"
   },
   "settingsSectionOpenSource": "오픈소스",
   "@settingsSectionOpenSource": {

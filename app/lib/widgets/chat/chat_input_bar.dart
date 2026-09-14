@@ -48,10 +48,14 @@ class _ChatInputBarState extends State<ChatInputBar> {
     if (text.isEmpty) return;
     widget.onSend(text);
     widget.controller.clear();
+    _focusNode.unfocus();
   }
 
   /// 마이크 아이콘 탭 시 음성 입력을 시작/중지한다. 인식 중간 결과가 나올 때마다
   /// 입력창 텍스트를 갱신하며, 탭 당시 이미 입력돼 있던 텍스트 뒤에 이어붙인다.
+  /// 최종 결과(`isFinal`)가 나오면 음성 입력을 멈추고 곧바로 전송까지
+  /// 트리거한다(엔터를 직접 치는 것과 동일) — 최종 결과가 빈 문자열이면
+  /// `_submit`의 빈 텍스트 가드에 걸려 아무 일도 일어나지 않는다.
   Future<void> _toggleVoiceInput() async {
     if (_isListening) {
       await _stopVoiceInput();
@@ -77,7 +81,10 @@ class _ChatInputBarState extends State<ChatInputBar> {
           text: combined,
           selection: TextSelection.collapsed(offset: combined.length),
         );
-        if (isFinal) _stopVoiceInput();
+        if (isFinal) {
+          _stopVoiceInput();
+          _submit();
+        }
       },
     );
   }

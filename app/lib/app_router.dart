@@ -10,6 +10,7 @@ import 'package:nullnull/screens/onboarding_screen.dart';
 import 'package:nullnull/screens/place_detail_screen.dart';
 import 'package:nullnull/screens/settings_screen.dart';
 import 'package:nullnull/screens/splash_screen.dart';
+import 'package:nullnull/screens/web_view_screen.dart';
 
 /// 앱 전역 라우터의 [Navigator]에 접근하기 위한 키. [NetworkStatusListener]가
 /// 오프라인 팝업을 띄울 오버레이 컨텍스트를 얻는 데 사용한다.
@@ -27,6 +28,7 @@ class RouteNames {
   static const history = 'history';
   static const settings = 'settings';
   static const place = 'place';
+  static const webView = 'webView';
 }
 
 final GoRouter appRouter = GoRouter(
@@ -70,6 +72,14 @@ final GoRouter appRouter = GoRouter(
       name: RouteNames.place,
       builder: (context, state) =>
           PlaceDetailScreen(place: state.extra as PlaceRecommendation),
+    ),
+    GoRoute(
+      path: '/${RouteNames.webView}',
+      name: RouteNames.webView,
+      builder: (context, state) {
+        final args = state.extra as WebViewRouteArgs;
+        return WebViewScreen(title: args.title, url: args.url);
+      },
     ),
   ],
 );
