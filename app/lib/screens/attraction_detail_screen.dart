@@ -13,10 +13,10 @@ import 'package:nullnull/data/map_launcher_service.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
-import 'package:nullnull/widgets/app_header.dart';
 import 'package:nullnull/widgets/app_icon.dart';
 import 'package:nullnull/widgets/app_toast.dart';
 import 'package:nullnull/widgets/nullnull/congestion_badge.dart';
+import 'package:nullnull/widgets/nullnull/plain_header.dart';
 import 'package:nullnull/widgets/skeleton_box.dart';
 
 /// [AttractionDetailScreen]을 `context.pushNamed(RouteNames.attractionDetail,
@@ -227,16 +227,10 @@ class _AttractionDetailScreenState extends State<AttractionDetailScreen> {
         maintainBottomViewPadding: true,
         child: Column(
           children: [
-            AppHeader(
+            PlainHeader(
               title: _detail?.summary.title ??
                   widget.initialTitle ??
                   l10n.attractionDetailTitle,
-              leading: IconButton(
-                icon: AppIcon(AppIconShape.chevronLeft,
-                    size: 18, color: colors.ink),
-                onPressed: () => context.pop(),
-                tooltip: l10n.commonBack,
-              ),
             ),
             Expanded(child: _buildBody(context)),
           ],
@@ -271,129 +265,131 @@ class _AttractionDetailScreenState extends State<AttractionDetailScreen> {
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 2. 이미지 캐러셀
-          _ImageCarousel(imageUrls: imageUrls),
-          const SizedBox(height: 18),
-          // 3. 장소이름, 상세 주소
-          Text(summary.title,
-              style: AppTextStyles.heading(fontSize: 24, color: colors.ink)),
-          if (summary.address.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AppIcon(AppIconShape.pin, size: 13, color: colors.ink600),
-                const SizedBox(width: 5),
-                Expanded(
-                  child: Text(
-                    summary.address,
-                    style:
-                        AppTextStyles.body(fontSize: 13, color: colors.ink700),
+      child: SelectionArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 2. 이미지 캐러셀
+            _ImageCarousel(imageUrls: imageUrls),
+            const SizedBox(height: 18),
+            // 3. 장소이름, 상세 주소
+            Text(summary.title,
+                style: AppTextStyles.heading(fontSize: 24, color: colors.ink)),
+            if (summary.address.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppIcon(AppIconShape.pin, size: 13, color: colors.ink600),
+                  const SizedBox(width: 5),
+                  Expanded(
+                    child: Text(
+                      summary.address,
+                      style: AppTextStyles.body(
+                          fontSize: 13, color: colors.ink700),
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
-          const SizedBox(height: 24),
-          _Divider(colors: colors),
-          const SizedBox(height: 20),
-          // 4. 혼잡도 그래프
-          _SectionLabel(l10n.attractionDetailCrowdSection),
-          _CrowdSection(
-            days: _crowdDays,
-            dayOptions: _crowdDayOptions,
-            onSelectDays: _selectCrowdDays,
-            loading: _loadingCrowd,
-            failed: _crowdFailed,
-            forecast: _crowd,
-            onRetry: _loadCrowd,
-          ),
-          const SizedBox(height: 24),
-          _Divider(colors: colors),
-          const SizedBox(height: 20),
-          // 5. 이용정보 + 지도에서 보기
-          _SectionLabel(l10n.attractionDetailInfoSection),
-          _InfoSection(
-            info: detail.info,
-            onOpenKakaoMap: () => _openMap(
-              context,
-              () => summary.mapX != null && summary.mapY != null
-                  ? MapLauncherService.openKakaoMapAt(
-                      summary.mapY!, summary.mapX!)
-                  : MapLauncherService.openKakaoMap(summary.title),
-            ),
-            onOpenNaverMap: () => _openMap(
-              context,
-              () => summary.mapX != null && summary.mapY != null
-                  ? MapLauncherService.openNaverMapAt(
-                      summary.mapY!, summary.mapX!, summary.title)
-                  : MapLauncherService.openNaverMap(summary.title),
-            ),
-          ),
-          // 6. 상세 소개
-          if (detail.overview != null && detail.overview!.isNotEmpty) ...[
-            const SizedBox(height: 24),
-            _Divider(colors: colors),
-            const SizedBox(height: 20),
-            _SectionLabel(l10n.attractionDetailIntroSection),
-            Text(
-              detail.overview!,
-              style: AppTextStyles.body(color: colors.ink, height: 1.8),
-            ),
-          ],
-          // 7. 함께 찾는 곳
-          if (_alternatives != null && _alternatives!.items.isNotEmpty) ...[
-            const SizedBox(height: 24),
-            _Divider(colors: colors),
-            const SizedBox(height: 20),
-            _SectionLabel(l10n.attractionDetailAlternativesSection),
-            if (_alternatives!.base != null) ...[
-              CongestionBadge(
-                level: _alternatives!.base!.level,
-                score: _alternatives!.base!.rate,
+                ],
               ),
-              const SizedBox(height: 10),
             ],
-            _AlternativesSection(
-              items: _alternatives!.items,
-              onTap: _openAttraction,
+            const SizedBox(height: 24),
+            _Divider(colors: colors),
+            const SizedBox(height: 20),
+            // 4. 혼잡도 그래프
+            _SectionLabel(l10n.attractionDetailCrowdSection),
+            _CrowdSection(
+              days: _crowdDays,
+              dayOptions: _crowdDayOptions,
+              onSelectDays: _selectCrowdDays,
+              loading: _loadingCrowd,
+              failed: _crowdFailed,
+              forecast: _crowd,
+              onRetry: _loadCrowd,
             ),
-          ],
-          // 8. 반려동물 정보
-          if (_pet != null) ...[
             const SizedBox(height: 24),
             _Divider(colors: colors),
             const SizedBox(height: 20),
-            _SectionLabel(l10n.attractionDetailPetSection),
-            _PetSection(pet: _pet!),
-          ],
-          // 9. 유사도 데이터
-          if (_similar != null && _similar!.isNotEmpty) ...[
-            const SizedBox(height: 24),
-            _Divider(colors: colors),
-            const SizedBox(height: 20),
-            _SectionLabel(l10n.attractionDetailSimilarSection),
-            _SimilarSection(items: _similar!, onTap: _openAttraction),
-          ],
-          // 10. 검색 관심도
-          if (_interest != null && _interest!.items.isNotEmpty) ...[
-            const SizedBox(height: 24),
-            _Divider(colors: colors),
-            const SizedBox(height: 20),
-            _SectionLabel(l10n.attractionDetailInterestSection),
-            _InterestSummary(items: _interest!.items),
-          ],
-          if (detail.source != null && detail.source!.isNotEmpty) ...[
-            const SizedBox(height: 24),
-            Text(
-              detail.source!,
-              style: AppTextStyles.body(fontSize: 11, color: colors.ink600),
+            // 5. 이용정보 + 지도에서 보기
+            _SectionLabel(l10n.attractionDetailInfoSection),
+            _InfoSection(
+              info: detail.info,
+              onOpenKakaoMap: () => _openMap(
+                context,
+                () => summary.mapX != null && summary.mapY != null
+                    ? MapLauncherService.openKakaoMapAt(
+                        summary.mapY!, summary.mapX!)
+                    : MapLauncherService.openKakaoMap(summary.title),
+              ),
+              onOpenNaverMap: () => _openMap(
+                context,
+                () => summary.mapX != null && summary.mapY != null
+                    ? MapLauncherService.openNaverMapAt(
+                        summary.mapY!, summary.mapX!, summary.title)
+                    : MapLauncherService.openNaverMap(summary.title),
+              ),
             ),
+            // 6. 상세 소개
+            if (detail.overview != null && detail.overview!.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              _Divider(colors: colors),
+              const SizedBox(height: 20),
+              _SectionLabel(l10n.attractionDetailIntroSection),
+              Text(
+                detail.overview!,
+                style: AppTextStyles.body(color: colors.ink, height: 1.8),
+              ),
+            ],
+            // 7. 함께 찾는 곳
+            if (_alternatives != null && _alternatives!.items.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              _Divider(colors: colors),
+              const SizedBox(height: 20),
+              _SectionLabel(l10n.attractionDetailAlternativesSection),
+              if (_alternatives!.base != null) ...[
+                CongestionBadge(
+                  level: _alternatives!.base!.level,
+                  score: _alternatives!.base!.rate,
+                ),
+                const SizedBox(height: 10),
+              ],
+              _AlternativesSection(
+                items: _alternatives!.items,
+                onTap: _openAttraction,
+              ),
+            ],
+            // 8. 반려동물 정보
+            if (_pet != null) ...[
+              const SizedBox(height: 24),
+              _Divider(colors: colors),
+              const SizedBox(height: 20),
+              _SectionLabel(l10n.attractionDetailPetSection),
+              _PetSection(pet: _pet!),
+            ],
+            // 9. 유사도 데이터
+            if (_similar != null && _similar!.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              _Divider(colors: colors),
+              const SizedBox(height: 20),
+              _SectionLabel(l10n.attractionDetailSimilarSection),
+              _SimilarSection(items: _similar!, onTap: _openAttraction),
+            ],
+            // 10. 검색 관심도
+            if (_interest != null && _interest!.items.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              _Divider(colors: colors),
+              const SizedBox(height: 20),
+              _SectionLabel(l10n.attractionDetailInterestSection),
+              _InterestSummary(items: _interest!.items),
+            ],
+            if (detail.source != null && detail.source!.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              Text(
+                detail.source!,
+                style: AppTextStyles.body(fontSize: 11, color: colors.ink600),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -829,7 +825,7 @@ class _InfoSection extends StatelessWidget {
           children: [
             Expanded(
               child: _OutlineButton(
-                label: l10n.placeDetailOpenInMapApp,
+                label: l10n.attractionDetailOpenInKakaoMap,
                 icon: AppIconShape.arrowUpRight,
                 onTap: onOpenKakaoMap,
               ),
@@ -837,7 +833,7 @@ class _InfoSection extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: _OutlineButton(
-                label: l10n.placeDetailOpenInNaverMap,
+                label: l10n.attractionDetailOpenInNaverMap,
                 icon: AppIconShape.arrowUpRight,
                 onTap: onOpenNaverMap,
               ),
@@ -1005,24 +1001,16 @@ class _PetSection extends StatelessWidget {
       return Text(l10n.attractionDetailPetNoData,
           style: AppTextStyles.body(color: colors.ink600));
     }
-    // `items` 안의 항목 스키마는 아직 값이 있는 예시가 없어(`no_data` 사례만
-    // 확인됨) `info`와 같은 {label, value} 모양이면 그 라벨/값으로, 아니면
-    // 통째로 텍스트화해서 최소한 정보 손실 없이 보여준다.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         for (final item in pet.items) ...[
-          if (item is Map && item['label'] != null) ...[
-            Text('${item['label']}',
-                style: AppTextStyles.body(fontSize: 12, color: colors.ink600)),
-            const SizedBox(height: 2),
-            Text('${item['value'] ?? ''}',
-                style: AppTextStyles.body(
-                    fontSize: 14, color: colors.ink, height: 1.5)),
-          ] else
-            Text(item.toString(),
-                style: AppTextStyles.body(
-                    fontSize: 14, color: colors.ink, height: 1.5)),
+          Text(item.label,
+              style: AppTextStyles.body(fontSize: 12, color: colors.ink600)),
+          const SizedBox(height: 2),
+          Text(item.value,
+              style: AppTextStyles.body(
+                  fontSize: 14, color: colors.ink, height: 1.5)),
           const SizedBox(height: 12),
         ],
       ],

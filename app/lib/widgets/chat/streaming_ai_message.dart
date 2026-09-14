@@ -211,8 +211,11 @@ class _BlockView extends StatelessWidget {
     return switch (block) {
       TextBlock(:final text) => Padding(
           padding: EdgeInsets.only(top: first ? 0 : 10),
-          child: RichText(
-            text: TextSpan(
+          // 꾹 눌러서 선택/복사할 수 있어야 해서 `RichText`(선택 불가) 대신
+          // `SelectableText.rich`를 쓴다 — `TextSpan` 트리를 그대로 받는다는
+          // 점은 동일해 커서 `WidgetSpan`도 그대로 유지된다.
+          child: SelectableText.rich(
+            TextSpan(
               style: AppTextStyles.body(color: colors.ink, height: 1.8),
               children: [
                 TextSpan(text: text),

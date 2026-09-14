@@ -473,9 +473,11 @@ class _ChatScreenState extends State<ChatScreen>
                   trailing: const Center(child: _ProfileAvatarButton()),
                 ),
                 Expanded(
-                  child: _entries.isEmpty
-                      ? _EmptyState(onPromptTap: _send)
-                      : _buildThread(),
+                  child: SelectionArea(
+                    child: _entries.isEmpty
+                        ? _EmptyState(onPromptTap: _send)
+                        : _buildThread(),
+                  ),
                 ),
                 ChatInputBar(controller: _inputController, onSend: _send),
               ],

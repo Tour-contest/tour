@@ -447,10 +447,9 @@ class AttractionImages {
 }
 
 /// `attractions/{content_id}/pet`(반려동물 동반 정보). **[실서버로 확인함]**
-/// 최상위가 `status`/`items`/`source` 구조인 것은 확인됐다(`no_data`일 때
-/// `items`가 빈 배열) — 다만 [items] 안에 실제 정보가 있을 때의 항목 스키마는
-/// 아직 예시가 없어(`no_data` 사례만 확인) `List<dynamic>` 원본 그대로 두고,
-/// 값이 있는 예시가 오면 그때 구체화한다(`ChatToolEvent.raw`와 같은 이유).
+/// 값이 있는 예시로 [items]도 `info`와 완전히 같은 `{label, value}` 배열
+/// 구조임이 확인됐다(예: "동반 구분"/"전구역 동반가능") — `AttractionInfoItem`을
+/// 그대로 재사용한다.
 class AttractionPetInfo {
   const AttractionPetInfo({
     required this.status,
@@ -461,13 +460,16 @@ class AttractionPetInfo {
   factory AttractionPetInfo.fromJson(Map<String, dynamic> json) {
     return AttractionPetInfo(
       status: json['status'] as String? ?? '',
-      items: (json['items'] as List<dynamic>?) ?? const [],
+      items: ((json['items'] as List<dynamic>?) ?? const [])
+          .cast<Map<String, dynamic>>()
+          .map(AttractionInfoItem.fromJson)
+          .toList(),
       source: json['source'] as String?,
     );
   }
 
   final String status;
-  final List<dynamic> items;
+  final List<AttractionInfoItem> items;
   final String? source;
 
   bool get hasData => status != 'no_data' && items.isNotEmpty;
