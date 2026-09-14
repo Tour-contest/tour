@@ -176,6 +176,10 @@ class _ChatScreenState extends State<ChatScreen>
           ? _UserChatEntry(id, message.text)
           : (_AiChatEntry(id)
             ..blocks.add(TextBlock(message.text))
+            // [실서버로 확인함] 메시지 응답의 `tool_trace`가 SSE `card` 이벤트와
+            // 같은 모양이라 그대로 카드로 복원한다 — 문장 안에서 정확히 어느
+            // 위치에 있었는지는 응답에 없어 항상 텍스트 뒤에 이어붙인다.
+            ..blocks.addAll(message.toolTrace)
             ..done = true));
     }
   }
@@ -253,34 +257,37 @@ class _ChatScreenState extends State<ChatScreen>
       completer.completeError(error, stackTrace ?? StackTrace.current);
     }
 
-    subscription = _chatApi
-        .sendMessage(text: text, sessionId: _sessionId)
-        .listen((event) {
-      switch (event) {
-        case ChatMetaEvent(:final sessionId):
-          _sessionId = sessionId;
-        case ChatStatusEvent(:final message):
-          if (!mounted) return;
-          setState(() => aiEntry.statusLabel = message);
-          _scrollToBottomSoon();
-        case ChatDeltaEvent(text: final chunk):
-          appendDelta(chunk);
-        case ChatCardEvent(:final type, :final payload):
-          buffer.add(
-              event.demoBlock ?? ChatCardBlock(type: type, payload: payload));
-        case ChatSourcesEvent(:final sources):
-          capturedSources.addAll(sources);
-        case ChatErrorEvent(:final message):
-          completeWithError(ChatApiException(message));
-        case ChatFinalEvent():
-        case ChatToolEvent():
-        case ChatDoneEvent():
-        case ChatUnknownEvent():
-          break;
-      }
-    }, onError: completeWithError, onDone: () {
-      if (!completer.isCompleted) completer.complete();
-    }, cancelOnError: true);
+    subscription =
+        _chatApi.sendMessage(text: text, sessionId: _sessionId).listen(
+            (event) {
+              switch (event) {
+                case ChatMetaEvent(:final sessionId):
+                  _sessionId = sessionId;
+                case ChatStatusEvent(:final message):
+                  if (!mounted) return;
+                  setState(() => aiEntry.statusLabel = message);
+                  _scrollToBottomSoon();
+                case ChatDeltaEvent(text: final chunk):
+                  appendDelta(chunk);
+                case ChatCardEvent(:final type, :final payload):
+                  buffer.add(event.demoBlock ??
+                      ChatCardBlock(type: type, payload: payload));
+                case ChatSourcesEvent(:final sources):
+                  capturedSources.addAll(sources);
+                case ChatErrorEvent(:final message):
+                  completeWithError(ChatApiException(message));
+                case ChatFinalEvent():
+                case ChatToolEvent():
+                case ChatDoneEvent():
+                case ChatUnknownEvent():
+                  break;
+              }
+            },
+            onError: completeWithError,
+            onDone: () {
+              if (!completer.isCompleted) completer.complete();
+            },
+            cancelOnError: true);
 
     setState(() {
       _stopGeneration = () {

@@ -522,9 +522,8 @@ class CrowdMatchItem {
     final summaryJson = json['summary'] as Map<String, dynamic>?;
     return CrowdMatchItem(
       contentId: json['content_id']?.toString() ?? '',
-      name: (json['name'] as String?) ??
-          (json['matched_title'] as String?) ??
-          '',
+      name:
+          (json['name'] as String?) ?? (json['matched_title'] as String?) ?? '',
       days: ((json['series'] as List<dynamic>?) ?? const [])
           .cast<Map<String, dynamic>>()
           .map(AttractionCrowdDay.fromJson)
@@ -576,8 +575,8 @@ class _CrowdMatchItemCard extends StatelessWidget {
     }
     context.pushNamed(
       RouteNames.attractionDetail,
-      extra:
-          AttractionDetailArgs(contentId: item.contentId, initialTitle: item.name),
+      extra: AttractionDetailArgs(
+          contentId: item.contentId, initialTitle: item.name),
     );
   }
 
@@ -590,51 +589,52 @@ class _CrowdMatchItemCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final summary = item.summary;
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 22),
-      decoration: BoxDecoration(
-        color: colors.crowdChartBackground,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          InkWell(
-            onTap: () => _open(context),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  item.name,
-                  style:
-                  AppTextStyles.heading(fontSize: 16, color: colors.ink).copyWith(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  sigun ?? '',
-                  style:
-                  AppTextStyles.heading(fontSize: 12, color: colors.ink600).copyWith(fontWeight: FontWeight.w500),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 15),
-          CrowdBarChart(days: item.days),
-          if (summary != null) ...[
-            const SizedBox(height: 12),
-            Text(
-              l10n.attractionDetailCrowdSummary(
-                summary.avg,
-                _formatDate(summary.peakDate),
-                summary.peakRate,
-                _formatDate(summary.minDate),
-                summary.minRate,
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 22),
+        decoration: BoxDecoration(
+          color: colors.crowdChartBackground,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            InkWell(
+              onTap: () => _open(context),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    item.name,
+                    style:
+                        AppTextStyles.heading(fontSize: 16, color: colors.ink)
+                            .copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    sigun ?? '',
+                    style: AppTextStyles.heading(
+                            fontSize: 12, color: colors.ink600)
+                        .copyWith(fontWeight: FontWeight.w500),
+                  ),
+                ],
               ),
-              style: AppTextStyles.body(fontSize: 12, color: colors.ink600),
             ),
+            const SizedBox(height: 15),
+            CrowdBarChart(days: item.days),
+            if (summary != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                l10n.attractionDetailCrowdSummary(
+                  summary.avg,
+                  _formatDate(summary.peakDate),
+                  summary.peakRate,
+                  _formatDate(summary.minDate),
+                  summary.minRate,
+                ),
+                style: AppTextStyles.body(fontSize: 12, color: colors.ink600),
+              ),
+            ],
           ],
-        ],
-      )
-    );
+        ));
   }
 }
 

@@ -95,8 +95,7 @@ class CrowdBarChart extends StatelessWidget {
                                             color: colors.accentBright,
                                             borderRadius:
                                                 const BorderRadius.vertical(
-                                                    top:
-                                                        Radius.circular(3)),
+                                                    top: Radius.circular(3)),
                                           ),
                                         ),
                                       ),

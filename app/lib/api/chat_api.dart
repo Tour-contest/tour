@@ -167,17 +167,20 @@ class ChatSessionsPage {
 
 /// `GET /api/v1/chat/sessions/{session_id}/messages`의 메시지 한 건.
 /// **[실서버로 확인함]** `id`/`role`/`created_at`은 가정이 맞았지만, 본문은
-/// `text`가 아니라 `content`였다. 실 응답에는 이 외에도 `session_id`(중복 정보라
+/// `text`가 아니라 `content`였다. **[실서버로 확인함]** `session_id`(중복 정보라
 /// 안 씀)와 `tool_trace`(SSE `card` 이벤트와 동일한 `type`/`payload` 스키마의
-/// 카드 데이터 배열)가 함께 오는데, `tool_trace`는 아직 이 모델에 반영하지
-/// 않았다 — 지난 대화를 이어보면(`chat_screen.dart`의 `ChatResumeData`) 카드가
-/// 있었던 메시지는 텍스트만 복원되고 카드는 유실된다.
+/// 카드 데이터 배열, 값이 없으면 빈 배열)도 함께 온다 — `role`은 `user`/`assistant`
+/// 두 값만 확인됨(`user`가 아니면 전부 AI 메시지로 취급하던 기존 가정과 일치).
+/// [toolTrace]를 반영해 지난 대화를 이어볼 때도(`chat_screen.dart`의
+/// `ChatResumeData`) 카드가 함께 복원된다(이전엔 텍스트만 복원되고 카드는
+/// 유실됐음).
 class ChatMessage {
   const ChatMessage({
     required this.id,
     required this.role,
     required this.text,
     required this.createdAt,
+    required this.toolTrace,
   });
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
@@ -190,6 +193,13 @@ class ChatMessage {
       text: json['content'] as String? ?? '',
       createdAt:
           DateTime.tryParse(json['created_at'] as String? ?? '')?.toLocal(),
+      toolTrace: ((json['tool_trace'] as List<dynamic>?) ?? const [])
+          .cast<Map<String, dynamic>>()
+          .map((item) => ChatCardBlock(
+                type: item['type'] as String? ?? '',
+                payload: item['payload'] as Map<String, dynamic>? ?? const {},
+              ))
+          .toList(),
     );
   }
 
@@ -197,13 +207,24 @@ class ChatMessage {
   final String role;
   final String text;
   final DateTime? createdAt;
+
+  /// SSE `card` 이벤트와 동일한 모양의 카드 목록(`docs/API_SPEC.md`의 `### chat`
+  /// 참고). 이 메시지에 카드가 없었으면 빈 리스트.
+  final List<ChatCardBlock> toolTrace;
 }
 
-/// 커서 페이징 결과. [nextBefore]를 다음 요청의 `before`로 넘기면 이어서 조회된다.
-/// `null`이면 더 가져올 이력이 없다는 뜻으로 가정했다.
+/// 커서 페이징 결과. **[실서버로 확인함]** `next_before`/`has_more`는 최상위가
+/// 아니라 세션 목록과 동일하게 `data.page` 객체 안에 있었다(이전엔 최상위로
+/// 가정해 `hasMore`도 아예 모델링 안 돼 있었음). [nextBefore]가 `null`이면 더
+/// 가져올 이력이 없다는 뜻.
 class ChatMessagesPage {
-  const ChatMessagesPage({required this.messages, required this.nextBefore});
+  const ChatMessagesPage({
+    required this.messages,
+    required this.hasMore,
+    required this.nextBefore,
+  });
   final List<ChatMessage> messages;
+  final bool hasMore;
   final String? nextBefore;
 }
 
@@ -320,7 +341,7 @@ class LoggingChatApi implements ChatApi {
       final page =
           await _inner.fetchMessages(sessionId: sessionId, before: before);
       AppLog.logger.d(
-          '[ChatApi] ← messages: ${page.messages.length}건, nextBefore: ${page.nextBefore}');
+          '[ChatApi] ← messages: ${page.messages.length}건, hasMore: ${page.hasMore}, nextBefore: ${page.nextBefore}');
       return page;
     } catch (e, stackTrace) {
       AppLog.logger
@@ -437,7 +458,8 @@ class MockChatApi implements ChatApi {
     required String sessionId,
     String? before,
   }) async {
-    return const ChatMessagesPage(messages: [], nextBefore: null);
+    return const ChatMessagesPage(
+        messages: [], hasMore: false, nextBefore: null);
   }
 
   @override
@@ -513,16 +535,18 @@ class DioChatApi implements ChatApi {
     );
     final data = _unwrap(response, errorMessage: '대화 이력을 불러오지 못했어요.');
     // [실서버로 확인함] 세션 목록과 마찬가지로 `messages`가 아니라 `items`.
-    // `next_before`(커서 페이징)는 응답에 페이지가 하나뿐이라 아직 실제로
-    // 등장하는 걸 확인 못해 기존 가정을 그대로 둠 — 세션 목록의 `page` 객체와
-    // 비슷한 위치일 가능성이 있으니, 페이징이 실제로 필요해지면 다시 확인할 것.
+    // `next_before`/`has_more`도 세션 목록과 동일하게 최상위가 아니라
+    // `page` 객체 안에 있었다(이전엔 최상위 `next_before`로 잘못 가정해
+    // 페이징이 필요해지는 순간 항상 `null`로 읽혔을 것).
     final messages = ((data['items'] as List<dynamic>?) ?? const [])
         .cast<Map<String, dynamic>>()
         .map(ChatMessage.fromJson)
         .toList();
+    final page = data['page'] as Map<String, dynamic>? ?? const {};
     return ChatMessagesPage(
       messages: messages,
-      nextBefore: data['next_before'] as String?,
+      hasMore: page['has_more'] as bool? ?? false,
+      nextBefore: page['next_before'] as String?,
     );
   }
 

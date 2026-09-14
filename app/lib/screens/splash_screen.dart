@@ -67,8 +67,8 @@ class _SplashScreenState extends State<SplashScreen>
       AppLog.logger.i('[Splash] 자동 로그인 성공');
       return RouteNames.chat;
     } catch (e, stackTrace) {
-      AppLog.logger
-          .w('[Splash] 자동 로그인 실패 → 로그인 화면으로 이동', error: e, stackTrace: stackTrace);
+      AppLog.logger.w('[Splash] 자동 로그인 실패 → 로그인 화면으로 이동',
+          error: e, stackTrace: stackTrace);
       return RouteNames.login;
     }
   }
