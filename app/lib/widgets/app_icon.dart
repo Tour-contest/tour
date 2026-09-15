@@ -16,6 +16,7 @@ enum AppIconShape {
   pin,
   phone,
   image,
+  close,
 }
 
 class AppIcon extends StatelessWidget {
@@ -232,6 +233,11 @@ class _AppIconPainter extends CustomPainter {
           ..lineTo(15.5, 12.5)
           ..lineTo(19.5, 17);
         canvas.drawPath(mountains, strokePaint);
+        break;
+
+      case AppIconShape.close:
+        canvas.drawLine(const Offset(6, 6), const Offset(18, 18), strokePaint);
+        canvas.drawLine(const Offset(18, 6), const Offset(6, 18), strokePaint);
         break;
     }
 

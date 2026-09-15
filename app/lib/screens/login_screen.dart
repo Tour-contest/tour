@@ -137,7 +137,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final bottomCardPadding = systemBottomPadding > _minBottomCardPadding
         ? systemBottomPadding
         : _minBottomCardPadding;
-    return PopScope(
+    final screen = PopScope(
       canPop: !_isLoggingIn,
       child: Scaffold(
         backgroundColor: colors.loginBackground,
@@ -304,6 +304,16 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
+    );
+    // 사용자 요청으로 로그인 화면의 텍스트는 접근성 글자 크기 설정과 무관하게
+    // 항상 기본 크기로 고정한다 — 개별 `Text`마다 `textScaler`를 주는 대신
+    // 화면 전체를 감싸는 `MediaQuery`로 한 번에 덮어쓴다. `showDialog`로 뜨는
+    // `_AdminLoginDialog`/`ConfirmDialog`(카카오 계정 로그인 전환 확인)는 앱
+    // 루트 Navigator의 오버레이에 별도로 올라가 이 트리 바깥이라 영향받지
+    // 않는다(필요하면 별도로 고정해야 함).
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+      child: screen,
     );
   }
 }

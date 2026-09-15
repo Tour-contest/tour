@@ -374,6 +374,10 @@
   "@commonCancel": {
     "description": "확인 팝업의 취소 버튼 (여러 화면 공통)"
   },
+  "commonClose": "닫기",
+  "@commonClose": {
+    "description": "닫기 버튼/툴팁 (여러 화면 공통) — 예: photo_viewer_screen.dart의 닫기 버튼"
+  },
   "snsProviderKakao": "카카오",
   "@snsProviderKakao": {
     "description": "카카오 SNS 로그인 수단의 화면 표시명"

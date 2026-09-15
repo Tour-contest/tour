@@ -9,6 +9,7 @@ import 'package:nullnull/screens/login_screen.dart';
 import 'package:nullnull/screens/onboarding_screen.dart';
 import 'package:nullnull/screens/place_detail_screen.dart';
 import 'package:nullnull/screens/attraction_detail_screen.dart';
+import 'package:nullnull/screens/photo_viewer_screen.dart';
 import 'package:nullnull/screens/settings_screen.dart';
 import 'package:nullnull/screens/splash_screen.dart';
 import 'package:nullnull/screens/web_view_screen.dart';
@@ -31,6 +32,7 @@ class RouteNames {
   static const place = 'place';
   static const webView = 'webView';
   static const attractionDetail = 'attractionDetail';
+  static const photoViewer = 'photoViewer';
 }
 
 final GoRouter appRouter = GoRouter(
@@ -91,6 +93,12 @@ final GoRouter appRouter = GoRouter(
         return AttractionDetailScreen(
             contentId: args.contentId, initialTitle: args.initialTitle);
       },
+    ),
+    GoRoute(
+      path: '/${RouteNames.photoViewer}',
+      name: RouteNames.photoViewer,
+      builder: (context, state) =>
+          PhotoViewerScreen(args: state.extra as PhotoViewerArgs),
     ),
   ],
 );

@@ -10,6 +10,7 @@ import 'package:nullnull/app_log.dart';
 import 'package:nullnull/app_router.dart';
 import 'package:nullnull/data/map_launcher_service.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
+import 'package:nullnull/screens/photo_viewer_screen.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
 import 'package:nullnull/widgets/app_icon.dart';
@@ -511,17 +512,24 @@ class _ImageCarouselState extends State<_ImageCarousel> {
                       controller: _controller,
                       itemCount: urls.length,
                       onPageChanged: (index) => setState(() => _page = index),
-                      itemBuilder: (context, index) => CachedNetworkImage(
-                        imageUrl: urls[index],
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        placeholder: (_, __) => SkeletonBox(
-                          child: AppIcon(AppIconShape.image,
-                              size: 22, color: colors.ink600),
+                      itemBuilder: (context, index) => GestureDetector(
+                        onTap: () => context.pushNamed(
+                          RouteNames.photoViewer,
+                          extra: PhotoViewerArgs(
+                              imageUrls: urls, initialIndex: index),
                         ),
-                        errorWidget: (_, __, ___) => SkeletonBox(
-                          child: AppIcon(AppIconShape.image,
-                              size: 22, color: colors.ink600),
+                        child: CachedNetworkImage(
+                          imageUrl: urls[index],
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          placeholder: (_, __) => SkeletonBox(
+                            child: AppIcon(AppIconShape.image,
+                                size: 22, color: colors.ink600),
+                          ),
+                          errorWidget: (_, __, ___) => SkeletonBox(
+                            child: AppIcon(AppIconShape.image,
+                                size: 22, color: colors.ink600),
+                          ),
                         ),
                       ),
                     ),

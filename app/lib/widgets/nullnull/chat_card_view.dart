@@ -611,9 +611,9 @@ class _CrowdMatchItemCard extends StatelessWidget {
                       item.name,
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
-                      style: AppTextStyles.heading(
-                              fontSize: 16, color: colors.ink)
-                          .copyWith(fontWeight: FontWeight.w600),
+                      style:
+                          AppTextStyles.heading(fontSize: 16, color: colors.ink)
+                              .copyWith(fontWeight: FontWeight.w600),
                     ),
                   ),
                   const SizedBox(width: 8),

@@ -32,8 +32,8 @@ class ProfileAvatar extends StatelessWidget {
     final fallback = Center(
       child: Text(
         initial,
-        style:
-            initialStyle ?? AppTextStyles.heading(color: colors.accentBright),
+        style: initialStyle ??
+            AppTextStyles.heading(color: colors.accentBright, fontSize: 14),
       ),
     );
     return Container(

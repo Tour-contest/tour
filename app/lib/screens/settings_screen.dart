@@ -235,7 +235,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     selected: scale == option,
                                     onTap: () =>
                                         appTextScaleController.setScale(option),
-                                    isFirst: option == AppFontScale.values.first,
+                                    isFirst:
+                                        option == AppFontScale.values.first,
                                   ),
                               ],
                             );

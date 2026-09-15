@@ -694,7 +694,7 @@ class _ProfileAvatarButton extends StatefulWidget {
 class _ProfileAvatarButtonState extends State<_ProfileAvatarButton> {
   // `AppHeader`의 `_HeaderSlot`이 아이콘 슬롯에 쓰는 탭 영역 크기(44)와 맞춰
   // 팝업이 실제 보이는 아이콘 바로 아래에 붙도록 한다.
-  static const double _slotSize = 44;
+  static const double _slotSize = 36;
 
   // 지원하는 SNS 로그인 수단이 카카오 하나뿐이라 항상 이 값으로 고정한다
   // ("최근 로그인" 수단 저장 기능은 삭제됨).
@@ -814,7 +814,7 @@ class _ProfileAvatarButtonState extends State<_ProfileAvatarButton> {
             imageUrl: _profile?.profileImageUrl,
             initial: nickname.substring(0, 1),
             initialStyle: AppTextStyles.heading(
-                fontSize: 18, color: colors.ink, weight: FontWeight.w600),
+                fontSize: 14, color: colors.ink, weight: FontWeight.w600),
           ),
         ),
       ),
