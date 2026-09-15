@@ -54,6 +54,7 @@ async def lifespan(app: FastAPI):
     await auth_svc.ensure_admin()
     await client.load_today_count()
     await db.purge_call_logs(90)
+    await db.purge_refresh_tokens()
     try:
         await area_svc.ensure_loaded()
         log.info("area_codes: %d", await db.area_count())
@@ -79,16 +80,32 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+
+@app.middleware("http")
+async def guard_errors(request: Request, call_next):
+    """레이트리밋과 미처리 예외를 CORS 안쪽에서 처리한다.
+
+    Starlette 는 나중에 붙인 미들웨어가 바깥에 온다. 이 미들웨어가 CORS 보다 먼저 붙어
+    안쪽에 있으므로 여기서 만든 429·500 응답에도 CORS 헤더가 붙는다. 바깥의
+    ServerErrorMiddleware 까지 예외가 올라가면 브라우저는 본문을 읽지 못한다.
+    """
+    try:
+        return await ratelimit.middleware(request, call_next)
+    except Exception:
+        log.exception("미처리 오류: %s", request.url.path)
+        return response.error_response(
+            500, "INTERNAL_ERROR",
+            "일시적인 오류가 발생했어요. 잠시 후 다시 시도해주세요.", retriable=True,
+        )
+
+
+# Bearer 토큰만 쓰므로 쿠키용 allow_credentials 는 켜지 않는다.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_list,
-    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-app.middleware("http")(ratelimit.middleware)
 
 
 @app.exception_handler(AppError)

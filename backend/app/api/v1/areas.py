@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date as _date
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, Path, Query
 
 from app.core.response import EnvelopeRoute
 from app.core.deps import current_user
@@ -15,7 +15,8 @@ router = APIRouter(prefix="/areas", tags=["areas"], dependencies=[Depends(curren
                    route_class=EnvelopeRoute)
 
 CD = Path(description="시군구 코드. /areas 또는 /areas/resolve 응답의 signgu_cd", examples=["44825"])
-DATE_Q = Query(default=None, description="YYYY-MM-DD. 비우면 오늘", examples=["2026-09-06"])
+DATE_Q = Query(default=None, description="YYYY-MM-DD. 비우면 오늘. 형식이 틀리면 422 INVALID_INPUT",
+               examples=["2026-09-06"])
 
 _OVERVIEW_EX = {
     "status": "ok", "signgu_cd": "44825", "signgu_nm": "태안군", "date": "2026-09-06",
@@ -30,13 +31,8 @@ _OVERVIEW_EX = {
 }
 
 
-def check_date(value: str | None) -> str | None:
-    if value is not None:
-        try:
-            _date.fromisoformat(value)
-        except ValueError:
-            raise HTTPException(422, "날짜 형식은 YYYY-MM-DD 여야 합니다")
-    return value
+def ymd(value: _date | None) -> str | None:
+    return value.isoformat() if value else None
 
 
 @router.get(
@@ -93,7 +89,7 @@ async def resolve(q: str = Query(min_length=1, description="지역명",
                **errors("401", "404", "422", "429", "502", "503",
                  messages={"404": "모르는 지역 코드입니다"})},
 )
-async def overview(signgu_cd: str = CD, date: str | None = DATE_Q):
+async def overview(signgu_cd: str = CD, date: _date | None = DATE_Q):
     """지정일 기준 등급별 관광지 수와 한적한 곳 표본. 지역 화면의 기본 조회다.
 
     coverage 는 관광정보 등록 수 대비 혼잡도 자료 보유 수다. 혼잡도 집계 대상이 아닌
@@ -101,7 +97,7 @@ async def overview(signgu_cd: str = CD, date: str | None = DATE_Q):
 
     이 조회 한 번에 상류 호출이 두세 건 나간다.
     """
-    return await usecase.area_overview(signgu_cd, check_date(date))
+    return await usecase.area_overview(signgu_cd, ymd(date))
 
 
 @router.get(
@@ -112,9 +108,9 @@ async def overview(signgu_cd: str = CD, date: str | None = DATE_Q):
                **errors("401", "404", "422", "429", "502", "503",
                  messages={"404": "모르는 지역 코드입니다"})},
 )
-async def crowding(signgu_cd: str = CD, date: str | None = DATE_Q):
+async def crowding(signgu_cd: str = CD, date: _date | None = DATE_Q):
     """현황 집계 없이 혼잡도 원자료만 조회한다. 웹 화면은 overview 만 사용한다."""
-    return await usecase.get_crowding(signgu_cd, None, check_date(date), 1)
+    return await usecase.get_crowding(signgu_cd, None, ymd(date), 1)
 
 
 @router.get(
@@ -124,18 +120,22 @@ async def crowding(signgu_cd: str = CD, date: str | None = DATE_Q):
         {"status": "ok", "signgu_nm": "태안군",
          "items": [{"date": "2026-06-15", "total": 41233, "local": 18820, "outsider": 22413},
                    {"date": "2026-06-22", "total": 39810, "local": 17904, "outsider": 21906}],
-         "data_through": "2026-06-23",
+         "data_through": "2026-06-23", "partial": False,
          "note": "통신 데이터 기반이며 두 달쯤 지연된 값입니다"})},
         **errors("401", "404", "422", "429", "502", "503",
                  messages={"404": "모르는 지역 코드입니다"})},
 )
 async def visitors(
     signgu_cd: str = CD,
-    weeks: int = Query(default=4, ge=1, le=52, description="조회 기간(주)"),
+    weeks: int = Query(default=4, ge=1, le=12, description="조회 기간(주). 최대 12"),
 ):
-    """주 단위 방문자 추이.
+    """일 단위 방문자 추이.
 
     통신 데이터 기반이라 원천이 약 두 달 지연된다. data_through 가 자료의 마지막
     날짜이며 화면에 함께 표시해야 한다.
+
+    받은 자료는 서버 DB 에 쌓이므로 같은 기간을 다시 조회하면 상류 호출이 없다.
+    상류 장애로 일부 날짜를 못 채우면 partial 이 true 다. 그 경우 items 에 빠진
+    날짜가 있을 수 있고 다시 조회하면 채워진다.
     """
     return await usecase.area_visitors(signgu_cd, weeks)

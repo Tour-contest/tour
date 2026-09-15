@@ -9,7 +9,7 @@
 | 언어 | Python 3.11 이상 (서버 3.13) |
 | 프레임워크 | FastAPI, uvicorn |
 | DB | PostgreSQL 16, pgvector |
-| ORM | SQLAlchemy 2.0 async, asyncpg |
+| ORM | SQLAlchemy 2.0 async, asyncpg, alembic |
 | 외부 연동 | 공공데이터포털(TourAPI, 데이터랩, 집중률), 네이버 데이터랩, 카카오 로그인 |
 | LLM | OpenAI 호환 API (Groq gpt-oss-20b, GPT-5.4 mini) |
 | 임베딩 | OpenAI 호환 API (Upstage solar-embedding, gpt text-embedding-3-small)  |
@@ -51,7 +51,21 @@ sudo -u postgres psql -c "CREATE DATABASE tour OWNER tour"
 sudo -u postgres psql -d tour -c "CREATE EXTENSION IF NOT EXISTS vector"
 ```
 
-테이블은 서버 기동 시 자동 생성. 마이그레이션 도구가 없어 기존 테이블에 컬럼을 추가하면 `ALTER TABLE` 직접 실행이 필요합니다.
+스키마는 alembic 으로 관리합니다.
+
+```bash
+cd backend
+alembic upgrade head            # 새 DB. 테이블 전부 생성
+```
+
+alembic 도입 전에 만들어진 DB(운영 서버)는 테이블이 이미 있으므로 기준 버전만 찍은 뒤 올립니다. 한 번만 하면 됩니다.
+
+```bash
+alembic stamp 0001              # 기존 테이블을 기준 스키마로 인정
+alembic upgrade head            # 그 뒤에 추가된 변경만 적용
+```
+
+모델을 바꾸면 `alembic revision -m "설명"` 으로 파일을 만들고 upgrade 를 채웁니다. 개발 편의로 기동 시 없는 테이블은 자동 생성되지만, 기존 테이블의 컬럼 변경은 alembic 으로만 반영됩니다.
 
 ### 3. .env
 
@@ -68,7 +82,6 @@ sudo -u postgres psql -d tour -c "CREATE EXTENSION IF NOT EXISTS vector"
 
 | 항목 | 의미 |
 | --- | --- |
-| LLM_PROVIDER | 모델 제공자 표기. 현재 groq 입니다. 코드에서는 참조하지 않으며 제공자 전환은 LLM_BASE_URL 로 합니다 |
 | LLM_BASE_URL | OpenAI 호환 엔드포인트. 제공자를 바꾸면 이 값만 교체합니다 |
 | LLM_API_KEY | 모델 키. 설정하지 않으면 대화가 규칙 기반으로 동작합니다. 응답 형태는 동일합니다 |
 | LLM_MODEL | 도구 선택과 문장 작성에 쓰는 모델 |
@@ -106,7 +119,6 @@ sudo -u postgres psql -d tour -c "CREATE EXTENSION IF NOT EXISTS vector"
 | ADMIN_LOGIN_ID | 관리자 로그인 아이디. 이 값으로 계정을 자동 생성합니다 |
 | ADMIN_PASSWORD | 관리자 비밀번호. 운영 구성에서 비어 있거나 기본값이면 기동하지 않습니다 |
 | ALLOW_DEV_LOGIN | 개발용 로그인 활성 여부. 운영은 false 입니다. false 이면 서버가 운영 구성으로 판단하고 비밀값을 검사합니다 |
-| ALLOW_ANONYMOUS_CHAT | 비로그인 대화 허용 여부. 현재 코드에서는 참조하지 않습니다 |
 
 **소셜 로그인**
 
@@ -127,8 +139,9 @@ sudo -u postgres psql -d tour -c "CREATE EXTENSION IF NOT EXISTS vector"
 
 | 항목 | 의미 |
 | --- | --- |
-| DAILY_UPSTREAM_QUOTA | 서버의 API 일일 상한. 초과하면 503 UPSTREAM_QUOTA_EXCEEDED 로 응답합니다 |
-| MAX_UPSTREAM_CALLS_PER_REQUEST | 요청 1건이 사용할 수 있는 호출 상한 |
+| DAILY_UPSTREAM_QUOTA | 공공데이터 서비스별(KorService2, TatsCnctrRateService 등) 일일 호출 상한. 초과하면 503 UPSTREAM_QUOTA_EXCEEDED 로 응답합니다. 카운터는 DB 호출 이력에서 세므로 서버와 배치가 같은 값을 보고, 한국 시간 자정에 초기화됩니다 |
+| MAX_UPSTREAM_CALLS_PER_REQUEST | 대화 요청 1건이 실제로 내보낼 수 있는 상류 호출 수. 도구 호출 횟수가 아니라 공공데이터 호출 건수라서 12 로 두면 지역 현황 하나도 다 못 봅니다. 기본 40 |
+| REQUEST_MAP_BUDGET | 조회 요청 중에 즉석에서 이름 매핑을 시도할 관광지 수. 관광지 하나에 검색 호출이 최대 4건 나가므로 작게 유지하고, 본격 매핑은 `jobs.run name-map` 배치로 합니다. 기본 5 |
 | UPSTREAM_CACHE_ENABLED | 한 요청 안의 중복 호출 제거 여부. 원천 데이터를 저장하는 캐시가 아닙니다 |
 | UPSTREAM_CACHE_TTL_DETAIL | 상세 조회 중복 제거 유지 시간(초) |
 | UPSTREAM_CACHE_TTL_CROWD | 집중률 조회 중복 제거 유지 시간(초) |
@@ -136,6 +149,7 @@ sudo -u postgres psql -d tour -c "CREATE EXTENSION IF NOT EXISTS vector"
 | CROWD_MAX_DAYS | 집중률 조회 최대 일수 |
 | CROWD_PAGE_SIZE | 집중률을 1회에 수신하는 건수 |
 | VISITOR_LAG_DAYS | 방문자 추이 지연 일수. 약 75일 지연되므로 data_through 를 함께 표시합니다 |
+| VISITOR_WEEKS_MAX | 방문자 추이 최대 조회 주 수. 원천 API 에 지역 필터가 없어 전국분을 받아 visitor_daily 에 저장하고, 이미 있는 날짜는 다시 받지 않습니다. 기본 12 |
 | TREND_WEEKS | 검색 관심도 기본 집계 주 수 |
 | REPORT_TZ | 일일 집계 기준 시간대. 포털 할당량이 한국 자정에 초기화됩니다 |
 
@@ -168,7 +182,7 @@ cd backend
 uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-운영환경에서는 `--reload` 제거.
+운영환경에서는 `--reload` 제거. 워커는 1개로 둡니다. 레이트리밋, 상류 캐시, 답변 이어받기가 프로세스 메모리에 있어 워커를 늘리면 따로 놉니다.
 
 확인
 
@@ -198,6 +212,8 @@ python -m app.jobs.run vectors --all --budget 400      # 유사 관광지 벡터
 ```
 
 `--all` 대신 시군구 코드를 주면 해당 지역만 처리하며, 할당량 도달 시 체크포인트 저장 후 중단, 다음 실행에서 이어서 진행 됩니다.
+
+배치는 시작할 때 서버가 오늘 쓴 호출 수를 DB 에서 읽고, 자기 호출도 5초마다 DB 에 내립니다. 서버는 1분마다 DB 기준으로 카운터를 다시 맞추므로 둘이 같은 일일 한도를 씁니다.
 
 ## 서버 환경
 

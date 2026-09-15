@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from app.core.config import settings
-from app.core.errors import QuotaExceeded
+from app.core.errors import BudgetExceeded, QuotaExceeded
 from app.services import usecase
 
 SCHEMA = [
@@ -225,7 +225,7 @@ SCHEMA = [
                 "type": "object",
                 "properties": {
                     "signgu_cd": {"type": "string"},
-                    "months": {"type": "integer", "description": "기본 3"},
+                    "months": {"type": "integer", "description": "기본 3. 최대 3"},
                 },
                 "required": ["signgu_cd"],
             },
@@ -326,10 +326,18 @@ async def run(name: str, args: dict, session_id: str | None = None) -> dict:
 
         if name == "get_area_visitors":
             months = int(args.get("months") or 3)
-            return await usecase.area_visitors(str(args["signgu_cd"]), weeks=months * 4)
+            weeks = min(months * 4, settings.visitor_weeks_max)
+            return await usecase.area_visitors(str(args["signgu_cd"]), weeks=weeks)
 
         return {"status": "unknown_tool", "message": f"{name} 이라는 도구는 없다"}
 
+    except BudgetExceeded as e:
+        return {
+            "status": "budget_exceeded",
+            "message": e.message,
+            "instruction": "이번 요청의 조회 한도에 걸렸다. 도구를 더 부르지 말고 "
+            "지금까지 결과로 답하고, 일부만 확인했다는 것을 밝혀라.",
+        }
     except QuotaExceeded as e:
         return {
             "status": "quota_exceeded",

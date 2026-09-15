@@ -34,11 +34,17 @@ STAGE_LABEL = {
 }
 
 
+SESSION_ID_PATTERN = r"^[0-9a-f]{12}$"
+SESSION_PATH = Path(description="세션 식별자", pattern=SESSION_ID_PATTERN, examples=["a1b2c3d4e5f6"])
+
+
 class ChatIn(BaseModel):
     message: str = Field(min_length=1, max_length=500, description="사용자가 보낸 문장",
                          examples=["태안에 한적한 캠핑장 추천해줘"])
     session_id: str | None = Field(
-        None, description="이어가는 대화의 세션. 새 대화면 비우고, meta 이벤트로 받은 값을 다음부터 쓴다",
+        None, pattern=SESSION_ID_PATTERN,
+        description="이어가는 대화의 세션. 새 대화면 비우고, meta 이벤트로 받은 값을 다음부터 쓴다. "
+                    "서버가 발급한 12자리 hex 만 받는다",
         examples=["a1b2c3d4e5f6"],
     )
 
@@ -122,6 +128,12 @@ async def run(body: ChatIn, user: dict):
     if session["user_id"] != user["id"]:
         yield sse("error", {"code": "FORBIDDEN", "message": "볼 수 없는 대화입니다",
                             "retriable": False})
+        return
+    live = _live.get(session_id)
+    if live is not None and not live.done:
+        yield sse("error", {"code": "CHAT_BUSY",
+                            "message": "아직 답변을 만드는 중이에요. 끝난 뒤에 보내주세요.",
+                            "retriable": True})
         return
     await db.touch_session(session_id)
 
@@ -275,7 +287,8 @@ async def run_rules(session_id: str, message_id: str, message: str, user: dict):
         await record_recent(user, result.get("cards") or [])
         yield sse("done", {"message_id": message_id, "cards": len(result.get("cards", []))})
 
-    except Exception as e:
+    except Exception:
+        log.exception("규칙 기반 응답 실패: %s", session_id)
         yield sse(
             "error",
             {
@@ -318,6 +331,9 @@ async def stream(body: ChatIn, user: dict = Depends(current_user)):
     | `final` | 문장이 끝나면 | `{text, unknown_numbers}` |
     | `done` | 맨 끝 | `{message_id, cards}` |
     | `error` | 실패 | `{code, message, retriable}` |
+
+    같은 세션에서 답변을 만드는 중에 다시 보내면 `error` 의 code 가 `CHAT_BUSY` 로 오고
+    메시지는 저장되지 않는다. 전송 버튼은 `done` 이나 `error` 를 받을 때까지 비활성으로 둔다.
 
     card 의 payload 는 그 카드를 만든 도구의 반환값 그대로다.
 
@@ -402,7 +418,7 @@ async def owned(session_id: str, user: dict) -> dict:
                            "404": "없는 대화입니다"})},
 )
 async def messages(
-    session_id: str = Path(description="세션 식별자", examples=["a1b2c3d4e5f6"]),
+    session_id: str = SESSION_PATH,
     user: dict = Depends(current_user),
     limit: int = Query(default=100, ge=1, le=200, description="한 번에 받을 개수"),
     before: int | None = Query(default=None, ge=1,
@@ -441,7 +457,7 @@ async def messages(
     },
 )
 async def resume_stream(
-    session_id: str = Path(description="세션 식별자", examples=["a1b2c3d4e5f6"]),
+    session_id: str = SESSION_PATH,
     user: dict = Depends(current_user),
 ):
     """새로고침 등으로 끊긴 뒤 다시 들어왔을 때 부른다.
@@ -482,7 +498,7 @@ async def resume_stream(
                            "404": "없는 대화입니다"})},
 )
 async def delete_session(
-    session_id: str = Path(description="세션 식별자", examples=["a1b2c3d4e5f6"]),
+    session_id: str = SESSION_PATH,
     user: dict = Depends(current_user),
 ):
     """세션과 해당 세션의 메시지를 삭제한다. 본인 또는 관리자만 가능하다."""

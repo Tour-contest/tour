@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import math
 
 from app.services import crowding, embedding, matcher, related, tourapi
@@ -111,7 +112,18 @@ async def alternatives(
     rows.sort(key=lambda r: (round(r["rate"] / 10), -(r.get("similarity") or 0), r["rate"]))
     picked = rows[:limit]
 
-    for r in picked:
+    async def detail_of(cid: str | None) -> dict | None:
+        if not cid:
+            return None
+        try:
+            return await tourapi.detail_common(cid, session_id=session_id)
+        except Exception:
+            return None
+
+    # 상세 조회는 서로 독립이라 한꺼번에 던진다. 동시 건수는 상류 클라이언트가 제한한다.
+    details = await asyncio.gather(*[detail_of(r["content_id"]) for r in picked])
+
+    for r, d in zip(picked, details):
         reason = {
             "lower_by": None,
             "same_category": None,
@@ -121,10 +133,6 @@ async def alternatives(
         if base_rate is not None:
             reason["lower_by"] = round(base_rate - r["rate"], 1)
         if r["content_id"]:
-            try:
-                d = await tourapi.detail_common(r["content_id"], session_id=session_id)
-            except Exception:
-                d = None
             if d:
                 r["image"] = d.get("image") or ""
                 r["addr1"] = d.get("addr1") or ""

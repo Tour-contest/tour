@@ -4,11 +4,13 @@ import asyncio
 import json
 import logging
 import re
-from datetime import date, timedelta
+from datetime import timedelta
 from typing import AsyncIterator
 
 from app.agent import compose, guard, llm, prompts, tools
+from app.core import clock
 from app.core.config import settings
+from app.services import client as upstream
 from app.repository import db
 
 log = logging.getLogger("tour.agent")
@@ -30,7 +32,7 @@ def wants_alternatives(text: str) -> bool:
 _WEEKDAY = ["월", "화", "수", "목", "금", "토", "일"]
 
 def system_prompt(phase: str = "tool") -> str:
-    today = date.today()
+    today = clock.today()
     sat = today + timedelta(days=(5 - today.weekday()) % 7)
     tail = prompts.SYSTEM_TOOLS if phase == "tool" else prompts.SYSTEM_WRITE
     return (prompts.SYSTEM_HEAD + chr(10) * 2 + tail).format(
@@ -355,7 +357,7 @@ async def run(
 
     tool_results: list = []
     cards_out: list[dict] = []
-    upstream_calls = 0
+    upstream.begin_budget()
     seen_calls: dict[str, object] = {}
     called_names: set[str] = set()
     bad_arg_names: set[str] = set()
@@ -464,7 +466,6 @@ async def run(
             yield "status", {"stage": stage, "label": label}
 
         async def call_one(c, truncated: bool):
-            nonlocal upstream_calls
             name = c["function"]["name"]
             params = args(c["function"].get("arguments"))
             if params is None or truncated:
@@ -488,9 +489,8 @@ async def run(
                 prior = seen_calls[key]
                 res = await prior if isinstance(prior, asyncio.Task) else prior
                 return c, res, True
-            if upstream_calls >= settings.max_upstream_calls_per_request:
+            if upstream.budget_exhausted():
                 return c, {"status": "budget_exceeded", "message": "조회 한도에 걸렸다"}, False
-            upstream_calls += 1
             task = asyncio.ensure_future(tools.run(name, params, session_id))
             seen_calls[key] = task
             res = await task
@@ -526,7 +526,7 @@ async def run(
             )
     else:
         msg = "이제 도구를 더 부르지 말고 지금까지 받은 결과로 답하라."
-        if upstream_calls >= settings.max_upstream_calls_per_request:
+        if upstream.budget_exhausted():
             msg += " 조회 한도에 걸려 일부만 확인했다는 것도 밝혀라."
         messages.append({"role": "system", "content": msg})
 

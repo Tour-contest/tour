@@ -55,7 +55,8 @@ async def search_keyword(
     if tour_cd:
         regn, sig = split_signgu(tour_cd)
         params["lDongRegnCd"] = regn
-        params["lDongSignguCd"] = sig
+        if sig and sig != "000":
+            params["lDongSignguCd"] = sig
     if content_type_id:
         params["contentTypeId"] = content_type_id
 

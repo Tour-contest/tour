@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import time
-from datetime import date, timedelta
+from datetime import timedelta
 
 import httpx
 
+from app.core import clock
 from app.core.config import settings
 from app.services import client as upstream
 
@@ -43,7 +44,7 @@ async def fetch(names: list[str], weeks: int | None = None) -> dict:
         return {"status": "no_data", "items": []}
 
     w = max(1, min(int(weeks or settings.trend_weeks), 52))
-    end = date.today() - timedelta(days=1)
+    end = clock.today() - timedelta(days=1)
     start = end - timedelta(weeks=w)
 
     body = {
@@ -67,7 +68,7 @@ async def fetch(names: list[str], weeks: int | None = None) -> dict:
 
     upstream.record_row(
         {
-            "called_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "called_at": clock.now().isoformat(timespec="seconds"),
             "provider": "naver",
             "operation": "search-trend",
             "params": {"names": names, "weeks": w},

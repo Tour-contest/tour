@@ -16,7 +16,6 @@ class Settings(BaseSettings):
     naver_search_client_id: str = ""
     naver_search_client_secret: str = ""
 
-    llm_provider: str = "openai"
     llm_base_url: str = ""
     llm_api_key: str = ""
     llm_model: str = "gpt-4o-mini"
@@ -60,12 +59,14 @@ class Settings(BaseSettings):
     crowd_max_days: int = 28
     crowd_page_size: int = 1000
     visitor_lag_days: int = 75
+    visitor_weeks_max: int = 12
     trend_weeks: int = 8
 
     upstream_cache_enabled: bool = True
     upstream_cache_ttl_detail: int = 300
     upstream_cache_ttl_crowd: int = 600
-    max_upstream_calls_per_request: int = 12
+    max_upstream_calls_per_request: int = 40
+    request_map_budget: int = 5
     max_tool_rounds: int = 4
     crowd_threshold_high: float = 70.0
     crowd_threshold_low: float = 40.0
