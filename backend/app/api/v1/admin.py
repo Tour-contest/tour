@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from fastapi import APIRouter, Depends, Path, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from pydantic import BaseModel, Field
 
 from app.core import response
@@ -200,7 +200,8 @@ class StatusIn(BaseModel):
     "/users/{user_id}",
     summary="회원 상태 변경",
     responses={200: {"model": Envelope[OkOut], "description": "성공", **example({"ok": True})},
-               **errors("401", "403", "422", "429")},
+               **errors("401", "403", "404", "422", "429",
+                        messages={"404": "없는 회원입니다"})},
 )
 async def update_user(
     body: StatusIn,
@@ -211,7 +212,8 @@ async def update_user(
     suspended 로 변경하면 다음 요청부터 403 이다. 이미 발급된 액세스 토큰은 만료
     시점까지 유효하므로 즉시 차단되지는 않는다.
     """
-    await db.set_user_status(user_id, body.status)
+    if not await db.set_user_status(user_id, body.status):
+        raise HTTPException(404, {"code": "NOT_FOUND", "message": "없는 회원입니다"})
     return {"ok": True}
 
 

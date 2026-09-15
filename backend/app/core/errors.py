@@ -35,7 +35,7 @@ class QuotaExceeded(AppError):
 
 class BudgetExceeded(AppError):
     code = "UPSTREAM_BUDGET_EXCEEDED"
-    http_status = 200
+    http_status = 503
     retriable = False
 
 

@@ -6,8 +6,6 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import date as _date
 from datetime import datetime, time, timedelta, timezone
-from zoneinfo import ZoneInfo
-
 import logging
 
 from sqlalchemy import (
@@ -20,18 +18,20 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.orm import aliased
 
 from app.core.config import settings
+from app.core import clock
 from app.repository.models import (
     ApiCallLog, AreaCode, AttractionNameMap, AttractionVector, Base,
     CategoryCode, ChatMessage, ChatSession, LlmCallLog, RecentAttraction,
-    RefreshToken, User,
+    RefreshToken, User, VisitorDaily,
 )
 
 log = logging.getLogger("tour.db")
 
-try:
-    _TZ = ZoneInfo(settings.report_tz)
-except Exception:
-    _TZ = datetime.now().astimezone().tzinfo or timezone.utc
+_TZ = clock.TZ
+
+
+def like_escape(q: str) -> str:
+    return q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
 def url() -> str:
@@ -91,7 +91,7 @@ def day_bounds(day: str) -> tuple[datetime, datetime]:
 
 
 def today() -> str:
-    return datetime.now(_TZ).date().isoformat()
+    return clock.today_str()
 
 
 async def drop_vectors_if_dim_changed(conn) -> None:
@@ -116,7 +116,6 @@ async def init() -> None:
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         await drop_vectors_if_dim_changed(conn)
         await conn.run_sync(Base.metadata.create_all)
-        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT"))
     async with session() as s:
         await s.execute(
             delete(ChatMessage).where(
@@ -177,7 +176,9 @@ async def touch_login(user_id: str, ok: bool, lock_until: str | None = None) -> 
 async def list_users(q: str = "", limit: int = 50, offset: int = 0) -> tuple[list[dict], int]:
     where = []
     if q:
-        where.append(or_(User.nickname.ilike(f"%{q}%"), User.login_id.ilike(f"%{q}%")))
+        pat = "%" + like_escape(q) + "%"
+        where.append(or_(User.nickname.ilike(pat, escape="\\"),
+                         User.login_id.ilike(pat, escape="\\")))
     async with session() as s:
         total = (await s.execute(
             select(func.count()).select_from(User).where(*where)
@@ -190,10 +191,11 @@ async def list_users(q: str = "", limit: int = 50, offset: int = 0) -> tuple[lis
     return rows, total
 
 
-async def set_user_status(user_id: str, status: str) -> None:
+async def set_user_status(user_id: str, status: str) -> bool:
     async with session() as s:
-        await s.execute(update(User).where(User.id == user_id).values(status=status))
+        res = await s.execute(update(User).where(User.id == user_id).values(status=status))
         await s.commit()
+        return res.rowcount == 1
 
 
 async def delete_user(user_id: str) -> None:
@@ -250,6 +252,25 @@ async def revoke_all_refresh(user_id: str) -> None:
             update(RefreshToken).where(RefreshToken.user_id == user_id).values(revoked=1)
         )
         await s.commit()
+
+
+async def purge_refresh_tokens(revoked_keep_days: int = 7) -> int:
+    """만료된 리프레시와 폐기된 지 오래된 리프레시를 지운다.
+
+    폐기 행을 곧바로 지우면 재사용 탐지(같은 토큰을 두 번 쓰면 전부 폐기)가 안 되므로
+    며칠 두었다가 지운다.
+    """
+    now = datetime.now(timezone.utc)
+    async with session() as s:
+        res = await s.execute(
+            delete(RefreshToken).where(or_(
+                RefreshToken.expires_at < now,
+                (RefreshToken.revoked == 1)
+                & (RefreshToken.created_at < now - timedelta(days=revoked_keep_days)),
+            ))
+        )
+        await s.commit()
+        return res.rowcount or 0
 
 
 async def upsert_areas(rows: list[dict]) -> None:
@@ -507,13 +528,15 @@ async def similar_vectors(
         if base is None:
             return []
 
-        sim = (1 - AttractionVector.embedding.cosine_distance(base)).label("similarity")
+        dist = AttractionVector.embedding.cosine_distance(base)
+        sim = (1 - dist).label("similarity")
         stmt = (
             select(AttractionVector.content_id, AttractionVector.title,
                    AttractionVector.lcls1, AttractionVector.lcls2, sim)
             .where(AttractionVector.signgu_cd == signgu_cd,
-                   AttractionVector.content_id != content_id)
-            .order_by(AttractionVector.embedding.cosine_distance(base))
+                   AttractionVector.content_id != content_id,
+                   (1 - dist) >= min_similarity)
+            .order_by(dist)
             .limit(limit)
         )
         if exclude:
@@ -524,7 +547,7 @@ async def similar_vectors(
         {"content_id": r.content_id, "title": r.title, "lcls1": r.lcls1,
          "lcls2": r.lcls2, "similarity": round(float(r.similarity), 3)}
         for r in rows
-        if r.similarity is not None and float(r.similarity) >= min_similarity
+        if r.similarity is not None
     ]
 
 
@@ -860,6 +883,47 @@ async def purge_call_logs(days: int = 90) -> None:
     async with session() as s:
         await s.execute(delete(ApiCallLog).where(ApiCallLog.called_at < cutoff))
         await s.commit()
+
+
+async def visitor_days(start: _date, end: _date) -> set[_date]:
+    """[start, end] 안에서 이미 저장된 날짜. 전국이 한꺼번에 저장되므로 지역과 무관하게 본다."""
+    async with session() as s:
+        rows = (await s.execute(
+            select(func.distinct(VisitorDaily.day))
+            .where(VisitorDaily.day >= start, VisitorDaily.day <= end)
+        )).scalars()
+        return set(rows)
+
+
+async def put_visitors(rows: list[dict]) -> None:
+    if not rows:
+        return
+    ins = pg_insert(VisitorDaily)
+    stmt = ins.on_conflict_do_update(
+        index_elements=["signgu_cd", "day"],
+        set_={"signgu_nm": ins.excluded.signgu_nm, "local": ins.excluded.local,
+              "outsider": ins.excluded.outsider, "foreigner": ins.excluded.foreigner,
+              "total": ins.excluded.total, "fetched_at": func.now()},
+    )
+    async with session() as s:
+        for i in range(0, len(rows), 2000):
+            await s.execute(stmt, rows[i:i + 2000])
+        await s.commit()
+
+
+async def visitors_between(signgu_cd: str, start: _date, end: _date) -> list[dict]:
+    async with session() as s:
+        rows = (await s.execute(
+            select(VisitorDaily)
+            .where(VisitorDaily.signgu_cd == signgu_cd,
+                   VisitorDaily.day >= start, VisitorDaily.day <= end)
+            .order_by(VisitorDaily.day)
+        )).scalars()
+        return [
+            {"date": r.day.isoformat(), "signgu_nm": r.signgu_nm, "total": r.total,
+             "local": r.local, "outsider": r.outsider, "foreigner": r.foreigner}
+            for r in rows
+        ]
 
 
 async def put_categories(rows: list[dict]) -> None:

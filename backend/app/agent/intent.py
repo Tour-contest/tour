@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import re
-from datetime import date, timedelta
+from datetime import timedelta
+
+from app.core import clock
 
 ALT_WORDS = ["한적", "대안", "추천", "덜 붐", "안 붐", "조용", "다른 곳", "다른데", "피해"]
 OVERVIEW_WORDS = ["어때", "현황", "요즘", "전체", "상황"]
@@ -30,7 +32,7 @@ def parse_intent(text: str) -> dict:
 
     on = None
     days = 7
-    today = date.today()
+    today = clock.today()
     if "오늘" in t:
         on = today.isoformat()
         days = 1

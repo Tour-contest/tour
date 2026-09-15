@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import date, datetime, timedelta
 
+from app.core import clock
 from app.core.config import settings
 from app.services import client
 
@@ -69,11 +70,11 @@ async def fetch_signgu(signgu_cd: str, session_id: str | None = None) -> dict[st
 
 
 def slice_series(series: list[dict], date_from: str | None, days: int) -> list[dict]:
-    start = date_from or date.today().isoformat()
+    start = date_from or clock.today_str()
     try:
         start_date = date.fromisoformat(start)
     except ValueError:
-        start_date = date.today()
+        start_date = clock.today()
         start = start_date.isoformat()
     end = (start_date + timedelta(days=days - 1)).isoformat()
     return [s for s in series if start <= s["date"] <= end]
@@ -95,7 +96,7 @@ def summarize(series: list[dict]) -> dict | None:
 
 
 def day_rate(series: list[dict], on: str | None = None) -> dict | None:
-    target = on or date.today().isoformat()
+    target = on or clock.today_str()
     for s in series:
         if s["date"] == target:
             return s
@@ -103,7 +104,7 @@ def day_rate(series: list[dict], on: str | None = None) -> dict | None:
 
 
 def aggregate(by_name: dict[str, list[dict]], on: str | None = None) -> dict:
-    target = on or date.today().isoformat()
+    target = on or clock.today_str()
     summary = {k: 0 for k in LEVEL_KEY.values()}
     buckets: dict[str, list[dict]] = {k: [] for k in LEVEL_KEY.values()}
 

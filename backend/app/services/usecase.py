@@ -3,8 +3,7 @@ from __future__ import annotations
 import asyncio
 import re
 from collections import Counter
-from datetime import date
-
+from app.core import clock
 from app.core.config import settings
 from app.core.errors import NotFound, QuotaExceeded
 from app.repository import db
@@ -53,7 +52,10 @@ async def resolve_area(query: str) -> dict:
     r = await area.resolve(query)
     if r["status"] != "not_found":
         return r
-    last = query.split()[-1]
+    words = (query or "").split()
+    if not words:
+        return r
+    last = words[-1]
     bare = re.sub(r"[읍면동리]$", "", last) if len(last) > 2 else last
     for kw in dict.fromkeys([query, last, bare]):
         try:
@@ -94,7 +96,7 @@ async def area_of(code: str) -> dict:
 
 async def tourapi_count(a: dict, session_id=None) -> int | None:
     codes = [a["tour_cd"]]
-    if a.get("merged_from"):
+    if a.get("merged_from") and not area.is_metro_parent(a):
         children = await children_of(a)
         codes = [c["tour_cd"] for c in children if c["tour_cd"]] or codes
 
@@ -203,10 +205,16 @@ async def find_attraction(name: str, signgu_cd: str | None = None, session_id=No
 
 
 async def with_child_fallback(a: dict, fetch) -> list[dict]:
+    """상위 코드로 먼저 조회하고, 비면 하위 시군구를 돌며 모은다.
+
+    서울·부산 같은 광역시 상위 코드(11000)는 tourapi 쪽에서 시도 단위 조회로 바뀌어
+    한 번에 받아진다. '청주시'처럼 구를 거느린 시는 상위 코드가 비면 하위로 내려간다.
+    """
     items = await fetch(a["tour_cd"])
     if not items:
-        for c in await db.child_areas(a["signgu_nm"]):
-            items += await fetch(c["tour_cd"])
+        for c in await children_of(a):
+            if c["tour_cd"]:
+                items += await fetch(c["tour_cd"])
     return items
 
 
@@ -320,7 +328,7 @@ async def list_festivals(
     signgu_cd: str, date_from: str | None = None, limit: int = 10, session_id=None
 ) -> dict:
     a = await area_of(signgu_cd)
-    start = (date_from or date.today().isoformat()).replace("-", "")
+    start = (date_from or clock.today_str()).replace("-", "")
 
     try:
         items = await with_child_fallback(
@@ -374,7 +382,8 @@ async def crowd_context(signgu_cd: str, session_id=None) -> tuple[dict, dict, di
                 a = {**a, "merged_from": [c["signgu_nm"] for c in used]}
 
     mapping = await matcher.ensure(
-        a["crowd_cd"], a["tour_cd"], a["signgu_nm"], list(by_name.keys())
+        a["crowd_cd"], a["tour_cd"], a["signgu_nm"], list(by_name.keys()),
+        budget=settings.request_map_budget,
     )
     return a, by_name, mapping
 
@@ -428,7 +437,8 @@ async def get_crowding(
         sample_names = [q["name"] for q in (agg.get("samples") or {}).get("quiet", [])]
         if sample_names:
             mapping = await matcher.ensure(
-                a["crowd_cd"], a["tour_cd"], a["signgu_nm"], sample_names, budget=15
+                a["crowd_cd"], a["tour_cd"], a["signgu_nm"], sample_names,
+                budget=settings.request_map_budget,
             )
         for bucket in (agg.get("samples") or {}).values():
             for q in bucket:
@@ -574,9 +584,13 @@ async def attraction_detail(content_id: str, session_id=None, include_pet: bool 
     }
 
 
+ALTERNATIVES_MAX = 10
+
+
 async def recommend_alternatives(
     content_id: str, date_on: str | None = None, limit: int = 5, session_id=None
 ) -> dict:
+    limit = max(1, min(limit, ALTERNATIVES_MAX))
     a0 = await area_for_content(content_id, session_id)
     if a0 is None:
         return {"status": "not_found", "items": []}
@@ -631,7 +645,8 @@ async def area_visitors(signgu_cd: str, weeks: int = 4, session_id=None) -> dict
 async def build_vectors(signgu_cd: str, limit: int = 60) -> dict:
     a = await area_of(signgu_cd)
     by_name = await crowding.fetch_signgu(a["crowd_cd"])
-    await matcher.ensure(a["crowd_cd"], a["tour_cd"], a["signgu_nm"], list(by_name.keys()))
+    await matcher.ensure(a["crowd_cd"], a["tour_cd"], a["signgu_nm"], list(by_name.keys()),
+                         budget=limit)
     res = await embedding.build_for_area(a["crowd_cd"], a["tour_cd"], limit)
     res["signgu_nm"] = a["signgu_nm"]
     return res

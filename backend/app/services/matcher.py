@@ -37,6 +37,8 @@ def same_area(a: str | None, b: str | None) -> bool:
         return False
     if a == b:
         return True
+    if b.endswith("000") or a.endswith("000"):
+        return a[:2] == b[:2]
     return a[:4] == b[:4] and a.endswith("0") != b.endswith("0")
 
 

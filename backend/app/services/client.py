@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 import asyncio
+import contextvars
 import time
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 from typing import Any
 
 import httpx
 
+from app.core import clock
 from app.core.config import settings
 from app.core.errors import (
+    BudgetExceeded,
     QuotaExceeded,
     UpstreamError,
     UpstreamMalformed,
@@ -44,12 +47,41 @@ def is_daily_limit(text: str) -> bool:
 
 
 def block(operation: str) -> None:
-    _blocked[operation] = date.today().isoformat()
+    _blocked[operation] = clock.today_str()
 
 
 def blocked_ops() -> list[str]:
-    today = date.today().isoformat()
+    today = clock.today_str()
     return [s for s, d in _blocked.items() if d == today]
+
+
+_budget: contextvars.ContextVar[list | None] = contextvars.ContextVar("upstream_budget", default=None)
+
+
+def begin_budget(limit: int | None = None) -> None:
+    _budget.set([0, limit or settings.max_upstream_calls_per_request])
+
+
+def budget_used() -> int:
+    b = _budget.get()
+    return b[0] if b else 0
+
+
+def budget_exhausted() -> bool:
+    b = _budget.get()
+    return bool(b) and b[0] >= b[1]
+
+
+def spend_budget(operation: str) -> None:
+    b = _budget.get()
+    if b is None:
+        return
+    if b[0] >= b[1]:
+        raise BudgetExceeded(
+            "이번 요청에서 쓸 수 있는 조회 횟수를 다 썼어요.",
+            detail=f"{operation} request budget {b[1]}",
+        )
+    b[0] += 1
 
 
 def blocked_error(operation: str) -> QuotaExceeded:
@@ -71,6 +103,7 @@ async def pace() -> None:
 call_log: list[dict] = []
 _pending: list[dict] = []
 _today_count: dict[str, int] = {}
+_today_key = ""
 _quota_lock = asyncio.Lock()
 
 
@@ -158,6 +191,7 @@ async def call(
 
     task = _inflight.get(ck)
     if task is None:
+        spend_budget(operation)
         task = asyncio.ensure_future(fetch(operation, q, ck, ttl, session_id))
         _inflight[ck] = task
         task.add_done_callback(lambda _t, ck=ck: _inflight.pop(ck, None))
@@ -175,6 +209,8 @@ async def fetch(
 
     svc = service(operation)
     async with _quota_lock:
+        if _today_key != clock.today_str():
+            await load_today_count()
         if _today_count.get(svc, 0) >= settings.daily_upstream_quota:
             raise QuotaExceeded(
                 f"{_OP_NM.get(operation, svc)} 조회 한도를 오늘 다 썼어요. 내일 다시 시도해주세요.",
@@ -310,13 +346,23 @@ def quota_left() -> int:
 
 
 async def load_today_count() -> None:
+    """오늘(KST) 호출 수를 DB 에서 다시 센다.
+
+    기동 시, 날짜가 바뀔 때, 그리고 flush_loop 가 주기적으로 부른다. 배치 프로세스가 쓴
+    호출도 DB 를 거쳐 여기로 합산되므로 서버와 배치가 같은 한도를 본다.
+    """
+    global _today_key
     from app.repository import db
 
-    summary = await db.call_summary(db.today(), provider="data.go.kr")
-    _today_count.clear()
+    today = clock.today_str()
+    summary = await db.call_summary(today, provider="data.go.kr")
+    counts: dict[str, int] = {}
     for op, n in summary["by_operation"].items():
         svc = service(op)
-        _today_count[svc] = _today_count.get(svc, 0) + n
+        counts[svc] = counts.get(svc, 0) + n
+    _today_count.clear()
+    _today_count.update(counts)
+    _today_key = today
 
 
 async def flush() -> int:
@@ -326,17 +372,36 @@ async def flush() -> int:
     from app.repository import db
 
     rows, _pending = _pending, []
-    await db.add_call_logs(rows)
+    try:
+        await db.add_call_logs(rows)
+    except Exception:
+        _pending = rows + _pending
+        del _pending[:-5000]
+        raise
     return len(rows)
 
 
+RESYNC_EVERY = 12
+
+
 async def flush_loop(interval: int = 5) -> None:
+    """호출 로그를 주기적으로 DB 에 내리고, 한 번씩 오늘 카운터를 DB 기준으로 다시 맞춘다."""
+    import logging
+
+    log = logging.getLogger("tour.client")
+    tick = 0
     while True:
         try:
             await asyncio.sleep(interval)
             await flush()
+            tick += 1
+            if tick % RESYNC_EVERY == 0:
+                await load_today_count()
         except asyncio.CancelledError:
-            await flush()
+            try:
+                await flush()
+            except Exception:
+                log.warning("종료 중 호출 로그 저장 실패")
             raise
-        except Exception:
-            pass
+        except Exception as e:
+            log.warning("호출 로그 저장 실패: %s", type(e).__name__)

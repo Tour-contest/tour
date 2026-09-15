@@ -30,13 +30,8 @@ CID = Path(description="관광정보 콘텐츠 ID. 검색 응답의 content_id",
 SOURCE = "출처: ⓒ한국관광공사"
 
 
-def check_date(value: str | None) -> str | None:
-    if value is not None:
-        try:
-            _date.fromisoformat(value)
-        except ValueError:
-            raise HTTPException(422, "날짜 형식은 YYYY-MM-DD 여야 합니다")
-    return value
+def ymd(value: _date | None) -> str | None:
+    return value.isoformat() if value else None
 
 
 @router.get(
@@ -134,7 +129,7 @@ async def detail(content_id: str = CID, user: dict = Depends(current_user)):
 async def crowd(
     content_id: str = CID,
     days: int = Query(default=7, ge=1, le=30, description="조회 기간(일)"),
-    date_from: str | None = Query(None, description="YYYY-MM-DD. 비우면 오늘부터"),
+    date_from: _date | None = Query(None, description="YYYY-MM-DD. 비우면 오늘부터. 형식이 틀리면 422"),
 ):
     """일자별 예측 혼잡도와 기간 요약.
 
@@ -144,7 +139,7 @@ async def crowd(
     기간 토글은 이 엔드포인트만 다시 호출한다.
     """
     return await usecase.crowd_for_content(
-        content_id, days=days, date_from=check_date(date_from)
+        content_id, days=days, date_from=ymd(date_from)
     )
 
 
@@ -164,8 +159,8 @@ async def crowd(
 )
 async def alternatives(
     content_id: str = CID,
-    date: str | None = Query(None, description="YYYY-MM-DD. 비우면 오늘 기준"),
-    limit: int = Query(default=5, ge=1, le=50, description="최대 개수"),
+    date: _date | None = Query(None, description="YYYY-MM-DD. 비우면 오늘 기준. 형식이 틀리면 422"),
+    limit: int = Query(default=5, ge=1, le=10, description="최대 개수. 화면은 상위 3개만 그린다"),
 ):
     """기준 관광지와 같은 지역의 대안 관광지.
 
@@ -175,7 +170,7 @@ async def alternatives(
     candidate_source 는 후보를 어디서 골랐는지 나타낸다. related 는 연관 관광지,
     area 는 지역 전체, related+area 는 둘을 합친 것이다.
     """
-    return await usecase.recommend_alternatives(content_id, check_date(date), limit)
+    return await usecase.recommend_alternatives(content_id, ymd(date), limit)
 
 
 @router.get(

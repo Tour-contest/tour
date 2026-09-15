@@ -143,6 +143,13 @@ async def codes_for(args) -> list[str]:
     return args.codes or []
 
 
+async def sync_quota() -> asyncio.Task:
+    """서버가 오늘 쓴 호출 수를 DB 에서 읽어 온 뒤, 이쪽 호출도 주기적으로 DB 에 내린다."""
+    await db.init()
+    await client.load_today_count()
+    return asyncio.create_task(client.flush_loop())
+
+
 async def main() -> None:
     p = argparse.ArgumentParser(prog="jobs")
     p.add_argument("task", choices=["area-codes", "crowd-flags", "name-map", "vectors", "status"])
@@ -151,6 +158,7 @@ async def main() -> None:
     p.add_argument("--budget", type=int, default=800, help="이번 실행에서 쓸 최대 호출 수")
     args = p.parse_args()
 
+    flusher = await sync_quota()
     try:
         if args.task == "area-codes":
             await load_area_codes()
@@ -163,12 +171,19 @@ async def main() -> None:
         else:
             await status()
     finally:
+        flusher.cancel()
+        try:
+            await flusher
+        except asyncio.CancelledError:
+            pass
         await client.flush()
         await client.close_client()
+        await db.close()
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    logging.getLogger("httpx").setLevel(logging.WARNING)
     if not settings.data_go_kr_service_key:
         log.error("DATA_GO_KR_SERVICE_KEY 없음")
         sys.exit(1)

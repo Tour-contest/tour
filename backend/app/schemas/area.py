@@ -83,8 +83,9 @@ class VisitorPoint(Loose):
 class VisitorsOut(BaseModel):
     status: str = Field(description="ok · no_data", examples=["ok"])
     signgu_nm: str | None = Field(None, examples=["태안군"])
-    items: list[VisitorPoint] = Field(description="주 단위. 구분(local·outsider·foreigner)은 키로 더 붙는다")
+    items: list[VisitorPoint] = Field(description="일 단위. 구분(local·outsider·foreigner)은 키로 더 붙는다")
     data_through: str = Field(
         description="이 날짜까지의 자료다. 화면에 반드시 같이 표시할 것", examples=["2026-06-23"]
     )
+    partial: bool = Field(False, description="true 면 상류 장애로 일부 날짜가 비어 있다. 다시 조회하면 채워진다")
     note: str | None = Field(None, examples=["통신 데이터 기반이며 두 달쯤 지연된 값입니다"])

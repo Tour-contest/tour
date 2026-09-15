@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
-    BigInteger, DateTime, Float, Identity, Index, Integer, Text, func, text,
+    BigInteger, Date, DateTime, Float, Identity, Index, Integer, Text, func, text,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -169,6 +169,23 @@ class LlmCallLog(Base):
     latency_ms: Mapped[int | None] = mapped_column(Integer)
     status: Mapped[str] = mapped_column(Text, server_default="ok")
     called_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), server_default=func.now())
+
+
+class VisitorDaily(Base):
+    """데이터랩 지역별 방문자수. 원천이 75일 지연이라 한 번 받은 날짜는 바뀌지 않는다."""
+
+    __tablename__ = "visitor_daily"
+    __table_args__ = (Index("idx_visitor_day", "day"),)
+
+    signgu_cd: Mapped[str] = mapped_column(Text, primary_key=True)
+    day: Mapped[date] = mapped_column(Date, primary_key=True)
+    signgu_nm: Mapped[str | None] = mapped_column(Text)
+    local: Mapped[int] = mapped_column(Integer, server_default="0")
+    outsider: Mapped[int] = mapped_column(Integer, server_default="0")
+    foreigner: Mapped[int] = mapped_column(Integer, server_default="0")
+    total: Mapped[int] = mapped_column(Integer, server_default="0")
+    fetched_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), server_default=func.now())
 
 
