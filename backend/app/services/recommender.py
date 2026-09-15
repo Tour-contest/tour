@@ -120,7 +120,6 @@ async def alternatives(
         except Exception:
             return None
 
-    # 상세 조회는 서로 독립이라 한꺼번에 던진다. 동시 건수는 상류 클라이언트가 제한한다.
     details = await asyncio.gather(*[detail_of(r["content_id"]) for r in picked])
 
     for r, d in zip(picked, details):

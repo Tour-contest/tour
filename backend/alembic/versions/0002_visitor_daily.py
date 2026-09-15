@@ -24,7 +24,6 @@ depends_on = None
 def upgrade() -> None:
     op.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS email TEXT")
 
-    # 서버가 alembic 보다 먼저 떠서 create_all 로 이미 만들었으면 건너뛴다.
     if sa.inspect(op.get_bind()).has_table("visitor_daily"):
         return
     op.create_table(

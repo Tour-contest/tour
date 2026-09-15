@@ -38,7 +38,6 @@ def same_area(a: str | None, b: str | None) -> bool:
     if a == b:
         return True
     if b.endswith("000") or a.endswith("000"):
-        # 광역시 상위 코드(11000 등)는 앞 두 자리만 맞으면 같은 지역으로 본다
         return a[:2] == b[:2]
     return a[:4] == b[:4] and a.endswith("0") != b.endswith("0")
 

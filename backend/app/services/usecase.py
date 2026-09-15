@@ -381,7 +381,6 @@ async def crowd_context(signgu_cd: str, session_id=None) -> tuple[dict, dict, di
                 by_name = merged
                 a = {**a, "merged_from": [c["signgu_nm"] for c in used]}
 
-    # 요청 경로에서는 몇 건만 매핑한다. 본격 매핑은 jobs.run name-map 배치가 한다.
     mapping = await matcher.ensure(
         a["crowd_cd"], a["tour_cd"], a["signgu_nm"], list(by_name.keys()),
         budget=settings.request_map_budget,

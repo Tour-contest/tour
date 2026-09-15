@@ -55,7 +55,6 @@ def blocked_ops() -> list[str]:
     return [s for s, d in _blocked.items() if d == today]
 
 
-# 요청 1건이 쓸 수 있는 상류 호출 상한. begin_budget() 을 부른 태스크와 그 자식 태스크에서만 센다.
 _budget: contextvars.ContextVar[list | None] = contextvars.ContextVar("upstream_budget", default=None)
 
 

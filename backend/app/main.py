@@ -33,7 +33,6 @@ logging.basicConfig(
         ),
     ],
 )
-# httpx 는 INFO 에서 요청 URL 전체를 찍어 serviceKey 가 로그에 남는다. 경고 이상만 남긴다.
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 
@@ -102,7 +101,6 @@ async def guard_errors(request: Request, call_next):
         )
 
 
-# Bearer 토큰만 쓰므로 쿠키용 allow_credentials 는 켜지 않는다.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_list,

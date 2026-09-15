@@ -115,7 +115,6 @@ async def init() -> None:
     async with _engines[key].begin() as conn:
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         await drop_vectors_if_dim_changed(conn)
-        # 새 DB 에서는 여기서 테이블이 만들어진다. 기존 DB 의 스키마 변경은 alembic 이 맡는다.
         await conn.run_sync(Base.metadata.create_all)
     async with session() as s:
         await s.execute(
@@ -531,7 +530,6 @@ async def similar_vectors(
 
         dist = AttractionVector.embedding.cosine_distance(base)
         sim = (1 - dist).label("similarity")
-        # 하한을 LIMIT 앞(WHERE)에서 걸어야 요청한 개수가 채워진다.
         stmt = (
             select(AttractionVector.content_id, AttractionVector.title,
                    AttractionVector.lcls1, AttractionVector.lcls2, sim)

@@ -135,7 +135,6 @@ async def run(body: ChatIn, user: dict):
                             "message": "아직 답변을 만드는 중이에요. 끝난 뒤에 보내주세요.",
                             "retriable": True})
         return
-    # 판정 직후 await 없이 슬롯을 잡아야 같은 세션의 동시 요청이 둘 다 통과하지 않는다.
     live = _Live()
     _live[session_id] = live
 
@@ -160,7 +159,6 @@ async def run(body: ChatIn, user: dict):
             return
 
         if settings.llm_enabled:
-            # 생성 태스크가 슬롯 해제를 맡는다
             async for chunk in run_llm(live, session_id, message_id, message, session, user):
                 yield chunk
             return
