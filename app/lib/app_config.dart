@@ -6,7 +6,7 @@ class AppConfig {
 
   static const String baseUrl = 'https://nullnull.kr';
 
-  static const Duration apiTimeout = Duration(seconds: 10);
+  static const Duration apiTimeout = Duration(seconds: 30);
 
   static const String healthzEndpoint = '/api/v1/healthz';
 

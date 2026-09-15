@@ -36,22 +36,33 @@ class ThemeGrid extends StatelessWidget {
     ];
     return Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _ThemeCard(option: options[0], onTap: onThemeTap),
-            const SizedBox(width: 16),
-            _ThemeCard(option: options[1], onTap: onThemeTap),
-          ],
+        // `IntrinsicHeight` + `CrossAxisAlignment.stretch`로 같은 행의 두
+        // 카드가 서로의 콘텐츠 높이(글자 크기 설정에 따라 달라짐)에 맞춰
+        // 항상 같은 높이가 되도록 한다 — 이게 없으면 각 카드가 `minHeight`
+        // 아래로는 자기 콘텐츠 길이만큼만 커져서, 부제 길이가 서로 다른
+        // 카드끼리 높이가 들쭉날쭉해진다.
+        IntrinsicHeight(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _ThemeCard(option: options[0], onTap: onThemeTap),
+              const SizedBox(width: 16),
+              _ThemeCard(option: options[1], onTap: onThemeTap),
+            ],
+          ),
         ),
         const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _ThemeCard(option: options[2], onTap: onThemeTap),
-            const SizedBox(width: 16),
-            _ThemeCard(option: options[3], onTap: onThemeTap),
-          ],
+        IntrinsicHeight(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _ThemeCard(option: options[2], onTap: onThemeTap),
+              const SizedBox(width: 16),
+              _ThemeCard(option: options[3], onTap: onThemeTap),
+            ],
+          ),
         ),
       ],
     );
@@ -77,10 +88,17 @@ class _ThemeCard extends StatelessWidget {
               padding: EdgeInsets.symmetric(vertical: 20, horizontal: 12),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
+                // 같은 행의 카드끼리 높이를 맞춘 뒤(`IntrinsicHeight`) 이
+                // 카드가 더 짧은 콘텐츠를 가진 쪽이면 남는 공간이 생기는데,
+                // 위쪽에 쏠리지 않고 세로로 가운데 놓이도록 한다.
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     option.title,
                     textAlign: TextAlign.center,
+                    // 이 4개 테마 카드는 접근성 글자 크기 설정과 무관하게
+                    // 항상 기본 크기로 고정한다(사용자 요청).
+                    textScaler: TextScaler.noScaling,
                     style: AppTextStyles.heading(
                         fontSize: 16,
                         color: colors.ink,
@@ -90,6 +108,7 @@ class _ThemeCard extends StatelessWidget {
                   Text(
                     option.subtitle,
                     textAlign: TextAlign.center,
+                    textScaler: TextScaler.noScaling,
                     style:
                         AppTextStyles.body(fontSize: 13, color: colors.ink600),
                   ),

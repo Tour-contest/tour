@@ -79,6 +79,7 @@ class _VoiceListeningToastView extends StatelessWidget {
                                 AppLocalizations.of(context)!
                                     .chatInputVoiceListeningTitle,
                                 textAlign: TextAlign.center,
+                                textScaler: TextScaler.noScaling,
                                 style: AppTextStyles.heading(
                                   fontSize: 14,
                                   color: colors.ink,
@@ -89,6 +90,7 @@ class _VoiceListeningToastView extends StatelessWidget {
                                 AppLocalizations.of(context)!
                                     .chatInputVoiceListeningHint,
                                 textAlign: TextAlign.center,
+                                textScaler: TextScaler.noScaling,
                                 style: AppTextStyles.heading(
                                   fontSize: 13,
                                   color: colors.voiceListeningHint,

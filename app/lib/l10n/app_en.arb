@@ -81,7 +81,6 @@
   "commonSettings": "Settings",
   "commonCancel": "Cancel",
   "snsProviderKakao": "Kakao",
-  "fontScaleSmall": "Small",
   "fontScaleNormal": "Default",
   "fontScaleLarge": "Large",
   "fontScaleExtraLarge": "Extra large",

@@ -378,10 +378,6 @@
   "@snsProviderKakao": {
     "description": "카카오 SNS 로그인 수단의 화면 표시명"
   },
-  "fontScaleSmall": "작게",
-  "@fontScaleSmall": {
-    "description": "글자 크기 설정 - 작게"
-  },
   "fontScaleNormal": "보통",
   "@fontScaleNormal": {
     "description": "글자 크기 설정 - 보통"

@@ -49,7 +49,6 @@ String _maskEmail(String email) {
 /// 문자열을 두지 않고 여기서 매핑한다.
 String _fontScaleLabel(AppLocalizations l10n, AppFontScale scale) =>
     switch (scale) {
-      AppFontScale.small => l10n.fontScaleSmall,
       AppFontScale.normal => l10n.fontScaleNormal,
       AppFontScale.large => l10n.fontScaleLarge,
       AppFontScale.extraLarge => l10n.fontScaleExtraLarge,
@@ -223,25 +222,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           enabled: !(_profile?.isAdmin ?? false),
                           onDisconnect: () => _confirmDisconnect(context),
                         ),
-                        // const SizedBox(height: 28),
-                        // _SectionLabel(l10n.settingsSectionFontSize),
-                        // ValueListenableBuilder<AppFontScale>(
-                        //   valueListenable: appTextScaleController,
-                        //   builder: (context, scale, _) {
-                        //     return Column(
-                        //       children: [
-                        //         for (final option in AppFontScale.values)
-                        //           _RadioRow(
-                        //             label: _fontScaleLabel(l10n, option),
-                        //             selected: scale == option,
-                        //             onTap: () =>
-                        //                 appTextScaleController.setScale(option),
-                        //             isFirst: option == AppFontScale.values.first,
-                        //           ),
-                        //       ],
-                        //     );
-                        //   },
-                        // ),
+                        const SizedBox(height: 28),
+                        _SectionLabel(l10n.settingsSectionFontSize),
+                        ValueListenableBuilder<AppFontScale>(
+                          valueListenable: appTextScaleController,
+                          builder: (context, scale, _) {
+                            return Column(
+                              children: [
+                                for (final option in AppFontScale.values)
+                                  _RadioRow(
+                                    label: _fontScaleLabel(l10n, option),
+                                    selected: scale == option,
+                                    onTap: () =>
+                                        appTextScaleController.setScale(option),
+                                    isFirst: option == AppFontScale.values.first,
+                                  ),
+                              ],
+                            );
+                          },
+                        ),
                         // const SizedBox(height: 28),
                         // _SectionLabel(l10n.settingsSectionLanguage),
                         // ValueListenableBuilder<AppLocaleOption>(

@@ -39,24 +39,35 @@ class AlternativesSection extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final cardWidth = constraints.maxWidth * _cardWidthFactor;
-        return SizedBox(
-          height: 176,
-          child: ListView.separated(
+        // 예전엔 `SizedBox(height: 176)` + `ListView.separated`로 고정
+        // 높이를 줬는데, 카드 내용(이름/사유/배지 등)은 접근성 글자 크기
+        // 설정에 따라 커지는 반면 이 높이는 고정이라 글자가 커지면 카드
+        // 안에서 세로로 오버플로가 났다. `ListView`는 가로 스크롤 시 세로
+        // (cross axis) 폭을 부모가 준 만큼 고정으로 요구해 콘텐츠에 맞춰
+        // 스스로 커질 수 없으므로(항목이 최대 3개뿐이라 성능상 문제도 없어)
+        // `Row` + `SingleChildScrollView`로 바꾸고 `IntrinsicHeight`로
+        // 감싸 가장 긴 카드의 실제 콘텐츠 높이에 맞춰 전체가 함께
+        // 늘어나도록 했다.
+        return IntrinsicHeight(
+          child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
-            itemCount: visible.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 10),
-            itemBuilder: (context, index) {
-              final item = visible[index];
-              return AlternativeCard(
-                item: item,
-                rank: index + 1,
-                width: cardWidth,
-                onTap: onTap == null
-                    ? null
-                    : () => onTap!(item.contentId, item.name),
-              );
-            },
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = 0; i < visible.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 10),
+                  AlternativeCard(
+                    item: visible[i],
+                    rank: i + 1,
+                    width: cardWidth,
+                    onTap: onTap == null
+                        ? null
+                        : () => onTap!(visible[i].contentId, visible[i].name),
+                  ),
+                ],
+              ],
+            ),
           ),
         );
       },

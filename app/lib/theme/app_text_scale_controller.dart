@@ -5,10 +5,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// 곱해져 앱 전체 텍스트 크기에 적용된다. 화면 표시용 라벨은 다국어 대응을
 /// 위해 여기 두지 않고 `AppLocalizations`를 통해 화면(위젯) 쪽에서 매핑한다.
 enum AppFontScale {
-  small(0.9),
   normal(1.0),
-  large(1.15),
-  extraLarge(1.3);
+  large(1.3),
+  extraLarge(1.5);
 
   const AppFontScale(this.factor);
 

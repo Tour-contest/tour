@@ -954,6 +954,7 @@ class _ProfileMenuItem extends StatelessWidget {
         alignment: Alignment.centerLeft,
         padding: const EdgeInsets.symmetric(horizontal: 18),
         child: Text(label,
+            textScaler: TextScaler.noScaling,
             style: AppTextStyles.body(fontSize: 15, color: colors.ink)
                 .copyWith(fontWeight: FontWeight.w500)),
       ),
@@ -1007,10 +1008,18 @@ class _EmptyStateState extends State<_EmptyState> {
               physics: const BouncingScrollPhysics(),
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: Center(
+                // 이전엔 `Center`로 전체 콘텐츠를 세로 중앙 정렬했는데,
+                // 그러면 글자 크기 설정이 커져 `ThemeGrid`가 늘어날수록
+                // 전체 높이가 커지면서 위쪽 마스코트/인사말이 위로 밀려
+                // 보이는 문제가 있었다(사용자 요청으로 상단 고정 + 여백으로
+                // 전환 — 내용이 늘어나도 마스코트 위치는 고정되고 아래쪽
+                // 여유 공간만 줄어든다).
+                child: Align(
+                  alignment: Alignment.topCenter,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      const SizedBox(height: 60),
                       Container(
                         width: 120,
                         height: 120,

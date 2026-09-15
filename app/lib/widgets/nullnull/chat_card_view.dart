@@ -602,11 +602,19 @@ class _CrowdMatchItemCard extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
-                    item.name,
-                    style:
-                        AppTextStyles.heading(fontSize: 16, color: colors.ink)
-                            .copyWith(fontWeight: FontWeight.w600),
+                  // 장소명 길이 + 접근성 글자 크기 설정에 따라 `sigun`(시군구
+                  // 라벨)과 합친 폭이 카드 너비를 넘어 `RenderFlex` 오버플로가
+                  // 나던 문제 — `Expanded` + 말줄임으로 장소명 쪽만 줄어들게
+                  // 하고 `sigun`은 항상 온전히 보이게 한다.
+                  Expanded(
+                    child: Text(
+                      item.name,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: AppTextStyles.heading(
+                              fontSize: 16, color: colors.ink)
+                          .copyWith(fontWeight: FontWeight.w600),
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Text(
