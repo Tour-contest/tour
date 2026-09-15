@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { openChatStream } from "@/api/chatStream";
+import { getChatMessages } from "@/service/chat";
+import { useChatSessionStore } from "@/store/chatSession";
 
 export type ChatViewMessage = {
     key: string;
@@ -33,6 +35,32 @@ const INITIAL_CHAT_STREAM: ChatStreamState = {
 
 const useChatStream = () => {
     const [chat, setChat] = useState<ChatStreamState>(INITIAL_CHAT_STREAM);
+    const refreshSessions = useChatSessionStore((state) => state.refreshSessions);
+
+    // 새 대화 시작 (사이드바의 "새 대화")
+    const resetChat = () => setChat(INITIAL_CHAT_STREAM);
+
+    // 과거 세션 복원 — assistant 메시지의 tool_trace 로 카드까지 되살린다
+    const loadSession = async (sessionId: string) => {
+        try {
+            const res = await getChatMessages(sessionId);
+
+            setChat({
+                ...INITIAL_CHAT_STREAM,
+                sessionId,
+                messages: res.data.items.map((message) => ({
+                    key: String(message.id),
+                    role: message.role,
+                    content: message.content,
+                    cards: message.tool_trace,
+                    sourceNote: null,
+                })),
+            });
+        } catch (e) {
+            console.error(e);
+            setChat({ ...INITIAL_CHAT_STREAM, sessionId, errorMessage: "대화를 불러오지 못했습니다." });
+        }
+    };
 
     const applyStreamEvent = (streamEvent: ChatStreamEvent) => {
         setChat((prev) => {
@@ -106,6 +134,8 @@ const useChatStream = () => {
                 { message: trimmed, session_id: chat.sessionId },
                 { onEvent: applyStreamEvent },
             );
+            // 제목은 첫 질문으로 서버가 생성하므로 답변이 끝난 뒤 목록을 다시 받는다
+            await refreshSessions();
         } catch (e) {
             console.error(e);
             setChat((prev) => ({
@@ -117,6 +147,6 @@ const useChatStream = () => {
         }
     };
 
-    return { chat, sendMessage };
+    return { chat, sendMessage, loadSession, resetChat };
 };
 export default useChatStream;

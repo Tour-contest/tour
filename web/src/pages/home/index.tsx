@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useParams } from "react-router";
 import clsx from "clsx";
 import { ChatCardView } from "@/components/chat";
 import { useChatStream } from "@/hooks/api";
@@ -22,11 +23,18 @@ const BubbleStyle = {
 } as const;
 
 function Home() {
-    const { chat, sendMessage } = useChatStream();
+    // 세션은 URL 이 소유한다 — 사이드바에서 고른 대화(/c/:sessionId), 없으면 새 대화(/)
+    const { sessionId } = useParams<{ sessionId: string }>();
+    const { chat, sendMessage, loadSession, resetChat } = useChatStream();
     const user = useAuthenticateStore((state) => state.user);
 
     const [inputValue, setInputValue] = useState<string>("");
     const scrollAnchorRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        if (sessionId) loadSession(sessionId);
+        else resetChat();
+    }, [sessionId]);
 
     useEffect(() => {
         scrollAnchorRef.current?.scrollIntoView({ behavior: "smooth" });

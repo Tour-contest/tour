@@ -5,6 +5,7 @@ import Login from "@/pages/login";
 import SocialCallback from "@/pages/social-callback";
 import Home from "@/pages/home";
 import Admin from "@/pages/admin";
+import AdminUsers from "@/pages/admin-users";
 import NotFound from "@/pages/not-found";
 
 const Router = () => {
@@ -22,12 +23,14 @@ const Router = () => {
                             element: <PrivateAuthorityRoute allow={["user"]} />,
                             children: [
                                 { index: true, element: <Home /> },
+                                { path: "c/:sessionId", element: <Home /> },
                             ],
                         },
                         {
                             element: <PrivateAuthorityRoute allow={["admin"]} />,
                             children: [
                                 { path: "admin", element: <Admin /> },
+                                { path: "admin/users", element: <AdminUsers /> },
                             ],
                         },
                         { path: "*", element: <NotFound /> },
