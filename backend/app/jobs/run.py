@@ -183,6 +183,7 @@ async def main() -> None:
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    logging.getLogger("httpx").setLevel(logging.WARNING)
     if not settings.data_go_kr_service_key:
         log.error("DATA_GO_KR_SERVICE_KEY 없음")
         sys.exit(1)

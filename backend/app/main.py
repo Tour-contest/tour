@@ -33,6 +33,9 @@ logging.basicConfig(
         ),
     ],
 )
+# httpx 는 INFO 에서 요청 URL 전체를 찍어 serviceKey 가 로그에 남는다. 경고 이상만 남긴다.
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 
 def check_secrets() -> None:

@@ -12,6 +12,15 @@ def split_signgu(tour_cd: str) -> tuple[str, str]:
     return tour_cd[:2], tour_cd[2:]
 
 
+def ldong_params(tour_cd: str) -> dict:
+    """법정동 코드 파라미터. 광역시 상위 코드(11000 처럼 뒤가 000)는 시도 단위로 조회한다."""
+    regn, sig = split_signgu(tour_cd)
+    out = {"lDongRegnCd": regn}
+    if sig and sig != "000":
+        out["lDongSignguCd"] = sig
+    return out
+
+
 def safe_float(v) -> float | None:
     try:
         return float(v)
@@ -53,10 +62,7 @@ async def search_keyword(
 ) -> list[dict]:
     params: dict = {"keyword": keyword, "numOfRows": rows, "pageNo": 1}
     if tour_cd:
-        regn, sig = split_signgu(tour_cd)
-        params["lDongRegnCd"] = regn
-        if sig and sig != "000":
-            params["lDongSignguCd"] = sig
+        params.update(ldong_params(tour_cd))
     if content_type_id:
         params["contentTypeId"] = content_type_id
 
@@ -80,8 +86,7 @@ async def area_based_list(
     max_pages: int = 8,
     session_id: str | None = None,
 ) -> list[dict]:
-    regn, sig = split_signgu(tour_cd)
-    params: dict = {"lDongRegnCd": regn, "lDongSignguCd": sig}
+    params: dict = ldong_params(tour_cd)
     if arrange:
         params["arrange"] = arrange
     if content_type_id:
@@ -103,10 +108,9 @@ async def area_based_list(
 
 
 async def area_based_count(tour_cd: str, session_id: str | None = None) -> int:
-    regn, sig = split_signgu(tour_cd)
     _, total = await client.call(
         "KorService2/areaBasedList2",
-        {"lDongRegnCd": regn, "lDongSignguCd": sig, "numOfRows": 1, "pageNo": 1},
+        {**ldong_params(tour_cd), "numOfRows": 1, "pageNo": 1},
         ttl=settings.upstream_cache_ttl_detail,
         session_id=session_id,
     )
@@ -210,9 +214,7 @@ async def search_festival(
 ) -> list[dict]:
     params: dict = {"eventStartDate": start_ymd, "numOfRows": rows, "pageNo": 1}
     if tour_cd:
-        regn, sig = split_signgu(tour_cd)
-        params["lDongRegnCd"] = regn
-        params["lDongSignguCd"] = sig
+        params.update(ldong_params(tour_cd))
     items, _ = await client.call(
         "KorService2/searchFestival2",
         params,

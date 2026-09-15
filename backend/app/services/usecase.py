@@ -96,7 +96,7 @@ async def area_of(code: str) -> dict:
 
 async def tourapi_count(a: dict, session_id=None) -> int | None:
     codes = [a["tour_cd"]]
-    if a.get("merged_from") or area.is_metro_parent(a):
+    if a.get("merged_from") and not area.is_metro_parent(a):
         children = await children_of(a)
         codes = [c["tour_cd"] for c in children if c["tour_cd"]] or codes
 
@@ -205,17 +205,11 @@ async def find_attraction(name: str, signgu_cd: str | None = None, session_id=No
 
 
 async def with_child_fallback(a: dict, fetch) -> list[dict]:
-    """상위 행정구역이면 하위 시군구를 돌며 모은다.
+    """상위 코드로 먼저 조회하고, 비면 하위 시군구를 돌며 모은다.
 
-    서울·부산 같은 광역시 상위 행은 관광정보 쪽 코드가 없어 바로 조회할 수 없고,
-    '청주시'처럼 구를 거느린 시는 상위 코드로 먼저 시도한 뒤 비면 하위로 내려간다.
+    서울·부산 같은 광역시 상위 코드(11000)는 tourapi 쪽에서 시도 단위 조회로 바뀌어
+    한 번에 받아진다. '청주시'처럼 구를 거느린 시는 상위 코드가 비면 하위로 내려간다.
     """
-    if area.is_metro_parent(a):
-        items: list[dict] = []
-        for c in await children_of(a):
-            if c["tour_cd"]:
-                items += await fetch(c["tour_cd"])
-        return items
     items = await fetch(a["tour_cd"])
     if not items:
         for c in await children_of(a):

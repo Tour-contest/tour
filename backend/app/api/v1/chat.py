@@ -129,35 +129,48 @@ async def run(body: ChatIn, user: dict):
         yield sse("error", {"code": "FORBIDDEN", "message": "볼 수 없는 대화입니다",
                             "retriable": False})
         return
-    live = _live.get(session_id)
-    if live is not None and not live.done:
+    prev = _live.get(session_id)
+    if prev is not None and not prev.done:
         yield sse("error", {"code": "CHAT_BUSY",
                             "message": "아직 답변을 만드는 중이에요. 끝난 뒤에 보내주세요.",
                             "retriable": True})
         return
-    await db.touch_session(session_id)
+    # 판정 직후 await 없이 슬롯을 잡아야 같은 세션의 동시 요청이 둘 다 통과하지 않는다.
+    live = _Live()
+    _live[session_id] = live
 
-    await db.add_message(session_id, "user", message)
-    await db.prune_sessions(user["id"], settings.max_sessions_per_user)
+    def release() -> None:
+        if _live.get(session_id) is live:
+            del _live[session_id]
 
-    yield sse("meta", {"session_id": session_id, "message_id": message_id,
-                       "title": session["title"]})
+    try:
+        await db.touch_session(session_id)
+        await db.add_message(session_id, "user", message)
+        await db.prune_sessions(user["id"], settings.max_sessions_per_user)
 
-    if guard.unsupported_topic(message):
-        text = guard.UNSUPPORTED_TOPIC_ANSWER
-        for chunk in chunks(text):
-            yield sse("delta", {"text": chunk})
-        await db.add_message(session_id, "assistant", text)
-        yield sse("done", {"message_id": message_id, "cards": 0})
-        return
+        yield sse("meta", {"session_id": session_id, "message_id": message_id,
+                           "title": session["title"]})
 
-    if settings.llm_enabled:
-        async for chunk in run_llm(session_id, message_id, message, session, user):
+        if guard.unsupported_topic(message):
+            text = guard.UNSUPPORTED_TOPIC_ANSWER
+            for chunk in chunks(text):
+                yield sse("delta", {"text": chunk})
+            await db.add_message(session_id, "assistant", text)
+            yield sse("done", {"message_id": message_id, "cards": 0})
+            return
+
+        if settings.llm_enabled:
+            # 생성 태스크가 슬롯 해제를 맡는다
+            async for chunk in run_llm(live, session_id, message_id, message, session, user):
+                yield chunk
+            return
+
+        async for chunk in run_rules(session_id, message_id, message, user):
             yield chunk
-        return
-
-    async for chunk in run_rules(session_id, message_id, message, user):
-        yield chunk
+    finally:
+        if not settings.llm_enabled or guard.unsupported_topic(message):
+            await live.close()
+            release()
 
 
 class _Live:
@@ -233,9 +246,8 @@ async def generate(
             del _live[session_id]
 
 
-async def run_llm(session_id: str, message_id: str, message: str, session: dict, user: dict):
-    live = _Live()
-    _live[session_id] = live
+async def run_llm(live: _Live, session_id: str, message_id: str, message: str,
+                  session: dict, user: dict):
     t = asyncio.create_task(generate(live, session_id, message_id, message, session, user))
     _gen_tasks.add(t)
     t.add_done_callback(_gen_tasks.discard)
