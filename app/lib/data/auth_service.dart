@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:nullnull/app_config.dart';
 import 'package:nullnull/app_log.dart';
 import 'package:nullnull/data/auth_token_storage.dart';
+import 'package:nullnull/data/user_profile_storage.dart';
 
 /// 로그인/토큰 교환/갱신/로그아웃 요청이 실패(`success: false`)했을 때
 /// 던지는 예외.
@@ -51,6 +52,41 @@ class AuthService {
       accessToken: data['access_token'] as String? ?? '',
       refreshToken: data['refresh_token'] as String? ?? '',
     ));
+  }
+
+  /// `POST /api/v1/auth/login`. 관리자 로컬 로그인(아이디/비밀번호) — 로그인
+  /// 화면의 숨겨진 관리자 진입점에서만 사용한다. 요청 필드는 `login_id`/
+  /// `password`, 응답 `data`는 `access_token`/`refresh_token`(+`expires_in`,
+  /// `user`: `id`/`nickname`/`role`/`provider`) — 실제 응답 예시로 확인함.
+  /// `expires_in`은 다른 로그인 흐름과 마찬가지로 별도 저장하지 않는다(액세스
+  /// 토큰 30분 고정 규칙을 그대로 따름, `## API`의 `auth` 문단 참고). 카카오
+  /// 로그인의 `_saveKakaoProfile`처럼 `user.nickname`을 [UserProfileStorage]에
+  /// 저장해 두어 "관리자" 닉네임이 채팅/설정 화면에 그대로 반영되게 한다(프로필
+  /// 사진 URL/이메일은 응답에 없어 저장하지 않음 — 기존에 저장된 값이 있었다면
+  /// 함께 지워짐). `user.role`이 `admin`이면 [UserProfile.isAdmin]도 함께
+  /// 저장해 `settings_screen.dart`가 관리자 계정의 "회원 탈퇴" 버튼을
+  /// 비활성화하는 데 쓴다. 5회 연속 실패 시 10분 잠금되며, 그 경우 서버가
+  /// `message`로 안내 문구를 내려준다고 가정해 [AuthException]에 그대로 실어
+  /// 화면에 보여준다(잠금 자체는 아직 실제로 확인 못 함).
+  static Future<void> loginAdmin(String username, String password) async {
+    final response = await _plainDio().post<Map<String, dynamic>>(
+      AppConfig.authLoginEndpoint,
+      data: {'login_id': username, 'password': password},
+    );
+    final envelope = response.data;
+    if (envelope?['success'] != true) {
+      throw AuthException(envelope?['message'] as String? ?? '로그인에 실패했어요.');
+    }
+    final data = envelope?['data'] as Map<String, dynamic>? ?? const {};
+    await AuthTokenStorage.save(AuthTokens(
+      accessToken: data['access_token'] as String? ?? '',
+      refreshToken: data['refresh_token'] as String? ?? '',
+    ));
+    final user = data['user'] as Map<String, dynamic>?;
+    await UserProfileStorage.save(
+      nickname: user?['nickname'] as String?,
+      isAdmin: user?['role'] == 'admin',
+    );
   }
 
   static Future<AuthTokens>? _refreshInFlight;

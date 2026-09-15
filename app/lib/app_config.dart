@@ -31,6 +31,11 @@ class AppConfig {
   static String authOAuthCallbackEndpoint(String provider) =>
       '/api/v1/auth/oauth/$provider/callback';
 
+  /// 관리자 로컬 로그인(아이디/비밀번호). 5회 연속 실패 시 10분 잠금
+  /// (`docs/API_SPEC.md`). 로그인 화면 하단의 숨겨진 관리자 로그인 버튼에서
+  /// 사용한다.
+  static const String authLoginEndpoint = '/api/v1/auth/login';
+
   /// 토큰 갱신(리프레시 회전). 인증 불필요(요청 바디의 리프레시 토큰으로 인증).
   static const String authRefreshEndpoint = '/api/v1/auth/refresh';
 

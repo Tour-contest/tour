@@ -220,6 +220,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                         _ConnectedAccountRow(
                           provider: _provider,
+                          enabled: !(_profile?.isAdmin ?? false),
                           onDisconnect: () => _confirmDisconnect(context),
                         ),
                         // const SizedBox(height: 28),
@@ -473,20 +474,38 @@ class _SnsIcon extends StatelessWidget {
       );
 }
 
-/// "연결된 계정" 행. 회원 탈퇴 버튼 탭 시 확인 팝업을 띄운다.
+/// "연결된 계정" 행. 회원 탈퇴 버튼 탭 시 확인 팝업을 띄운다. [enabled]가
+/// `false`(관리자 로그인 계정, `UserProfile.isAdmin`)면 버튼을 회색으로
+/// 비활성화하고 탭 자체를 막는다 — 관리자는 카카오 연결 해제를 함께 처리하는
+/// `DELETE /api/v1/me` 탈퇴 흐름의 대상이 아니기 때문.
 class _ConnectedAccountRow extends StatelessWidget {
   const _ConnectedAccountRow({
     required this.provider,
+    required this.enabled,
     required this.onDisconnect,
   });
 
   final SnsProvider provider;
+  final bool enabled;
   final VoidCallback onDisconnect;
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context)!;
+    final buttonLabel = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        border: Border.all(color: enabled ? colors.accent : colors.divider),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        l10n.settingsDisconnect,
+        style: AppTextStyles.body(
+            fontSize: 11.5,
+            color: enabled ? colors.accentBright : colors.ink600),
+      ),
+    );
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
@@ -508,22 +527,17 @@ class _ConnectedAccountRow extends StatelessWidget {
             style: AppTextStyles.body(fontSize: 12.5, color: colors.ink600),
           ),
           const SizedBox(width: 10),
-          InkWell(
-            onTap: onDisconnect,
-            borderRadius: BorderRadius.circular(4),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                border: Border.all(color: colors.accent),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                l10n.settingsDisconnect,
-                style: AppTextStyles.body(
-                    fontSize: 11.5, color: colors.accentBright),
-              ),
+          if (enabled)
+            InkWell(
+              onTap: onDisconnect,
+              borderRadius: BorderRadius.circular(4),
+              child: buttonLabel,
+            )
+          else
+            Tooltip(
+              message: l10n.settingsDisconnectAdminDisabledTooltip,
+              child: buttonLabel,
             ),
-          ),
         ],
       ),
     );

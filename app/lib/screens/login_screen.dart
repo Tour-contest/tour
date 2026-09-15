@@ -16,6 +16,7 @@ import 'package:nullnull/data/user_profile_storage.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
+import 'package:nullnull/widgets/confirm_dialog.dart';
 import 'package:nullnull/widgets/nullnull/mascot.dart';
 
 /// 온보딩 다음에 노출되는 로그인 화면. SNS 로그인만으로 로그인/회원가입을 함께
@@ -31,8 +32,10 @@ class _LoginScreenState extends State<LoginScreen> {
   ///  진행 중에는 화면 터치·뒤로가기를 막는다.
   bool _isLoggingIn = false;
 
-  Future<void> _completeLogin(SnsProvider provider) async {
-    unawaited(AnalyticsService.logLogin(provider));
+  /// [provider]가 `null`이면 관리자 로그인처럼 SNS 제공자가 없는 로그인
+  /// 수단이라는 뜻으로, 이 경우 `logLogin` 애널리틱스 이벤트는 건너뛴다.
+  Future<void> _completeLogin(SnsProvider? provider) async {
+    if (provider != null) unawaited(AnalyticsService.logLogin(provider));
     if (!mounted) return;
     context.goNamed(RouteNames.chat);
   }
@@ -41,9 +44,26 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoggingIn = true);
     try {
       final installed = await isKakaoTalkInstalled();
-      final OAuthToken token = installed
-          ? await UserApi.instance.loginWithKakaoTalk()
-          : await UserApi.instance.loginWithKakaoAccount();
+      OAuthToken token;
+      if (installed) {
+        try {
+          token = await UserApi.instance.loginWithKakaoTalk();
+        } catch (error) {
+          if (error is PlatformException && error.code == 'CANCELED') return;
+          AppLog.logger.w('카카오톡 앱 로그인 실패, 계정 로그인 전환 여부 확인', error: error);
+          if (!mounted) return;
+          // 다이얼로그를 띄우는 동안은 전체 화면 로딩 오버레이를 내려 두 겹으로
+          // 보이지 않게 한다 — 계정 로그인으로 전환하면 다시 켠다.
+          setState(() => _isLoggingIn = false);
+          if (!mounted) return;
+          final useAccountLogin = await _confirmKakaoAccountFallback();
+          if (useAccountLogin != true || !mounted) return;
+          setState(() => _isLoggingIn = true);
+          token = await UserApi.instance.loginWithKakaoAccount();
+        }
+      } else {
+        token = await UserApi.instance.loginWithKakaoAccount();
+      }
       AppLog.logger.i('카카오 로그인 성공, 백엔드 토큰 교환 시작');
       await AuthService.loginWithKakao(token.accessToken);
       await _saveKakaoProfile();
@@ -63,6 +83,22 @@ class _LoginScreenState extends State<LoginScreen> {
     } finally {
       if (mounted) setState(() => _isLoggingIn = false);
     }
+  }
+
+  /// 카카오톡 앱 설치 상태에서 [UserApi.instance.loginWithKakaoTalk]이 취소가
+  /// 아닌 에러로 실패했을 때(예: 기기에 카카오톡은 설치돼 있지만 로그인은
+  /// 안 돼 있는 경우) [UserApi.instance.loginWithKakaoAccount](웹 기반 계정
+  /// 로그인)로 전환할지 묻는 확인 팝업. `ConfirmDialog`와 같은 톤을 쓴다.
+  Future<bool?> _confirmKakaoAccountFallback() {
+    final l10n = AppLocalizations.of(context)!;
+    return showDialog<bool>(
+      context: context,
+      builder: (_) => ConfirmDialog(
+        title: l10n.loginKakaoTalkFailedDialogTitle,
+        message: l10n.loginKakaoTalkFailedDialogMessage,
+        confirmLabel: l10n.loginKakaoTalkFailedDialogConfirm,
+      ),
+    );
   }
 
   /// 카카오 `me()`로 닉네임/프로필 사진 URL/이메일을 받아와 [UserProfileStorage]에
@@ -249,6 +285,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           backgroundColor: colors.kakaoContainer,
                           labelColor: colors.kakaoLabel,
                         ),
+                        const SizedBox(height: 14),
+                        _AdminLoginEntry(
+                          enabled: !_isLoggingIn,
+                          onSuccess: () => _completeLogin(null),
+                        ),
                       ],
                     ),
                   ),
@@ -317,6 +358,266 @@ class _SnsLoginButton extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// 카카오 버튼 아래에 있는 숨겨진 관리자 로그인 진입점. 일반 사용자 눈에는
+/// 잘 띄지 않도록 아주 작은 글자·낮은 대비(카드 배경에 가까운 색)로 그리되,
+/// 탭 영역은 접근성을 위해 텍스트보다 넉넉하게 잡는다.
+class _AdminLoginEntry extends StatelessWidget {
+  const _AdminLoginEntry({required this.enabled, required this.onSuccess});
+
+  final bool enabled;
+  final VoidCallback onSuccess;
+
+  Future<void> _open(BuildContext context) async {
+    final success = await showDialog<bool>(
+      context: context,
+      builder: (_) => const _AdminLoginDialog(),
+    );
+    if (success == true) onSuccess();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: enabled ? () => _open(context) : null,
+        child: Text(
+          l10n.loginAdminEntryLabel,
+          style: AppTextStyles.body(
+            fontSize: 14,
+            color: colors.loginSubheadline,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// [_AdminLoginEntry] 탭 시 뜨는 아이디/비밀번호 입력 팝업. 성공하면
+/// `Navigator.pop(context, true)`로 닫혀 [_AdminLoginEntry]가 로그인 완료
+/// 처리를 이어받는다. `ConfirmDialog`와 같은 톤(배경 `colors.graphite`,
+/// 테두리 `colors.inputBarBorder`, 모서리 16)을 따른다.
+class _AdminLoginDialog extends StatefulWidget {
+  const _AdminLoginDialog();
+
+  @override
+  State<_AdminLoginDialog> createState() => _AdminLoginDialogState();
+}
+
+class _AdminLoginDialogState extends State<_AdminLoginDialog> {
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isSubmitting = false;
+  String? _errorMessage;
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_isSubmitting) return;
+    final l10n = AppLocalizations.of(context)!;
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text.trim();
+    if (username.isEmpty || password.isEmpty) {
+      setState(() => _errorMessage = l10n.loginAdminValidationError);
+      return;
+    }
+    setState(() {
+      _isSubmitting = true;
+      _errorMessage = null;
+    });
+    try {
+      await AuthService.loginAdmin(username, password);
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } on AuthException catch (error) {
+      AppLog.logger.e('관리자 로그인 실패', error: error);
+      if (!mounted) return;
+      setState(() => _errorMessage = error.message);
+    } catch (error) {
+      AppLog.logger.e('관리자 로그인 실패', error: error);
+      if (!mounted) return;
+      setState(() => _errorMessage = l10n.loginAdminError);
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    return Dialog(
+      backgroundColor: colors.graphite,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: colors.inputBarBorder, width: 1.5),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.loginAdminDialogTitle,
+              style: AppTextStyles.heading(fontSize: 17, color: colors.ink),
+            ),
+            const SizedBox(height: 20),
+            _AdminTextField(
+              controller: _usernameController,
+              label: l10n.loginAdminUsernameLabel,
+              obscureText: false,
+              enabled: !_isSubmitting,
+            ),
+            const SizedBox(height: 12),
+            _AdminTextField(
+              controller: _passwordController,
+              label: l10n.loginAdminPasswordLabel,
+              obscureText: true,
+              enabled: !_isSubmitting,
+              onSubmitted: (_) => _submit(),
+            ),
+            if (_errorMessage != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                _errorMessage!,
+                textAlign: TextAlign.center,
+                style:
+                    AppTextStyles.body(fontSize: 12.5, color: colors.busyText),
+              ),
+            ],
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: _AdminDialogButton(
+                    label: l10n.commonCancel,
+                    filled: false,
+                    onTap: _isSubmitting
+                        ? null
+                        : () => Navigator.of(context).pop(false),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _AdminDialogButton(
+                    label: l10n.loginAdminSubmitButton,
+                    filled: true,
+                    loading: _isSubmitting,
+                    onTap: _isSubmitting ? null : _submit,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AdminTextField extends StatelessWidget {
+  const _AdminTextField({
+    required this.controller,
+    required this.label,
+    required this.obscureText,
+    required this.enabled,
+    this.onSubmitted,
+  });
+
+  final TextEditingController controller;
+  final String label;
+  final bool obscureText;
+  final bool enabled;
+  final ValueChanged<String>? onSubmitted;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: BorderSide(color: colors.inputBarBorder),
+    );
+    return TextField(
+      controller: controller,
+      obscureText: obscureText,
+      enabled: enabled,
+      autocorrect: false,
+      style: AppTextStyles.body(fontSize: 14, color: colors.ink),
+      onSubmitted: onSubmitted,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: AppTextStyles.body(fontSize: 13, color: colors.ink700),
+        filled: true,
+        fillColor: colors.inputBar,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        border: border,
+        enabledBorder: border,
+        focusedBorder: border.copyWith(
+          borderSide: BorderSide(color: colors.accent),
+        ),
+      ),
+    );
+  }
+}
+
+class _AdminDialogButton extends StatelessWidget {
+  const _AdminDialogButton({
+    required this.label,
+    required this.filled,
+    required this.onTap,
+    this.loading = false,
+  });
+
+  final String label;
+  final bool filled;
+  final VoidCallback? onTap;
+  final bool loading;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return SizedBox(
+      height: 44,
+      child: OutlinedButton(
+        onPressed: onTap,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: filled ? colors.accent : null,
+          side: filled ? BorderSide.none : BorderSide(color: colors.accent),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          overlayColor: colors.accentTint08,
+        ),
+        child: loading
+            ? SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: filled ? colors.paper : colors.accentBright,
+                ),
+              )
+            : Text(
+                label,
+                style: AppTextStyles.body(
+                  fontSize: 13.5,
+                  color: filled ? colors.paper : colors.accentBright,
+                  letterSpacing: .3,
+                ),
+              ),
       ),
     );
   }

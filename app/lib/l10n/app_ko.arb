@@ -48,6 +48,46 @@
   "@loginKakaoError": {
     "description": "카카오 로그인 실패 시 스낵바 문구"
   },
+  "loginKakaoTalkFailedDialogTitle": "카카오톡으로 로그인하지 못했어요",
+  "@loginKakaoTalkFailedDialogTitle": {
+    "description": "카카오톡 설치 상태에서 loginWithKakaoTalk()이 취소가 아닌 에러로 실패했을 때(예: 카카오톡 미로그인 상태) 계정 로그인 전환을 묻는 다이얼로그 제목"
+  },
+  "loginKakaoTalkFailedDialogMessage": "카카오 계정으로 다시 로그인해볼까요?",
+  "@loginKakaoTalkFailedDialogMessage": {
+    "description": "loginKakaoTalkFailedDialogTitle 다이얼로그 본문 — UserApi.instance.loginWithKakaoAccount()로 전환할지 안내"
+  },
+  "loginKakaoTalkFailedDialogConfirm": "계정으로 로그인",
+  "@loginKakaoTalkFailedDialogConfirm": {
+    "description": "loginKakaoTalkFailedDialogTitle 다이얼로그 확인 버튼 — 탭하면 loginWithKakaoAccount() 실행"
+  },
+  "loginAdminEntryLabel": "관리자 로그인",
+  "@loginAdminEntryLabel": {
+    "description": "로그인 화면 하단, 카카오 버튼 아래에 있는 숨겨진 관리자 로그인 진입 버튼 레이블(의도적으로 눈에 잘 안 띄게 표시)"
+  },
+  "loginAdminDialogTitle": "관리자 로그인",
+  "@loginAdminDialogTitle": {
+    "description": "관리자 로그인 다이얼로그 제목"
+  },
+  "loginAdminUsernameLabel": "아이디",
+  "@loginAdminUsernameLabel": {
+    "description": "관리자 로그인 다이얼로그 아이디 입력란 레이블"
+  },
+  "loginAdminPasswordLabel": "비밀번호",
+  "@loginAdminPasswordLabel": {
+    "description": "관리자 로그인 다이얼로그 비밀번호 입력란 레이블"
+  },
+  "loginAdminSubmitButton": "로그인",
+  "@loginAdminSubmitButton": {
+    "description": "관리자 로그인 다이얼로그 제출 버튼"
+  },
+  "loginAdminValidationError": "아이디와 비밀번호를 입력해주세요.",
+  "@loginAdminValidationError": {
+    "description": "관리자 로그인 다이얼로그에서 아이디/비밀번호를 비운 채 제출했을 때 보여주는 안내"
+  },
+  "loginAdminError": "관리자 로그인에 실패했어요.",
+  "@loginAdminError": {
+    "description": "관리자 로그인 실패 시 서버 메시지가 없을 때 보여주는 기본 안내(서버 메시지가 있으면 그걸 그대로 보여준다)"
+  },
   "authSessionExpiredToast": "세션이 만료됐어요. 다시 로그인해주세요.",
   "@authSessionExpiredToast": {
     "description": "리프레시 토큰 만료/거절 등으로 서버가 갱신을 명시적으로 거절해 로그인 화면으로 자동 이동시킬 때 뜨는 토스트"
@@ -378,6 +418,10 @@
   "settingsDisconnect": "회원 탈퇴",
   "@settingsDisconnect": {
     "description": "회원 탈퇴 버튼 레이블(확인 팝업의 확인 버튼과 동일 문구)"
+  },
+  "settingsDisconnectAdminDisabledTooltip": "관리자 계정은 탈퇴할 수 없어요.",
+  "@settingsDisconnectAdminDisabledTooltip": {
+    "description": "관리자 로그인 계정에서 비활성화된 \"회원 탈퇴\" 버튼을 눌렀을 때(또는 길게 눌렀을 때) 보여주는 툴팁"
   },
   "settingsSectionFontSize": "글자 크기",
   "@settingsSectionFontSize": {
