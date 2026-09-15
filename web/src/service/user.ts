@@ -4,4 +4,11 @@ const getUser = (params?: GetUserParams) => {
     return requestModule.get("/api/v1/admin/users", params)
 };
 
-export { getUser }
+const getMyInfo = () => {
+    return requestModule.get("/api/v1/me")
+};
+
+export { 
+    getUser, 
+    getMyInfo,
+};

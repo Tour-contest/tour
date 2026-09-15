@@ -25,9 +25,15 @@ declare global {
         dev_login: boolean;
     };
 
+    type ResponseSuccessLogout = {
+        ok: boolean;
+    };
+
     type ResponseAutenticate = ResponseSuccessData<ResponseAccessData>;
 
     type ResponseAutenticateProvider = ResponseSuccessData<ResponseProviderData>;
+
+    type ResponseLogout = ResponseSuccessData<ResponseSuccessLogout>;
 
     // access_token 페이로드 실측 기준 (개발자 로그인 admin / 카카오 로그인 user 양쪽 확인)
     type AccessTokenPayload = {

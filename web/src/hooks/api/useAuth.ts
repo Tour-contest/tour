@@ -1,5 +1,12 @@
 import { isAxiosError } from "axios";
-import { adminAuthenticate, devAuthenticate, authenticateProviders, socialAuthenticate } from "@/service/auth";
+import { 
+    adminAuthenticate, 
+    devAuthenticate, 
+    authenticateProviders, 
+    socialAuthenticate,
+    logout,
+    withdrawMembership 
+} from "@/service/auth";
 import { useAuthenticateStore } from "@/store/authenticate";
 import { useAuthorityStore } from "@/store/authority";
 import type { ErrorResponse } from "@/types/error";
@@ -93,6 +100,29 @@ const useAuth = () => {
         };
     };
 
-    return { fetchAuthenticateProvider, handleAdminLogin, handleDevLogin, handleSocialLogin }
+    const handleLogout = async () => {
+        try {
+            await logout();
+        } catch (e) {
+            console.error(e);
+        };
+    };
+
+    const handleWithdrawMembership = async () => {
+        try {
+            await withdrawMembership();
+        } catch (e) {
+            console.error(e);
+        };
+    };
+
+    return { 
+        fetchAuthenticateProvider, 
+        handleAdminLogin, 
+        handleDevLogin, 
+        handleSocialLogin, 
+        handleLogout,
+        handleWithdrawMembership 
+    };
 }
 export default useAuth;

@@ -25,4 +25,20 @@ const requestRefresh = (refreshToken: string) => {
     return requestModule.post<ResponseAutenticate>('/api/v1/auth/refresh', { refresh_token: refreshToken })
 ;}
 
-export { authenticateProviders, adminAuthenticate, devAuthenticate, socialAuthenticate, requestRefresh };
+const logout = () => {
+    return requestModule.post<ResponseLogout>('/api/v1/auth/logout')
+};
+
+const withdrawMembership = () => {
+    return requestModule.delete("/api/v1/me");
+};
+
+export { 
+    authenticateProviders, 
+    adminAuthenticate, 
+    devAuthenticate, 
+    socialAuthenticate, 
+    requestRefresh, 
+    logout,
+    withdrawMembership 
+};

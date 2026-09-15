@@ -1,4 +1,4 @@
-import { getUser } from "@/service/user";
+import { getUser, getMyInfo } from "@/service/user";
 
 const useUser = () => {
     const fetchUsers = async (params?: GetUserParams) => {
@@ -12,6 +12,18 @@ const useUser = () => {
         }
     };
 
-    return { fetchUsers }
-}
+    const fetchMyInfo = async () => {
+        try {
+            const res = await getMyInfo();
+            console.log({ res });
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    return { 
+        fetchUsers, 
+        fetchMyInfo 
+    };
+};
 export default useUser;
