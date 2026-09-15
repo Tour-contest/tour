@@ -1,11 +1,11 @@
 import { requestModule } from "@/api/requestModule";
 
 const getUser = (params?: GetUserParams) => {
-    return requestModule.get("/api/v1/admin/users", params)
+    return requestModule.get<ResponseUserList>("/api/v1/admin/users", params)
 };
 
 const getMyInfo = () => {
-    return requestModule.get("/api/v1/me")
+    return requestModule.get<ResponseMyInfo>("/api/v1/me")
 };
 
 export { 

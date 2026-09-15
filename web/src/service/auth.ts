@@ -25,12 +25,14 @@ const requestRefresh = (refreshToken: string) => {
     return requestModule.post<ResponseAutenticate>('/api/v1/auth/refresh', { refresh_token: refreshToken })
 ;}
 
+// 그 회원의 리프레시 토큰이 전부 폐기된다. 액세스 토큰은 만료까지 유효하므로 로컬 토큰도 함께 지운다
 const logout = () => {
-    return requestModule.post<ResponseLogout>('/api/v1/auth/logout')
+    return requestModule.post<ResponseProcess>('/api/v1/auth/logout')
 };
 
+// 복구할 수 없다. 성공 응답을 받은 뒤에만 로컬 토큰을 삭제한다
 const withdrawMembership = () => {
-    return requestModule.delete("/api/v1/me");
+    return requestModule.delete<ResponseProcess>("/api/v1/me");
 };
 
 export { 

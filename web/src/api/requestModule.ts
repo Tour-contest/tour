@@ -19,6 +19,10 @@ export const requestModule = {
     const response: AxiosResponse<T> = await axiosInstance.put(url, data, options)
     return response.data
   },
+  patch: async <T = unknown>(url: string, data?: Record<string, unknown>, options?: ApiRequestOptions): Promise<T> => {
+    const response: AxiosResponse<T> = await axiosInstance.patch(url, data, options)
+    return response.data
+  },
   delete: async <T = unknown>(url: string, params?: Record<string, unknown>, options?: ApiRequestOptions): Promise<T> => {
     const response: AxiosResponse<T> = await axiosInstance.delete(url, { params, ...options })
     return response.data
