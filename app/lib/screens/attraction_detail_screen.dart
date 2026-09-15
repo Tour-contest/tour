@@ -275,14 +275,13 @@ class _AttractionDetailScreenState extends State<AttractionDetailScreen> {
             const SizedBox(height: 18),
             // 3. 장소이름, 상세 주소
             Text(summary.title,
-                style: AppTextStyles.heading(fontSize: 24, color: colors.ink)),
+                style: AppTextStyles.heading(fontSize: 26, color: colors.ink)),
             if (summary.address.isNotEmpty) ...[
               const SizedBox(height: 8),
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AppIcon(AppIconShape.pin, size: 13, color: colors.ink600),
-                  const SizedBox(width: 5),
+                  AppIcon(AppIconShape.pin, color: colors.ink600),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       summary.address,

@@ -16,6 +16,7 @@ class CardContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     return Container(
+      width: double.infinity,
       padding: padding,
       decoration: BoxDecoration(
         color: colors.graphite,

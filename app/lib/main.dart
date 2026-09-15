@@ -25,7 +25,8 @@ Future<void> main() async {
   await AppInfo.ensureInitialized();
   appTextScaleController = await AppTextScaleController.ensureInitialized();
   appLocaleController = await AppLocaleController.ensureInitialized();
-  KakaoSdk.init(nativeAppKey: AppConfig.kakaoNativeAppKey, loggingEnabled: true);
+  KakaoSdk.init(
+      nativeAppKey: AppConfig.kakaoNativeAppKey, loggingEnabled: true);
 
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
