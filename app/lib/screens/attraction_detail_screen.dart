@@ -716,7 +716,7 @@ class _MapButton extends StatelessWidget {
       borderRadius: BorderRadius.circular(11),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: ),
+        padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
           color: colors.paper,
           border: Border.all(color: colors.accent, width: 1.5),
@@ -727,7 +727,7 @@ class _MapButton extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SvgPicture.asset('assets/images/map.svg', height: 26),
+            SvgPicture.asset('assets/images/map.svg', height: 16,),
             const SizedBox(width: 10),
             Text(
               l10n.attractionDetailOpenMapButton,

@@ -37,6 +37,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.voiceListeningHint,
     required this.graphite,
     required this.crowdChartBackground,
+    required this.mapSheetGradientEnd,
   });
 
   final Color paper;
@@ -115,6 +116,9 @@ class AppColors extends ThemeExtension<AppColors> {
   /// `CrowdBarChart`(혼잡도 막대 그래프) 배경색(#333743).
   final Color crowdChartBackground;
 
+  /// `MapAppSheet` 배경 그라디언트 하단 색(#17191F, 100% — 상단은 `graphite`).
+  final Color mapSheetGradientEnd;
+
   Color get ink800 => ink.withAlpha(230);
 
   Color get ink700 => const Color(0xFFA9B6BF);
@@ -175,6 +179,7 @@ class AppColors extends ThemeExtension<AppColors> {
     voiceListeningHint: Color(0xFF737B87),
     graphite: Color(0xFF292C36),
     crowdChartBackground: Color(0xFF333743),
+    mapSheetGradientEnd: Color(0xFF17191F),
   );
 
   static AppColors of(BuildContext context) {
@@ -217,6 +222,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? voiceListeningHint,
     Color? graphite,
     Color? crowdChartBackground,
+    Color? mapSheetGradientEnd,
   }) {
     return AppColors(
       paper: paper ?? this.paper,
@@ -256,6 +262,7 @@ class AppColors extends ThemeExtension<AppColors> {
       voiceListeningHint: voiceListeningHint ?? this.voiceListeningHint,
       graphite: graphite ?? this.graphite,
       crowdChartBackground: crowdChartBackground ?? this.crowdChartBackground,
+      mapSheetGradientEnd: mapSheetGradientEnd ?? this.mapSheetGradientEnd,
     );
   }
 
@@ -307,6 +314,8 @@ class AppColors extends ThemeExtension<AppColors> {
       graphite: Color.lerp(graphite, other.graphite, t)!,
       crowdChartBackground:
           Color.lerp(crowdChartBackground, other.crowdChartBackground, t)!,
+      mapSheetGradientEnd:
+          Color.lerp(mapSheetGradientEnd, other.mapSheetGradientEnd, t)!,
     );
   }
 }

@@ -66,11 +66,15 @@ class MapAppSheet extends StatelessWidget {
         MediaQuery.paddingOf(context).bottom,
       ),
       decoration: BoxDecoration(
-        color: colors.graphite,
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [colors.graphite, colors.mapSheetGradientEnd],
+        ),
         border: Border(
-          top: BorderSide(color: colors.inputBarBorder, width: 1.5),
-          left: BorderSide(color: colors.inputBarBorder, width: 1.5),
-          right: BorderSide(color: colors.inputBarBorder, width: 1.5),
+          top: BorderSide(color: colors.inputBarBorder, width: 4),
+          left: BorderSide(color: colors.inputBarBorder, width: 4),
+          right: BorderSide(color: colors.inputBarBorder, width: 4),
         ),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(30),
@@ -129,9 +133,10 @@ class _SheetButton extends StatelessWidget {
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
           backgroundColor: colors.graphite,
-          side: BorderSide(color: colors.inputBarBorder, width: 1.5),
+          side: BorderSide(color: colors.inputBarBorder, width: 3),
           padding: const EdgeInsets.symmetric(vertical: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         ),
         child: Text(
           label,
