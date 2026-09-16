@@ -31,8 +31,16 @@ CATEGORY_FILTER: dict[str, dict] = {
     "음식": {"lcls1": "FD"},
     "한식": {"lcls2": "FD01"},
     "외국식": {"lcls2": "FD02"},
+    "중식": {"lcls3": "FD020100"},
+    "일식": {"lcls3": "FD020200"},
+    "양식": {"lcls3": "FD020300"},
     "간이음식": {"lcls2": "FD03"},
+    "빵집": {"lcls3": "FD030100"},
+    "피자햄버거": {"lcls3": "FD030200"},
+    "치킨": {"lcls3": "FD030300"},
+    "분식": {"lcls3": "FD030400"},
     "주점": {"lcls2": "FD04"},
+    "전통주점": {"lcls3": "FD040400"},
     "카페": {"lcls2": "FD05"},
     "숙박": {"lcls1": "AC"},
     "캠핑": {"lcls2": "AC05"},
@@ -46,9 +54,12 @@ CATEGORY_ALIAS = {
     "야영장": "캠핑", "캠핑장": "캠핑",
     "의료": "웰니스", "헬스케어": "웰니스",
     "한식집": "한식", "밥집": "한식", "한정식": "한식",
-    "양식": "외국식", "일식": "외국식", "중식": "외국식", "중국집": "외국식",
-    "분식": "간이음식", "패스트푸드": "간이음식",
-    "술집": "주점", "호프": "주점",
+    "중국집": "중식", "중화요리": "중식", "짜장면": "중식",
+    "일식집": "일식", "초밥": "일식", "스시": "일식", "돈까스": "일식",
+    "서양식": "양식", "스테이크": "양식", "파스타": "양식", "레스토랑": "양식",
+    "패스트푸드": "간이음식", "제과": "빵집", "베이커리": "빵집", "빵": "빵집",
+    "피자": "피자햄버거", "햄버거": "피자햄버거", "샌드위치": "피자햄버거", "김밥": "분식",
+    "술집": "주점", "호프": "주점", "맥주": "주점", "펍": "주점", "막걸리": "전통주점", "민속주점": "전통주점",
     "찻집": "카페", "카페/찻집": "카페", "커피": "카페", "디저트": "카페",
 }
 
@@ -244,13 +255,13 @@ async def with_child_fallback(a: dict, fetch) -> list[dict]:
 
 
 async def region_places(
-    a: dict, *, content_type_id=None, lcls1=None, lcls2=None,
+    a: dict, *, content_type_id=None, lcls1=None, lcls2=None, lcls3=None,
     arrange=None, max_pages=1, rows=50, session_id=None,
 ) -> list[dict]:
     return await with_child_fallback(
         a,
         lambda cd: tourapi.area_based_list(
-            cd, content_type_id=content_type_id, lcls1=lcls1, lcls2=lcls2,
+            cd, content_type_id=content_type_id, lcls1=lcls1, lcls2=lcls2, lcls3=lcls3,
             rows=rows, max_pages=max_pages, arrange=arrange, session_id=session_id,
         ),
     )
