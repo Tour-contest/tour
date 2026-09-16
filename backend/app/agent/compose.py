@@ -69,7 +69,7 @@ def from_cards(cards: list[dict], message: str | None = None) -> str:
     if uncovered:
         parts.append(
             f"{josa(uncovered.get('signgu_nm') or '이 지역', '은는')} 아직 관광지 혼잡도가 "
-            "제공되지 않는 지역이에요. 관광지 검색이나 갈래별 목록은 볼 수 있어요."
+            "제공되지 않는 지역이에요."
         )
 
     if one and one.get("series"):

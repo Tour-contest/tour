@@ -59,6 +59,21 @@ def names_other_area(message: str, resolved: dict, areas: list[dict]) -> bool:
     return bool(matched) and current not in matched
 
 
+def codes_in(result: dict) -> set[str]:
+    """도구 결과에 들어 있는 시군구 코드. 지역 확인 결과, 되묻기 후보, 관광지 목록의 소속 지역."""
+    out: set[str] = set()
+    for k in ("signgu_cd", "crowd_cd"):
+        if result.get(k):
+            out.add(str(result[k]))
+    for c in result.get("candidates") or []:
+        if isinstance(c, dict) and c.get("signgu_cd"):
+            out.add(str(c["signgu_cd"]))
+    for i in result.get("items") or []:
+        if isinstance(i, dict) and i.get("signgu_cd"):
+            out.add(str(i["signgu_cd"]))
+    return out
+
+
 def remember(resolved: dict, name: str, result: dict) -> None:
     if result.get("status") != "ok":
         return
@@ -397,6 +412,8 @@ async def run(
     cards_out: list[dict] = []
     upstream.begin_budget()
     seen_calls: dict[str, object] = {}
+    # 이번 대화에서 도구가 실제로 돌려준 지역 코드. 모델이 코드를 지어내 부르는 것을 막는다.
+    known_codes: set[str] = {str(resolved["signgu_cd"])} if resolved.get("signgu_cd") else set()
     called_names: set[str] = set()
     bad_arg_names: set[str] = set()
     nudged = False
@@ -524,6 +541,14 @@ async def run(
                 params["name"] = restore_name(str(params["name"]), message)
             if name == "resolve_area" and params.get("query"):
                 params["query"] = restore_region(str(params["query"]).strip(), message)
+            code = str(params.get("signgu_cd") or "").strip()
+            if code and code not in known_codes:
+                log.warning("확인되지 않은 지역 코드 사용 시도: %s %s", name, code)
+                return c, {
+                    "status": "bad_arguments",
+                    "message": f"{code} 는 이번 대화에서 확인된 지역 코드가 아니다. 코드를 지어내지 말고 "
+                    "resolve_area 에 지역명을 넣어 받은 코드만 써라.",
+                }, False
             key = f"{name}:{json.dumps(params, sort_keys=True, ensure_ascii=False)}"
             if key in seen_calls:
                 prior = seen_calls[key]
@@ -547,6 +572,7 @@ async def run(
 
             if result.get("status") != "bad_arguments":
                 called_names.add(name)
+            known_codes |= codes_in(result)
             remember(resolved, name, result)
             yield "tool", {"name": name, "status": result.get("status"), "repeated": repeated}
 
