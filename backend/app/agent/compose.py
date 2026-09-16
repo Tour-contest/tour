@@ -18,6 +18,7 @@ def pick(cards: list[dict], *types: str) -> dict | None:
 _ASKED_FOR = {
     "캠핑": ("캠핑", "야영", "글램핑", "카라반", "오토캠"),
     "음식": ("맛집", "음식점", "식당", "먹을"),
+    "한식": ("한식", "밥집"),
     "숙박": ("숙소", "숙박", "호텔", "펜션", "민박"),
     "쇼핑": ("쇼핑", "아울렛"),
 }
@@ -60,6 +61,17 @@ def from_cards(cards: list[dict], message: str | None = None) -> str:
 
     one, area = crowd_of(cards)
     name = (attraction or {}).get("title") or (one or {}).get("name") or (one or {}).get("matched_name") or ""
+
+    uncovered = next(
+        (c.get("payload") or {} for c in cards
+         if c.get("type") == "crowd" and (c.get("payload") or {}).get("has_crowd_data") is False),
+        None,
+    )
+    if uncovered:
+        parts.append(
+            f"{josa(uncovered.get('signgu_nm') or '이 지역', '은는')} 아직 관광지 혼잡도가 "
+            "제공되지 않는 지역이에요."
+        )
 
     if one and one.get("series"):
         s = one.get("summary") or {}
@@ -154,6 +166,9 @@ def from_cards(cards: list[dict], message: str | None = None) -> str:
 
     if not parts:
         return "조회 결과가 없어요. 지역명이나 관광지명을 다시 알려주세요."
+
+    if uncovered and not (one or area):
+        return " ".join(parts)
 
     if one or area or (alt and alt.get("items")):
         parts.append("집중률은 예측값이라 실제와 다를 수 있습니다.")

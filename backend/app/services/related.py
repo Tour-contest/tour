@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from app.core.config import settings
+from app.repository import db
 from app.services import client
 
 
@@ -14,9 +15,16 @@ def signgu(regn: str | None, sig: str | None) -> str | None:
     return None
 
 
+async def api_code(signgu_cd: str) -> str:
+    """연관 관광지 API 가 아는 코드. 통합 지역은 아직 옛 코드(29xxx·46xxx)로만 조회된다."""
+    a = await db.get_area(signgu_cd)
+    return (a or {}).get("legacy_cd") or signgu_cd
+
+
 async def by_keyword(
     keyword: str, signgu_cd: str, *, rows: int = 30, session_id: str | None = None
 ) -> list[dict]:
+    signgu_cd = await api_code(signgu_cd)
     items, _ = await client.call(
         "TarRlteTarService1/searchKeyword1",
         {
@@ -48,6 +56,7 @@ async def by_keyword(
 
 
 async def by_area(signgu_cd: str, *, rows: int = 100, session_id: str | None = None) -> list[dict]:
+    signgu_cd = await api_code(signgu_cd)
     items, _ = await client.call(
         "TarRlteTarService1/areaBasedList1",
         {

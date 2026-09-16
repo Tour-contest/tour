@@ -83,6 +83,7 @@ async def area_based_list(
     content_type_id: str | None = None,
     lcls1: str | None = None,
     lcls2: str | None = None,
+    lcls3: str | None = None,
     max_pages: int = 8,
     session_id: str | None = None,
 ) -> list[dict]:
@@ -95,6 +96,8 @@ async def area_based_list(
         params["lclsSystm1"] = lcls1
     if lcls2:
         params["lclsSystm2"] = lcls2
+    if lcls3:
+        params["lclsSystm3"] = lcls3
 
     items = await client.call_all(
         "KorService2/areaBasedList2",

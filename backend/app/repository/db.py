@@ -277,8 +277,9 @@ async def upsert_areas(rows: list[dict]) -> None:
     ins = pg_insert(AreaCode)
     stmt = ins.on_conflict_do_update(
         index_elements=["crowd_cd"],
-        set_={"tour_cd": ins.excluded.tour_cd, "sido_nm": ins.excluded.sido_nm,
-              "signgu_nm": ins.excluded.signgu_nm, "aliases": ins.excluded.aliases},
+        set_={"tour_cd": ins.excluded.tour_cd, "area_cd": ins.excluded.area_cd,
+              "sido_nm": ins.excluded.sido_nm, "signgu_nm": ins.excluded.signgu_nm,
+              "aliases": ins.excluded.aliases, "legacy_cd": ins.excluded.legacy_cd},
     )
     async with session() as s:
         await s.execute(stmt, [
@@ -289,10 +290,21 @@ async def upsert_areas(rows: list[dict]) -> None:
                 "sido_nm": r["sido_nm"],
                 "signgu_nm": r["signgu_nm"],
                 "aliases": json.dumps(r["aliases"], ensure_ascii=False),
+                "legacy_cd": r.get("legacy_cd"),
             }
             for r in rows
         ])
         await s.commit()
+
+
+async def delete_areas_of(area_cds: set[str]) -> int:
+    """사라진 시도의 시군구 행을 지운다. 광역시 상위 행(xx000)도 같이 간다."""
+    if not area_cds:
+        return 0
+    async with session() as s:
+        res = await s.execute(delete(AreaCode).where(AreaCode.area_cd.in_(area_cds)))
+        await s.commit()
+        return res.rowcount or 0
 
 
 def area_dict(a: AreaCode) -> dict:
@@ -306,6 +318,7 @@ def area_dict(a: AreaCode) -> dict:
         "aliases": json.loads(a.aliases),
         "label": a.sido_nm if a.signgu_nm == a.sido_nm else f"{a.sido_nm} {a.signgu_nm}",
         "has_crowd_data": None if a.has_crowd_data is None else bool(a.has_crowd_data),
+        "legacy_cd": a.legacy_cd,
     }
 
 
@@ -393,6 +406,10 @@ async def get_area(code: str) -> dict | None:
         if a is None:
             a = (await s.execute(
                 select(AreaCode).where(AreaCode.tour_cd == code)
+            )).scalars().first()
+        if a is None:
+            a = (await s.execute(
+                select(AreaCode).where(AreaCode.legacy_cd == code)
             )).scalars().first()
         return area_dict(a) if a else None
 

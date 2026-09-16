@@ -43,6 +43,37 @@ def system_prompt(phase: str = "tool") -> str:
     )
 
 
+def names_other_area(message: str, resolved: dict, areas: list[dict]) -> bool:
+    """문장에 직전 대상과 다른 지역명이 있는지. 별칭이나 시군구명과 정확히 같은 낱말만 본다."""
+    current = resolved.get("signgu_cd")
+    if not current:
+        return False
+    tokens = {strip_josa(w) for w in _TOKEN.findall(message)}
+    tokens = {t for t in tokens if len(t) >= 2}
+    if not tokens:
+        return False
+    matched = {
+        a["signgu_cd"] for a in areas
+        if a["signgu_nm"] in tokens or any(al in tokens for al in a.get("aliases", ()))
+    }
+    return bool(matched) and current not in matched
+
+
+def codes_in(result: dict) -> set[str]:
+    """도구 결과에 들어 있는 시군구 코드. 지역 확인 결과, 되묻기 후보, 관광지 목록의 소속 지역."""
+    out: set[str] = set()
+    for k in ("signgu_cd", "crowd_cd"):
+        if result.get(k):
+            out.add(str(result[k]))
+    for c in result.get("candidates") or []:
+        if isinstance(c, dict) and c.get("signgu_cd"):
+            out.add(str(c["signgu_cd"]))
+    for i in result.get("items") or []:
+        if isinstance(i, dict) and i.get("signgu_cd"):
+            out.add(str(i["signgu_cd"]))
+    return out
+
+
 def remember(resolved: dict, name: str, result: dict) -> None:
     if result.get("status") != "ok":
         return
@@ -131,6 +162,24 @@ def restore_name(asked: str, message: str) -> str:
     return asked
 
 
+_SIDO_WORDS = (
+    "서울", "경기", "경기도", "인천", "강원", "강원도", "충북", "충남", "충청도", "충청북도",
+    "충청남도", "전북", "전남", "전라도", "전라북도", "전라남도", "경북", "경남", "경상도",
+    "경상북도", "경상남도", "제주", "제주도", "부산", "대구", "광주", "대전", "울산", "세종",
+)
+
+
+def restore_region(asked: str, message: str) -> str:
+    """모델이 "전라도 광주" 에서 "광주" 만 넘기면 앞의 시도 표현을 되살린다. 동명 지역 되묻기를 줄인다."""
+    if not asked or " " in asked:
+        return asked
+    raw = _TOKEN.findall(message)
+    for i in range(1, len(raw)):
+        if strip_josa(raw[i]) == asked and raw[i - 1] in _SIDO_WORDS and raw[i - 1] != asked:
+            return f"{raw[i - 1]} {asked}"
+    return asked
+
+
 def args(raw: str) -> dict | None:
     try:
         v = json.loads(raw or "{}")
@@ -145,7 +194,8 @@ VISITOR_LABEL = {"local": "현지인", "outsider": "외지인", "foreigner": "�
 def for_model(name: str, result: dict) -> dict:
     st = result.get("status")
     base: dict = {"status": st}
-    for k in ("message", "hint", "signgu_nm", "signgu_cd", "coverage", "date", "summary"):
+    for k in ("message", "hint", "signgu_nm", "signgu_cd", "coverage", "date", "summary",
+              "has_crowd_data"):
         if k in result:
             base[k] = result[k]
 
@@ -156,7 +206,7 @@ def for_model(name: str, result: dict) -> dict:
                 "candidates": [c["label"] for c in result.get("candidates", [])],
                 "instruction": "후보 이름만 보여주고 어느 곳인지 되물어라. 코드는 말하지 마라.",
             }
-        drop = ("aliases", "area_cd", "tour_cd")
+        drop = ("aliases", "area_cd", "tour_cd", "legacy_cd")
         out = {k: v for k, v in result.items() if k not in drop}
         if out.get("has_crowd_data") is None:
             out.pop("has_crowd_data", None)
@@ -219,6 +269,8 @@ def for_model(name: str, result: dict) -> dict:
 
     if name == "list_places":
         base["category"] = result.get("category")
+        if result.get("instruction"):
+            base["instruction"] = result["instruction"]
         base["items"] = [
             {"title": i["title"], "addr1": i.get("addr1", "")}
             for i in (result.get("items") or [])[:8]
@@ -342,6 +394,9 @@ async def run(
         messages.append({"role": "system", "content": f"앞선 대화 요약:\n{summary}"})
 
     resolved = session.get("resolved") or {}
+    if resolved and names_other_area(message, resolved, await db.all_areas()):
+        # 새 지역명이 나왔으면 직전 대상은 버린다. 안 그러면 모델이 이전 지역 코드를 그대로 재사용한다.
+        resolved = {}
     if resolved:
         messages.append(
             {
@@ -359,6 +414,8 @@ async def run(
     cards_out: list[dict] = []
     upstream.begin_budget()
     seen_calls: dict[str, object] = {}
+    # 이번 대화에서 도구가 실제로 돌려준 지역 코드. 모델이 코드를 지어내 부르는 것을 막는다.
+    known_codes: set[str] = {str(resolved["signgu_cd"])} if resolved.get("signgu_cd") else set()
     called_names: set[str] = set()
     bad_arg_names: set[str] = set()
     nudged = False
@@ -484,6 +541,16 @@ async def run(
                 }, False
             if name == "find_attraction" and params.get("name"):
                 params["name"] = restore_name(str(params["name"]), message)
+            if name == "resolve_area" and params.get("query"):
+                params["query"] = restore_region(str(params["query"]).strip(), message)
+            code = str(params.get("signgu_cd") or "").strip()
+            if code and code not in known_codes:
+                log.warning("확인되지 않은 지역 코드 사용 시도: %s %s", name, code)
+                return c, {
+                    "status": "bad_arguments",
+                    "message": f"{code} 는 이번 대화에서 확인된 지역 코드가 아니다. 코드를 지어내지 말고 "
+                    "resolve_area 에 지역명을 넣어 받은 코드만 써라.",
+                }, False
             key = f"{name}:{json.dumps(params, sort_keys=True, ensure_ascii=False)}"
             if key in seen_calls:
                 prior = seen_calls[key]
@@ -507,6 +574,7 @@ async def run(
 
             if result.get("status") != "bad_arguments":
                 called_names.add(name)
+            known_codes |= codes_in(result)
             remember(resolved, name, result)
             yield "tool", {"name": name, "status": result.get("status"), "repeated": repeated}
 
@@ -514,7 +582,12 @@ async def run(
             if card_type and not repeated and result.get("status") in ("ok", "no_data"):
                 card = {"type": card_type, "payload": result}
                 cards_out.append(card)
-                yield "card", card
+                # 지역 자체에 혼잡도가 없으면 카드를 보내지 않는다. 화면이 no_data 카드를 보면
+                # "전체 현황 보기" 버튼을 그리는데, 눌러도 같은 답이라 문장만 남긴다.
+                # 갈래 목록이 비었을 때도 마찬가지. 빈 카드가 가면 화면이 같은 버튼을 그린다.
+                empty_list = card_type == "attraction_list" and result.get("status") == "no_data"
+                if result.get("has_crowd_data") is not False and not empty_list:
+                    yield "card", card
 
             messages.append(
                 {

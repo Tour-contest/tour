@@ -29,6 +29,19 @@ CATEGORY_FILTER: dict[str, dict] = {
     "축제공연행사": {"lcls1": "EV"},
     "쇼핑": {"lcls1": "SH"},
     "음식": {"lcls1": "FD"},
+    "한식": {"lcls2": "FD01"},
+    "외국식": {"lcls2": "FD02"},
+    "중식": {"lcls3": "FD020100"},
+    "일식": {"lcls3": "FD020200"},
+    "양식": {"lcls3": "FD020300"},
+    "간이음식": {"lcls2": "FD03"},
+    "빵집": {"lcls3": "FD030100"},
+    "피자햄버거": {"lcls3": "FD030200"},
+    "치킨": {"lcls3": "FD030300"},
+    "분식": {"lcls3": "FD030400"},
+    "주점": {"lcls2": "FD04"},
+    "전통주점": {"lcls3": "FD040400"},
+    "카페": {"lcls2": "FD05"},
     "숙박": {"lcls1": "AC"},
     "캠핑": {"lcls2": "AC05"},
     "웰니스": {"lcls2": "EX05"},
@@ -40,6 +53,14 @@ CATEGORY_ALIAS = {
     "음식점": "음식", "문화시설": "문화관광", "레포츠": "레저스포츠",
     "야영장": "캠핑", "캠핑장": "캠핑",
     "의료": "웰니스", "헬스케어": "웰니스",
+    "한식집": "한식", "밥집": "한식", "한정식": "한식",
+    "중국집": "중식", "중화요리": "중식", "짜장면": "중식",
+    "일식집": "일식", "초밥": "일식", "스시": "일식", "돈까스": "일식",
+    "서양식": "양식", "스테이크": "양식", "파스타": "양식", "레스토랑": "양식",
+    "패스트푸드": "간이음식", "제과": "빵집", "베이커리": "빵집", "빵": "빵집",
+    "피자": "피자햄버거", "햄버거": "피자햄버거", "샌드위치": "피자햄버거", "김밥": "분식",
+    "술집": "주점", "호프": "주점", "맥주": "주점", "펍": "주점", "막걸리": "전통주점", "민속주점": "전통주점",
+    "찻집": "카페", "카페/찻집": "카페", "커피": "카페", "디저트": "카페",
 }
 
 
@@ -82,6 +103,12 @@ async def children_of(a: dict) -> list[dict]:
     if area.is_metro_parent(a):
         return await db.child_areas(a["signgu_nm"], area_cd=a["area_cd"])
     return await db.child_areas(a["signgu_nm"])
+
+
+async def flag_crowd(a: dict, has: bool) -> None:
+    """확인한 결과와 저장된 표시가 다르면 바로 고친다. 공사가 데이터를 내렸다 올려도 따라간다."""
+    if a.get("has_crowd_data") is not has and not area.is_metro_parent(a) and not area.is_group_parent(a):
+        await db.set_crowd_flag(a["crowd_cd"], has)
 
 
 async def area_of(code: str) -> dict:
@@ -160,6 +187,12 @@ async def find_attraction(name: str, signgu_cd: str | None = None, session_id=No
     area_row = await area_of(signgu_cd) if signgu_cd else None
     tour_cd = area_row["tour_cd"] if area_row else None
 
+    # 광주처럼 시도가 없어진 묶음은 관광정보에 코드가 없다. 통합특별시 전체에서 찾고 하위 구로 거른다.
+    kids: set[str] = set()
+    if area_row and area.is_group_parent(area_row):
+        kids = {c["tour_cd"] for c in await children_of(area_row) if c["tour_cd"]}
+        tour_cd = f"{area_row['area_cd']}000"
+
     if area_row:
         hit = await from_mapping(name, area_row)
         if hit:
@@ -168,10 +201,13 @@ async def find_attraction(name: str, signgu_cd: str | None = None, session_id=No
     items: list[dict] = []
     try:
         items = await tourapi.search_keyword(name, tour_cd, rows=15, session_id=session_id)
+        if kids:
+            items = [f for f in items if f.get("tour_cd") in kids]
 
         if not items and tour_cd:
             found = await tourapi.search_keyword(name, None, rows=20, session_id=session_id)
-            items = [f for f in found if matcher.same_area(f.get("tour_cd"), tour_cd)]
+            items = [f for f in found if (f.get("tour_cd") in kids if kids
+                                          else matcher.same_area(f.get("tour_cd"), tour_cd))]
     except QuotaExceeded:
         return {
             "status": "no_data",
@@ -210,7 +246,7 @@ async def with_child_fallback(a: dict, fetch) -> list[dict]:
     서울·부산 같은 광역시 상위 코드(11000)는 tourapi 쪽에서 시도 단위 조회로 바뀌어
     한 번에 받아진다. '청주시'처럼 구를 거느린 시는 상위 코드가 비면 하위로 내려간다.
     """
-    items = await fetch(a["tour_cd"])
+    items = [] if area.is_group_parent(a) else await fetch(a["tour_cd"])
     if not items:
         for c in await children_of(a):
             if c["tour_cd"]:
@@ -219,13 +255,13 @@ async def with_child_fallback(a: dict, fetch) -> list[dict]:
 
 
 async def region_places(
-    a: dict, *, content_type_id=None, lcls1=None, lcls2=None,
+    a: dict, *, content_type_id=None, lcls1=None, lcls2=None, lcls3=None,
     arrange=None, max_pages=1, rows=50, session_id=None,
 ) -> list[dict]:
     return await with_child_fallback(
         a,
         lambda cd: tourapi.area_based_list(
-            cd, content_type_id=content_type_id, lcls1=lcls1, lcls2=lcls2,
+            cd, content_type_id=content_type_id, lcls1=lcls1, lcls2=lcls2, lcls3=lcls3,
             rows=rows, max_pages=max_pages, arrange=arrange, session_id=session_id,
         ),
     )
@@ -254,7 +290,10 @@ async def list_places(
             "status": "no_data",
             "items": [],
             "signgu_nm": a["signgu_nm"],
-            "message": f"{a['signgu_nm']}의 {category} 정보가 아직 없어요",
+            "category": category,
+            "message": f"{a['signgu_nm']}에 {category}(으)로 등록된 곳이 없어요",
+            "instruction": "이 갈래로 등록된 곳이 없다고 한 문장으로 답하고 끝내라. "
+                           "다른 갈래로 대신 조회하거나 앞서 보여준 목록을 다시 내놓지 마라.",
         }
     return {
         "status": "ok",
@@ -360,20 +399,25 @@ async def crowd_context(signgu_cd: str, session_id=None) -> tuple[dict, dict, di
     a = await area_of(signgu_cd)
     by_name = (
         {}
-        if area.is_metro_parent(a)
-        else await crowding.fetch_signgu(a["crowd_cd"], session_id=session_id)
+        if area.is_metro_parent(a) or area.is_group_parent(a)
+        else await crowding.fetch_area(a, session_id=session_id)
     )
+    if not (area.is_metro_parent(a) or area.is_group_parent(a)):
+        await flag_crowd(a, bool(by_name))
 
     if not by_name:
-        children = await children_of(a)
+        # 미제공으로 확인된 하위 지역은 건너뛴다. 되살아났는지는 crowd-flags 배치나 그 지역을 직접 물을 때 다시 본다.
+        children = [c for c in await children_of(a) if c.get("has_crowd_data") is not False]
         if children:
             parts = await asyncio.gather(
-                *[crowding.fetch_signgu(c["crowd_cd"], session_id=session_id) for c in children],
+                *[crowding.fetch_area(c, session_id=session_id) for c in children],
                 return_exceptions=True,
             )
             merged: dict[str, list[dict]] = {}
             used = []
             for child, part in zip(children, parts):
+                if isinstance(part, dict):
+                    await flag_crowd(child, bool(part))
                 if isinstance(part, dict) and part:
                     merged.update(part)
                     used.append(child)
@@ -427,7 +471,9 @@ async def get_crowding(
     if not by_name:
         return {
             "status": "no_data",
+            "signgu_cd": a["crowd_cd"],
             "signgu_nm": a["signgu_nm"],
+            "has_crowd_data": False,
             "message": "이 지역은 아직 집중률 데이터가 없어요",
             "items": [],
         }
@@ -524,12 +570,17 @@ async def crowd_for_content(
     res = await get_crowding(signgu_cd, [content_id], date_from, days, session_id)
     hit = next((i for i in res.get("items", [])), None)
     if not hit:
+        covered = res.get("has_crowd_data") is not False
         return {
             "status": "ok",
             "content_id": content_id,
             "has_data": False,
+            "has_crowd_data": covered,
             "series": [],
-            "message": "해당 관광지의 집중률 데이터가 아직 없어요. 지역 전체 현황을 볼까요?",
+            "message": (
+                "해당 관광지의 집중률 데이터가 아직 없어요. 지역 전체 현황을 볼까요?"
+                if covered else "이 지역은 아직 집중률 데이터가 제공되지 않아요."
+            ),
             "signgu_cd": signgu_cd,
             "signgu_nm": res.get("signgu_nm"),
             "source": SOURCE,
@@ -644,7 +695,7 @@ async def area_visitors(signgu_cd: str, weeks: int = 4, session_id=None) -> dict
 
 async def build_vectors(signgu_cd: str, limit: int = 60) -> dict:
     a = await area_of(signgu_cd)
-    by_name = await crowding.fetch_signgu(a["crowd_cd"])
+    by_name = await crowding.fetch_area(a)
     await matcher.ensure(a["crowd_cd"], a["tour_cd"], a["signgu_nm"], list(by_name.keys()),
                          budget=limit)
     res = await embedding.build_for_area(a["crowd_cd"], a["tour_cd"], limit)

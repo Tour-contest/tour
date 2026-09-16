@@ -360,6 +360,8 @@ async def stream(body: ChatIn, user: dict = Depends(current_user)):
 
     payload.status 가 no_data 이거나 has_data 가 false 면 카드 대신 "지역 전체 현황 보기"
     같은 후속 질문 버튼을 그린다. 카드는 status 가 ok 또는 no_data 일 때만 온다.
+    단 payload.has_crowd_data 가 false 면 지역 자체에 집중률이 없는 것이라 그 버튼을 눌러도
+    같은 결과가 온다. 이때는 버튼 없이 "이 지역은 아직 혼잡도가 제공되지 않는다" 한 줄만 보인다.
 
     새 대화면 `meta` 의 session_id 를 저장해 다음 메시지부터 같이 보낸다. 카드가 문장보다
     먼저 오니 도착하는 대로 그리면 된다. 문장 속 수치와 카드 속 수치가 다르면
