@@ -3,12 +3,14 @@ from __future__ import annotations
 import asyncio
 import re
 from collections import Counter
+from datetime import date as _date
+
 from app.core import clock
 from app.core.config import settings
 from app.core.errors import NotFound, QuotaExceeded
 from app.repository import db
 from app.services import (
-    area, crowding, datalab, embedding, matcher, recommender, tourapi, trend,
+    area, crowding, datalab, embedding, matcher, recommender, tourapi, trend, weather,
 )
 
 SOURCE = "출처: ⓒ한국관광공사"
@@ -691,6 +693,57 @@ async def area_overview(signgu_cd: str, date_on: str | None = None, session_id=N
 async def area_visitors(signgu_cd: str, weeks: int = 4, session_id=None) -> dict:
     a = await area_of(signgu_cd)
     return await datalab.visitors(a["crowd_cd"], weeks, session_id)
+
+
+def median(vals: list[float]) -> float:
+    vals = sorted(vals)
+    return vals[len(vals) // 2]
+
+
+async def area_center(a: dict, session_id=None) -> tuple[float, float] | None:
+    """시군구 대표 좌표. 지역 관광지 좌표의 중앙값을 쓴다. 좌표 테이블이 따로 없어서다."""
+    items = await tourapi.area_based_list(
+        a["tour_cd"], rows=30, content_type_id="12", max_pages=1, session_id=session_id
+    )
+    lats = [i["mapy"] for i in items if i.get("mapy") and i.get("mapx")]
+    lons = [i["mapx"] for i in items if i.get("mapy") and i.get("mapx")]
+    if not lats:
+        return None
+    return median(lats), median(lons)
+
+
+async def get_weather(
+    content_id: str | None, signgu_cd: str | None, date_on: str | None, session_id=None
+) -> dict:
+    """관광지(content_id) 또는 지역(signgu_cd)의 특정 날짜 날씨."""
+    try:
+        day = _date.fromisoformat(date_on) if date_on else clock.today()
+    except ValueError:
+        return {"status": "bad_arguments", "message": "date 는 YYYY-MM-DD 로 넣어라"}
+
+    place = ""
+    coords = None
+    a = None
+    if content_id:
+        detail = await tourapi.detail_common(content_id, session_id=session_id)
+        if detail:
+            place = detail.get("title") or ""
+            if detail.get("mapx") and detail.get("mapy"):
+                coords = (detail["mapy"], detail["mapx"])
+            a = await db.get_area(detail.get("tour_cd") or "")
+    if a is None and signgu_cd:
+        a = await area_of(signgu_cd)
+    if a is None:
+        return {"status": "not_found", "message": "어느 관광지나 지역의 날씨인지 먼저 정해야 한다"}
+    if coords is None:
+        coords = await area_center(a, session_id)
+    if coords is None:
+        return {"status": "no_data", "message": f"{a['label']}의 위치 정보를 찾지 못했어요."}
+
+    res = await weather.forecast(
+        coords[0], coords[1], day, area.sido_short(a["sido_nm"]), a["signgu_nm"], session_id
+    )
+    return {**res, "place": place or a["label"], "signgu_nm": a["signgu_nm"]}
 
 
 async def build_vectors(signgu_cd: str, limit: int = 60) -> dict:

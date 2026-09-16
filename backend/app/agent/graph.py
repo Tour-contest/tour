@@ -7,7 +7,7 @@ import re
 from datetime import timedelta
 from typing import AsyncIterator
 
-from app.agent import compose, guard, llm, prompts, tools
+from app.agent import compose, dates, guard, llm, prompts, tools
 from app.core import clock
 from app.core.config import settings
 from app.services import client as upstream
@@ -22,14 +22,36 @@ _CROWD_WORDS = ("붐", "혼잡", "한적", "조용", "사람", "추천", "어때
 
 _ALT_WORDS = ("한적", "대안", "추천", "조용", "덜 붐", "안 붐", "다른 곳", "다른 데", "피해")
 
+_WEATHER_WORDS = ("날씨", "비 와", "비 오", "비가", "비올", "기온", "우산", "더워", "더울",
+                  "추워", "추울", "눈 와", "눈 오", "강수", "맑", "흐리", "흐릴")
+
 def needs_crowding(text: str) -> bool:
     return any(w in text for w in _CROWD_WORDS)
+
+
+def needs_weather(text: str) -> bool:
+    return any(w in text for w in _WEATHER_WORDS)
 
 
 def wants_alternatives(text: str) -> bool:
     return any(w in text for w in _ALT_WORDS)
 
 _WEEKDAY = ["월", "화", "수", "목", "금", "토", "일"]
+
+def calendar(today) -> str:
+    """이번 주 남은 날부터 다다음 주까지 주 단위로. 모델이 "다음 주 화요일" 을 계산하다 틀리는 것을 막는다."""
+    def fmt(d):
+        return f"{d.strftime('%m-%d')}({_WEEKDAY[d.weekday()]})"
+
+    next_mon = today + timedelta(days=7 - today.weekday())
+    this_week = [today + timedelta(days=i) for i in range(1, 7 - today.weekday())]
+    lines = []
+    if this_week:
+        lines.append("이번 주 남은 날: " + " ".join(fmt(d) for d in this_week))
+    for label, start in (("다음 주", next_mon), ("다다음 주", next_mon + timedelta(days=7))):
+        lines.append(f"{label}: " + " ".join(fmt(start + timedelta(days=i)) for i in range(7)))
+    return chr(10).join(lines)
+
 
 def system_prompt(phase: str = "tool") -> str:
     today = clock.today()
@@ -40,6 +62,7 @@ def system_prompt(phase: str = "tool") -> str:
         weekday=_WEEKDAY[today.weekday()],
         saturday=sat.isoformat(),
         sunday=(sat + timedelta(days=1)).isoformat(),
+        calendar=calendar(today),
     )
 
 
@@ -311,6 +334,22 @@ def for_model(name: str, result: dict) -> dict:
         )
         return base
 
+    if name == "get_weather":
+        for k in ("place", "weekday", "kind", "now", "forecast"):
+            if result.get(k) is not None:
+                base[k] = result[k]
+        fc = base.get("forecast")
+        if isinstance(fc, dict) and "hourly" in fc:
+            base["forecast"] = {**fc, "hourly": [h for h in fc["hourly"] if h.get("temp") is not None]}
+            base["forecast"].pop("hours_covered", None)
+        if base.get("kind") == "mid":
+            base["note"] = "중기예보라 오전·오후 하늘 상태와 강수확률, 최저·최고 기온만 있다"
+        elif base.get("kind") == "short":
+            base["note"] = "pop 은 강수확률(%), temp 는 기온(℃)"
+            if isinstance(fc, dict) and fc.get("hours_covered", 24) < 20:
+                base["note"] += f". 예보는 {fc.get('from_hour')}부터 남은 시간대만 있다"
+        return base
+
     if name == "get_area_visitors":
         items = result.get("items") or []
         base["data_through"] = result.get("data_through")
@@ -408,6 +447,9 @@ async def run(
         )
     if ctx:
         messages.append({"role": "system", "content": f"직전 대화:\n{ctx}"})
+    when = dates.note(message, clock.today()) or dates.note(optimized, clock.today())
+    if when:
+        messages.append({"role": "system", "content": when})
     messages.append({"role": "user", "content": optimized})
 
     tool_results: list = []
@@ -479,6 +521,8 @@ async def run(
                     todo.append("get_crowding")
                 if wants_alternatives(message) and "recommend_alternatives" not in called_names:
                     todo.append("recommend_alternatives")
+                if needs_weather(message) and "get_weather" not in called_names:
+                    todo.append("get_weather")
                 if todo:
                     nudged = True
                     messages.append(
@@ -604,6 +648,11 @@ async def run(
         messages.append({"role": "system", "content": msg})
 
     messages[0] = {"role": "system", "content": system_prompt("write")}
+    if needs_weather(message) and "get_weather" not in called_names:
+        messages.append(
+            {"role": "system", "content": "날씨는 조회하지 못했다. 날씨를 지어내지 말고 "
+             "확인하지 못했다고 한 문장으로만 밝혀라."}
+        )
     yield "status", {"stage": "composing", "label": "정리하는 중"}
 
     for attempt in range(2):

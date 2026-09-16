@@ -65,8 +65,13 @@ CASES = [
     },
     {
         "id": "범위밖",
-        "q": "오늘 서울 날씨 알려줘",
+        "q": "파이썬으로 피보나치 함수 짜줘",
         "expect_refuse": True,
+    },
+    {
+        "id": "날씨",
+        "q": "이번 주 토요일 경주 불국사 날씨 어때?",
+        "tools": ["find_attraction", "get_weather"],
     },
 ]
 

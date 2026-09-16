@@ -228,6 +228,28 @@ SCHEMA = [
     {
         "type": "function",
         "function": {
+            "name": "get_weather",
+            "description": (
+                "관광지나 지역의 특정 날짜 날씨(기상청 예보). 사용자가 날씨·비·기온·우산·"
+                "더위·추위를 물었을 때만 부른다. 관광지를 찾았으면 content_id, 지역만 있으면 "
+                "signgu_cd 를 넣고, date 에 물은 날짜를 넣는다. 오늘부터 3일은 시간대별 예보, "
+                "4~10일은 오전·오후 중기예보, 그 뒤는 예보가 없다. 여러 날을 물으면 날짜마다 "
+                "따로 부르되 3번까지만. 날씨는 혼잡도와 별개이니 혼잡도 대신 쓰지 마라."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "date": {"type": "string", "description": "YYYY-MM-DD. 생략하면 오늘"},
+                    "content_id": {"type": "string", "description": "관광지 식별자"},
+                    "signgu_cd": {"type": "string", "description": "resolve_area 가 준 5자리 코드"},
+                },
+                "required": ["date"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "get_area_visitors",
             "description": (
                 "시군구 방문자 수 추세. 통신 데이터 기반이고 두 달쯤 지연된 값이라 "
@@ -268,6 +290,7 @@ STAGE_OF = {
     "get_interest_trend": ("crowd", "검색 관심도 보는 중"),
     "get_attraction_detail": ("searching", "상세 정보 가져오는 중"),
     "get_area_visitors": ("overview", "지역 방문자 추세 보는 중"),
+    "get_weather": ("searching", "날씨 확인 중"),
 }
 
 
@@ -334,6 +357,14 @@ async def run(name: str, args: dict, session_id: str | None = None) -> dict:
         if name == "get_attraction_detail":
             return await usecase.attraction_detail(
                 str(args["content_id"]), session_id, include_pet=True
+            )
+
+        if name == "get_weather":
+            return await usecase.get_weather(
+                args.get("content_id") or None,
+                args.get("signgu_cd") or None,
+                args.get("date") or None,
+                session_id,
             )
 
         if name == "get_area_visitors":

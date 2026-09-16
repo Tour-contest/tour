@@ -19,6 +19,13 @@ from app.core.errors import (
 )
 
 BASE = "https://apis.data.go.kr/B551011"
+KMA_BASE = "https://apis.data.go.kr/1360000"
+
+# 관광공사 외 기관의 서비스는 여기에 기관 경로를 적는다. 없으면 관광공사다.
+BASE_OF = {
+    "VilageFcstInfoService_2.0": KMA_BASE,
+    "MidFcstInfoService": KMA_BASE,
+}
 
 _client: httpx.AsyncClient | None = None
 _global_sem = asyncio.Semaphore(8)
@@ -39,7 +46,14 @@ _OP_NM = {
     "KorService2/detailInfo2": "관광지 상세 항목",
     "KorService2/ldongCode2": "법정동 코드",
     "TatsCnctrRateService/tatsCnctrRatedList": "관광지 집중률",
+    "VilageFcstInfoService_2.0/getVilageFcst": "단기예보",
+    "VilageFcstInfoService_2.0/getUltraSrtNcst": "초단기실황",
+    "MidFcstInfoService/getMidLandFcst": "중기육상예보",
+    "MidFcstInfoService/getMidTa": "중기기온",
 }
+
+OK_CODES = {"0000", "00"}
+NO_DATA_CODES = {"03"}
 
 
 def is_daily_limit(text: str) -> bool:
@@ -150,7 +164,10 @@ def parse(payload: dict) -> tuple[list[dict], int]:
         raise UpstreamError(payload.get("resultMsg", "unknown"))
 
     header = payload["response"].get("header", {})
-    if header.get("resultCode") != "0000":
+    code = header.get("resultCode")
+    if code in NO_DATA_CODES:
+        return [], 0
+    if code not in OK_CODES:
         raise UpstreamError(header.get("resultMsg", "unknown"))
 
     body = payload["response"].get("body") or {}
@@ -171,14 +188,16 @@ async def call(
     *,
     ttl: int | None = None,
     session_id: str | None = None,
+    common: bool = True,
 ) -> tuple[list[dict], int]:
-    q = {
-        "serviceKey": settings.data_go_kr_service_key,
-        "MobileOS": "ETC",
-        "MobileApp": settings.tourapi_mobile_app,
-        "_type": "json",
-        **params,
-    }
+    """공공데이터포털 API 한 번 호출. 기관은 operation 의 서비스명으로 정해진다(BASE_OF).
+
+    common 은 관광공사 공통 파라미터(MobileOS·MobileApp·_type)를 붙일지 여부다.
+    """
+    q = {"serviceKey": settings.data_go_kr_service_key}
+    if common:
+        q.update({"MobileOS": "ETC", "MobileApp": settings.tourapi_mobile_app, "_type": "json"})
+    q.update(params)
 
     ck = cache_key(operation, q)
     if settings.upstream_cache_enabled and ttl:
@@ -208,6 +227,7 @@ async def fetch(
         raise blocked_error(operation)
 
     svc = service(operation)
+    base = BASE_OF.get(svc, BASE)
     async with _quota_lock:
         if _today_key != clock.today_str():
             await load_today_count()
@@ -226,7 +246,7 @@ async def fetch(
             started = time.monotonic()
             await pace()
             async with _global_sem:
-                r = await get_client().get(f"{BASE}/{operation}", params=q)
+                r = await get_client().get(f"{base}/{operation}", params=q)
             elapsed = int((time.monotonic() - started) * 1000)
 
             if is_daily_limit(r.text):
