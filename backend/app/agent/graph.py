@@ -43,6 +43,22 @@ def system_prompt(phase: str = "tool") -> str:
     )
 
 
+def names_other_area(message: str, resolved: dict, areas: list[dict]) -> bool:
+    """문장에 직전 대상과 다른 지역명이 있는지. 별칭이나 시군구명과 정확히 같은 낱말만 본다."""
+    current = resolved.get("signgu_cd")
+    if not current:
+        return False
+    tokens = {strip_josa(w) for w in _TOKEN.findall(message)}
+    tokens = {t for t in tokens if len(t) >= 2}
+    if not tokens:
+        return False
+    matched = {
+        a["signgu_cd"] for a in areas
+        if a["signgu_nm"] in tokens or any(al in tokens for al in a.get("aliases", ()))
+    }
+    return bool(matched) and current not in matched
+
+
 def remember(resolved: dict, name: str, result: dict) -> None:
     if result.get("status") != "ok":
         return
@@ -361,6 +377,9 @@ async def run(
         messages.append({"role": "system", "content": f"앞선 대화 요약:\n{summary}"})
 
     resolved = session.get("resolved") or {}
+    if resolved and names_other_area(message, resolved, await db.all_areas()):
+        # 새 지역명이 나왔으면 직전 대상은 버린다. 안 그러면 모델이 이전 지역 코드를 그대로 재사용한다.
+        resolved = {}
     if resolved:
         messages.append(
             {

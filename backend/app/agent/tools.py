@@ -60,7 +60,11 @@ SCHEMA = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "signgu_cd": {"type": "string", "description": "시군구 코드 5자리"},
+                    "signgu_cd": {
+                        "type": "string",
+                        "description": "이번 대화에서 resolve_area 가 준 5자리 코드. 사용자가 새 지역명을 "
+                                       "말했으면 이전 지역의 코드를 재사용하지 말고 resolve_area 부터 부른다",
+                    },
                     "content_ids": {
                         "type": "array",
                         "items": {"type": "string"},
