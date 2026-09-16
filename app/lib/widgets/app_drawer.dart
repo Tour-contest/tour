@@ -124,6 +124,9 @@ class AppDrawerState extends State<AppDrawer> {
     final l10n = AppLocalizations.of(context)!;
 
     return Drawer(
+      elevation: 0.0,
+      shadowColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
       backgroundColor: colors.drawerBackground,
       child: SafeArea(
         child: Column(

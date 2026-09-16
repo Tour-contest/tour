@@ -168,7 +168,8 @@ class _ChatInputBarState extends State<ChatInputBar> {
               child: GestureDetector(
                 onTap: _toggleVoiceInput,
                 behavior: HitTestBehavior.opaque,
-                child: SvgPicture.asset('assets/images/mic.svg'),
+                child: SvgPicture.asset('assets/images/mic.svg',
+                    width: 36, height: 36),
               ),
             ),
             const SizedBox(width: 9),
@@ -179,9 +180,12 @@ class _ChatInputBarState extends State<ChatInputBar> {
               child: GestureDetector(
                 onTap: widget.isGenerating ? widget.onStop : _submit,
                 behavior: HitTestBehavior.opaque,
-                child: SvgPicture.asset(widget.isGenerating
-                    ? 'assets/images/chat_stop.svg'
-                    : 'assets/images/chat_submit.svg'),
+                child: SvgPicture.asset(
+                    widget.isGenerating
+                        ? 'assets/images/chat_stop.svg'
+                        : 'assets/images/chat_submit.svg',
+                    width: 36,
+                    height: 36),
               ),
             ),
           ],

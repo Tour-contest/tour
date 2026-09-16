@@ -18,6 +18,7 @@ class ProfileAvatar extends StatelessWidget {
     this.imageUrl,
     this.borderColor,
     this.initialStyle,
+    this.pinTextScale = false,
   });
 
   final double size;
@@ -26,12 +27,20 @@ class ProfileAvatar extends StatelessWidget {
   final Color? borderColor;
   final TextStyle? initialStyle;
 
+  /// `true`면 [initial] 글자에 접근성 글자 크기 설정(`AppTextScaleController`)이
+  /// 적용되지 않는다 — `chat_screen.dart`의 `_ProfileAvatarButton`처럼 헤더의
+  /// 고정 크기 아이콘 슬롯 안에 들어가는 경우, 글자가 커지면 원형 아바타를
+  /// 벗어날 수 있어 사용자 요청으로 추가함. `settings_screen.dart`의 "내 정보"
+  /// 아바타는 기본값(`false`)을 그대로 써서 영향받지 않는다.
+  final bool pinTextScale;
+
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final fallback = Center(
       child: Text(
         initial,
+        textScaler: pinTextScale ? TextScaler.noScaling : null,
         style: initialStyle ??
             AppTextStyles.heading(color: colors.accentBright, fontSize: 14),
       ),

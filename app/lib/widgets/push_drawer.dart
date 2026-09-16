@@ -131,28 +131,17 @@ class PushDrawerState extends State<PushDrawer>
                   final radius = 20 * t;
                   return Transform.translate(
                     offset: Offset(drawerWidth * t, 0),
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(radius),
-                        boxShadow: [
-                          BoxShadow(
-                            color: colors.scrim.withAlpha((153 * t).round()),
-                            blurRadius: 24,
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(radius),
-                        child: GestureDetector(
-                          onTap: _open ? close : null,
-                          onHorizontalDragStart: _open ? _onDragStart : null,
-                          onHorizontalDragUpdate: _open
-                              ? (details) => _onDragUpdate(details, drawerWidth)
-                              : null,
-                          onHorizontalDragEnd: _open ? _onDragEnd : null,
-                          behavior: HitTestBehavior.opaque,
-                          child: child,
-                        ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(radius),
+                      child: GestureDetector(
+                        onTap: _open ? close : null,
+                        onHorizontalDragStart: _open ? _onDragStart : null,
+                        onHorizontalDragUpdate: _open
+                            ? (details) => _onDragUpdate(details, drawerWidth)
+                            : null,
+                        onHorizontalDragEnd: _open ? _onDragEnd : null,
+                        behavior: HitTestBehavior.opaque,
+                        child: child,
                       ),
                     ),
                   );

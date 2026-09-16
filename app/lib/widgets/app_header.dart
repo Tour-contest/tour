@@ -41,7 +41,11 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
     final colors = AppColors.of(context);
     return Container(
       height: preferredSize.height,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      // 사용자 요청 — 시스템 상태 바(위 `SafeArea`가 만드는 상단 인셋)와 이
+      // 헤더 내용이 너무 붙어 보여, 위쪽에만 8px 여백을 줘서 `_HeaderSlot`의
+      // 탭 영역(44)과 정확히 맞아떨어지게 함(52 - 8 = 44, 기존엔 Row의
+      // 기본 세로 중앙 정렬로 위/아래 각각 ~4px씩만 생겼었음).
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       decoration: BoxDecoration(
         color: backgroundColor ?? colors.paper,
       ),
@@ -99,7 +103,7 @@ class _HeaderSlot extends StatelessWidget {
         child: Stack(
           alignment: Alignment.center,
           children: [
-            Image.asset('assets/images/slot.png', width: 33, height: 33),
+            Image.asset('assets/images/slot.png', width: 40, height: 40),
             if (child != null) child!,
           ],
         ),

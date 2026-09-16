@@ -33,7 +33,12 @@ class PlainHeader extends StatelessWidget {
     return ConstrainedBox(
       constraints: const BoxConstraints(minHeight: _minHeight),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
+        // 사용자 요청 — 시스템 상태 바(위 `SafeArea`가 만드는 상단 인셋)와
+        // 이 헤더 내용이 너무 붙어 보여, 위쪽에만 8px 여백을 줌
+        // (`ConstrainedBox`는 최솟값만 강제하므로, 뒤로가기 버튼(기본 탭
+        // 영역 48)+이 8px이 52를 넘으면 헤더가 자연히 그만큼 더 커진다 —
+        // 긴 제목이 2줄로 늘어날 때와 같은 방식).
+        padding: const EdgeInsets.fromLTRB(4, 12, 4, 0),
         child: Row(
           children: [
             IconButton(

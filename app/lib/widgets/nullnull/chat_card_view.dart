@@ -122,7 +122,8 @@ class AttractionItem {
 /// `MapLauncherService`가 아직 이름 검색 스킴만 지원 — `## 아키텍처` 참고).
 /// 항목이 [_collapsedCount]개보다 많으면 처음엔 그만큼만 보여주고
 /// "더보기"/"접기" 버튼(`_ShowMoreButton`)으로 펼치고 줄일 수 있다(응답 카드가
-/// 무한정 길어지지 않도록).
+/// 무한정 길어지지 않도록). 사용자 요청으로 보이는 항목 사이사이에도
+/// 구분선(`Divider`)을 넣는다 — "더보기" 버튼 위 구분선과는 별개.
 class _AttractionListCard extends StatefulWidget {
   const _AttractionListCard({required this.data});
 
@@ -144,7 +145,8 @@ class _AttractionListCardState extends State<_AttractionListCard> {
     final items = widget.data.items;
     final hiddenCount = items.length - _collapsedCount;
     final visibleItems =
-        _expanded || hiddenCount <= 0 ? items : items.take(_collapsedCount);
+        (_expanded || hiddenCount <= 0 ? items : items.take(_collapsedCount))
+            .toList();
     return CardContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,9 +161,17 @@ class _AttractionListCardState extends State<_AttractionListCard> {
                   widget.data.signguNm, widget.data.category),
               style: AppTextStyles.heading(fontSize: 16, color: colors.ink),
             ),
-          for (final item in visibleItems) ...[
+          for (var i = 0; i < visibleItems.length; i++) ...[
+            // 첫 항목 앞은 항상 12px 여백만, 두 번째 항목부터는 사용자
+            // 요청으로 항목 사이에 구분선(`Divider`)을 추가함 — "더보기"
+            // 버튼 위 구분선(아래 `hiddenCount > 0` 분기)과는 별개로, 접혀서
+            // 안 보이는 항목이 있어도 지금 보이는 항목들 사이에는 항상 그림.
+            if (i > 0) ...[
+              const SizedBox(height: 12),
+              Divider(height: 1, color: colors.divider),
+            ],
             const SizedBox(height: 12),
-            _AttractionRow(item: item),
+            _AttractionRow(item: visibleItems[i]),
           ],
           if (hiddenCount > 0) ...[
             const SizedBox(height: 14),
