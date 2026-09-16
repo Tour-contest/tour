@@ -13,10 +13,15 @@ import 'package:nullnull/widgets/app_icon.dart';
 /// [title]이 길어질 수 있는 화면(관광지 이름 등)을 위해 최대 2줄까지 허용하고
 /// 넘치면 말줄임표로 자른다 — 그만큼 헤더 높이도 최소 52에서 필요한 만큼
 /// 늘어난다(기존 짧은 타이틀 화면은 한 줄에 다 들어가 높이가 그대로 52).
+/// [trailing]을 주면 우측 대칭용 빈 공간(`_backButtonSize` 너비) 대신 그
+/// 위젯을 보여준다(사용자 요청 — `history_screen.dart`의 날짜 필터 토글
+/// 버튼). 기본값(`null`)이면 기존처럼 뒤로가기 버튼과 시각적으로 균형을
+/// 맞추는 빈 `SizedBox`를 쓴다.
 class PlainHeader extends StatelessWidget {
-  const PlainHeader({super.key, required this.title});
+  const PlainHeader({super.key, required this.title, this.trailing});
 
   final String title;
+  final Widget? trailing;
 
   static const double _minHeight = 52;
   static const double _backButtonSize = 48;
@@ -46,7 +51,7 @@ class PlainHeader extends StatelessWidget {
                 style: AppTextStyles.heading(color: colors.ink),
               ),
             ),
-            const SizedBox(width: _backButtonSize),
+            trailing ?? const SizedBox(width: _backButtonSize),
           ],
         ),
       ),

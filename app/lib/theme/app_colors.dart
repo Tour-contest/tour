@@ -38,6 +38,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.graphite,
     required this.crowdChartBackground,
     required this.mapSheetGradientEnd,
+    required this.dateFilterActiveBackground,
   });
 
   final Color paper;
@@ -119,6 +120,10 @@ class AppColors extends ThemeExtension<AppColors> {
   /// `MapAppSheet` 배경 그라디언트 하단 색(#17191F, 100% — 상단은 `graphite`).
   final Color mapSheetGradientEnd;
 
+  /// `history_screen.dart`의 `_DateFilterMenuItem`에서 현재 선택된(active)
+  /// 필터 항목 배경색(#343843).
+  final Color dateFilterActiveBackground;
+
   Color get ink800 => ink.withAlpha(230);
 
   Color get ink700 => const Color(0xFFA9B6BF);
@@ -180,6 +185,7 @@ class AppColors extends ThemeExtension<AppColors> {
     graphite: Color(0xFF292C36),
     crowdChartBackground: Color(0xFF333743),
     mapSheetGradientEnd: Color(0xFF17191F),
+    dateFilterActiveBackground: Color(0xFF343843),
   );
 
   static AppColors of(BuildContext context) {
@@ -223,6 +229,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? graphite,
     Color? crowdChartBackground,
     Color? mapSheetGradientEnd,
+    Color? dateFilterActiveBackground,
   }) {
     return AppColors(
       paper: paper ?? this.paper,
@@ -263,6 +270,8 @@ class AppColors extends ThemeExtension<AppColors> {
       graphite: graphite ?? this.graphite,
       crowdChartBackground: crowdChartBackground ?? this.crowdChartBackground,
       mapSheetGradientEnd: mapSheetGradientEnd ?? this.mapSheetGradientEnd,
+      dateFilterActiveBackground:
+          dateFilterActiveBackground ?? this.dateFilterActiveBackground,
     );
   }
 
@@ -316,6 +325,8 @@ class AppColors extends ThemeExtension<AppColors> {
           Color.lerp(crowdChartBackground, other.crowdChartBackground, t)!,
       mapSheetGradientEnd:
           Color.lerp(mapSheetGradientEnd, other.mapSheetGradientEnd, t)!,
+      dateFilterActiveBackground: Color.lerp(
+          dateFilterActiveBackground, other.dateFilterActiveBackground, t)!,
     );
   }
 }

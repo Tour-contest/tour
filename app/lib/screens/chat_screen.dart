@@ -48,10 +48,13 @@ class _UserChatEntry extends _ChatEntry {
 /// `history_screen.dart`가 지난 대화를 이어보기 위해 `/chat` 라우트의 `extra`로
 /// 넘기는 데이터. `ChatMessage.role`이 `user`가 아니면 전부 AI 메시지로
 /// 취급한다(`docs/API_SPEC.md`에 실제 값 예시가 없어 가정, 실 데이터로 다른
-/// 값이 확인되면 이 가정만 바꾸면 됨).
+/// 값이 확인되면 이 가정만 바꾸면 됨). [sessionId]가 `null`이면(빈 [messages]와
+/// 함께) "새 채팅 시작"을 의미한다 — `history_screen.dart`의 "새 채팅" 버튼이
+/// `AppDrawer`의 `_newChat()`과 동일한 효과(대화 비우고 세션 초기화)를 내기
+/// 위해 이 방식을 쓴다(`_applyResume` 참고).
 class ChatResumeData {
   const ChatResumeData({required this.sessionId, required this.messages});
-  final String sessionId;
+  final String? sessionId;
   final List<ChatMessage> messages;
 }
 

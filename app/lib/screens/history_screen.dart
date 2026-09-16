@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import 'package:nullnull/api/api_client.dart';
 import 'package:nullnull/api/chat_api.dart';
@@ -157,6 +157,26 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
   }
 
+  /// `AppDrawer`의 "새 채팅" 버튼(`_newChat()`)과 동일한 결과(대화 비우고
+  /// 세션 초기화)를 이 화면에서도 낸다. `ChatScreen`은 이미 `/chat` 스택에
+  /// 살아있는 단일 홈 화면이라 `goNamed`로 스택을 다시 쌓지 않고 교체하며,
+  /// `sessionId: null` + 빈 `messages`를 담은 [ChatResumeData]를 넘기면
+  /// `_ChatScreenState.didUpdateWidget`이 이를 감지해 `_applyResume`으로
+  /// 반영한다 — `_entries.clear()` + `_sessionId = null`이라 `_newChat()`과
+  /// 완전히 동일한 결과(`## Architecture`의 `chat_screen.dart` 문단 참고).
+  void _startNewChat() {
+    context.goNamed(
+      RouteNames.chat,
+      // `const`를 쓰면 안 된다: 동일한 값의 `const ChatResumeData`는 Dart가
+      // 같은 인스턴스로 정규화(canonicalize)해서, 이미 빈 대화 상태(`resume`이
+      // 지난번과 같은 그 canonical 인스턴스)에서 이 버튼을 한 번 더 누르면
+      // `_ChatScreenState.didUpdateWidget`의 `resume == oldWidget.resume`
+      // 참조 비교가 true가 되어 아무 일도 안 일어난다 — 매번 새 인스턴스를
+      // 만들어야 재진입해도 항상 감지된다.
+      extra: ChatResumeData(sessionId: null, messages: const []),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
@@ -171,35 +191,39 @@ class _HistoryScreenState extends State<HistoryScreen> {
             children: [
               Column(
                 children: [
-                  PlainHeader(title: l10n.historyTitle),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-                    child: _SearchField(
-                      controller: _searchController,
-                      hintText: l10n.historySearchHint,
+                  PlainHeader(
+                    title: l10n.historyTitle,
+                    trailing: _DateFilterButton(
+                      selected: _dateFilter,
+                      onSelect: (filter) =>
+                          setState(() => _dateFilter = filter),
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 4),
-                    child: Row(
+                  // "새 채팅" 버튼은 목록 스크롤 영역(`Expanded`) 안에서만
+                  // `Positioned`로 우하단에 띄운다(사용자 요청 — 일반적인
+                  // `floatingActionButton`처럼 목록 위에 항상 떠 있고, 목록은
+                  // 그 아래로 자유롭게 스크롤됨). `Expanded`의 경계가 곧
+                  // 검색창 바로 위 지점이라, 좌표를 따로 계산하지 않아도
+                  // 검색창과 겹치지 않는다.
+                  Expanded(
+                    child: Stack(
                       children: [
-                        _DateFilterChip(
-                          label: l10n.historyFilterAll,
-                          selected: _dateFilter == _DateFilter.all,
-                          onTap: () =>
-                              setState(() => _dateFilter = _DateFilter.all),
-                        ),
-                        const SizedBox(width: 8),
-                        _DateFilterChip(
-                          label: l10n.historyFilterToday,
-                          selected: _dateFilter == _DateFilter.today,
-                          onTap: () =>
-                              setState(() => _dateFilter = _DateFilter.today),
+                        _buildBody(colors, l10n),
+                        Positioned(
+                          right: 20,
+                          bottom: 16,
+                          child: _NewChatButton(onTap: _startNewChat),
                         ),
                       ],
                     ),
                   ),
-                  Expanded(child: _buildBody(colors, l10n)),
+                  // 검색창은 목록과 함께 스크롤되지 않고 화면 하단에 고정한다
+                  // (사용자 요청) — `Column`의 `Expanded` 형제로 둬서 목록만
+                  // 스크롤 영역을 갖고 이 검색창은 항상 같은 자리에 남는다.
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                    child: _SearchField(controller: _searchController),
+                  ),
                 ],
               ),
               if (_isOpeningSession)
@@ -258,9 +282,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
       return _HistoryMessage(message: message);
     }
     return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      // 아래쪽만 넉넉히(카드 한 개 높이만큼, 사용자 요청) 더 줘서 맨 마지막
+      // 카드까지 끝까지 스크롤했을 때 우하단에 떠 있는 `_NewChatButton`에
+      // 가려지지 않게 한다(`Expanded(child: Stack([...]))`에서 이 목록과
+      // 버튼이 같은 영역을 공유하는 구조라, 버튼을 투명 배리어로 피하는
+      // 대신 목록 쪽에 여유 공간을 더 주는 방식을 택함).
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 84),
       itemCount: filtered.length,
-      separatorBuilder: (_, __) => Container(height: 1, color: colors.divider),
+      // 항목이 각자 테두리 있는 카드가 돼서(`_HistoryTile` 참고) 카드 사이에
+      // 가로줄 구분선을 긋는 대신 여백만 준다 — 카드 2개가 붙어 선까지
+      // 겹치면 시각적으로 어색해짐.
+      separatorBuilder: (_, __) => const SizedBox(height: 16),
       itemBuilder: (context, index) => _HistoryTile(
         session: filtered[index],
         onTap: () => _openSession(filtered[index]),
@@ -269,10 +301,232 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 }
 
-/// 전체/오늘 필터 선택 칩. `attraction_detail_screen.dart`의 `_DayOptionPill`
-/// (7/14/28일 선택)과 같은 시각 스타일을 따른다.
-class _DateFilterChip extends StatelessWidget {
-  const _DateFilterChip({
+/// "새 채팅" 버튼. `app_drawer.dart`의 `_DrawerFooter`가 그리는 새 채팅
+/// 버튼과 완전히 같은 UI(아이콘·텍스트·색상·모양)를 재사용한다(사용자 요청 —
+/// 지난 대화 화면 우하단에도 같은 기능/모양의 버튼을 추가해달라고 함).
+class _NewChatButton extends StatelessWidget {
+  const _NewChatButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    return InkWell(
+      borderRadius: BorderRadius.circular(999),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: colors.chatSendButton,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SvgPicture.asset('assets/images/plus.svg'),
+            const SizedBox(width: 10),
+            Text(l10n.chatNewTooltip,
+                style: AppTextStyles.body(
+                        fontSize: 15, color: colors.ink, height: 1.6)
+                    .copyWith(fontWeight: FontWeight.w500)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 전체/오늘 날짜 필터 토글 버튼. 헤더 우측(`PlainHeader.trailing`)에 두고,
+/// 탭하면 `chat_screen.dart`의 `_ProfileAvatarButton`과 같은 방식(
+/// `CompositedTransformTarget`/`LayerLink` + `Overlay`)으로 바로 아래에
+/// 팝업 메뉴를 띄운다(사용자 요청 — 기존 `_DateFilterChip` 2개짜리 가로
+/// 토글을 이 버튼 + 팝업 메뉴로 대체함). 버튼 자체는 `app_header.dart`의
+/// `_HeaderSlot`과 같은 구성(`assets/images/slot.png` 배경 + 아이콘)을
+/// `assets/images/union.svg`(필터 깔때기 모양, 흰색 stroke라
+/// `ColorFilter`로 톤을 맞춤)로 재현한다.
+class _DateFilterButton extends StatefulWidget {
+  const _DateFilterButton({required this.selected, required this.onSelect});
+
+  final _DateFilter selected;
+  final ValueChanged<_DateFilter> onSelect;
+
+  @override
+  State<_DateFilterButton> createState() => _DateFilterButtonState();
+}
+
+class _DateFilterButtonState extends State<_DateFilterButton> {
+  // `app_header.dart`의 `_HeaderSlot` 탭 영역(44)과 맞춰 팝업이 실제 보이는
+  // 슬롯 바로 아래에 붙도록 한다.
+  static const double _slotSize = 44;
+
+  final _menuLink = LayerLink();
+  OverlayEntry? _menuEntry;
+
+  @override
+  void dispose() {
+    _closeMenu();
+    super.dispose();
+  }
+
+  void _toggleMenu() {
+    if (_menuEntry != null) {
+      _closeMenu();
+      return;
+    }
+    final overlayState = Overlay.of(context);
+    final entry = OverlayEntry(
+      builder: (_) => _DateFilterMenuOverlay(
+        link: _menuLink,
+        selected: widget.selected,
+        onDismiss: _closeMenu,
+        onSelect: (filter) {
+          _closeMenu();
+          widget.onSelect(filter);
+        },
+      ),
+    );
+    _menuEntry = entry;
+    overlayState.insert(entry);
+  }
+
+  void _closeMenu() {
+    _menuEntry?.remove();
+    _menuEntry = null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return CompositedTransformTarget(
+      link: _menuLink,
+      child: GestureDetector(
+        onTap: _toggleMenu,
+        behavior: HitTestBehavior.opaque,
+        child: SizedBox(
+          width: _slotSize,
+          height: _slotSize,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Image.asset('assets/images/slot.png', width: 33, height: 33),
+              SvgPicture.asset(
+                'assets/images/union.svg',
+                width: 14,
+                colorFilter: ColorFilter.mode(colors.ink, BlendMode.srcIn),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// [_DateFilterButton] 탭 시 뜨는 팝업. `chat_screen.dart`의
+/// `_ProfileMenuOverlay`와 동일한 구조(전체 화면 투명 배리어로 바깥 탭 감지 +
+/// `CompositedTransformFollower`로 버튼 바로 아래에 카드 배치).
+class _DateFilterMenuOverlay extends StatelessWidget {
+  const _DateFilterMenuOverlay({
+    required this.link,
+    required this.selected,
+    required this.onDismiss,
+    required this.onSelect,
+  });
+
+  final LayerLink link;
+  final _DateFilter selected;
+  final VoidCallback onDismiss;
+  final ValueChanged<_DateFilter> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onDismiss,
+          ),
+        ),
+        CompositedTransformFollower(
+          link: link,
+          showWhenUnlinked: false,
+          targetAnchor: Alignment.bottomRight,
+          followerAnchor: Alignment.topRight,
+          offset: const Offset(0, 8),
+          child: _DateFilterMenuCard(
+            selected: selected,
+            onSelectAll: () => onSelect(_DateFilter.all),
+            onSelectToday: () => onSelect(_DateFilter.today),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// `chat_screen.dart`의 `_ProfileMenuCard`와 완전히 같은 배경/크기
+/// (`popup_slot.png`, 154×77)를 쓰되, 항목이 선택 여부에 따라 색이 달라지는
+/// 토글 메뉴다.
+class _DateFilterMenuCard extends StatelessWidget {
+  const _DateFilterMenuCard({
+    required this.selected,
+    required this.onSelectAll,
+    required this.onSelectToday,
+  });
+
+  final _DateFilter selected;
+  final VoidCallback onSelectAll;
+  final VoidCallback onSelectToday;
+
+  static const double _width = 154;
+  static const double _height = 77;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Material(
+      color: Colors.transparent,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: SizedBox(
+          width: _width,
+          height: _height,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.asset('assets/images/popup_slot.png', fit: BoxFit.fill),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // 사용자 요청으로 "오늘"이 "전체"보다 위(순서상 먼저) 오도록
+                  // 배치함. 기본 선택값은 여전히 `_DateFilter.all`
+                  // (`_HistoryScreenState._dateFilter` 초기값 참고, 표시
+                  // 순서와 기본값은 별개).
+                  _DateFilterMenuItem(
+                    label: l10n.historyFilterToday,
+                    selected: selected == _DateFilter.today,
+                    onTap: onSelectToday,
+                  ),
+                  _DateFilterMenuItem(
+                    label: l10n.historyFilterAll,
+                    selected: selected == _DateFilter.all,
+                    onTap: onSelectAll,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DateFilterMenuItem extends StatelessWidget {
+  const _DateFilterMenuItem({
     required this.label,
     required this.selected,
     required this.onTap,
@@ -287,58 +541,59 @@ class _DateFilterChip extends StatelessWidget {
     final colors = AppColors.of(context);
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(99),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        margin: const EdgeInsets.symmetric(horizontal: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
         decoration: BoxDecoration(
-          color: selected ? colors.accentTint14 : colors.surfaceMuted,
-          border: Border.all(
-              color: selected ? colors.accent : colors.surfaceMutedBorder),
-          borderRadius: BorderRadius.circular(99),
+          color: selected ? colors.dateFilterActiveBackground : null,
+          borderRadius: BorderRadius.circular(6),
         ),
-        child: Text(
-          label,
-          style: AppTextStyles.body(
-            fontSize: 12.5,
-            color: selected ? colors.accentBright : colors.ink600,
-          ),
-        ),
+        alignment: Alignment.centerLeft,
+        child: Text(label,
+            textScaler: TextScaler.noScaling,
+            style: AppTextStyles.body(fontSize: 15, color: colors.ink)
+                .copyWith(fontWeight: FontWeight.w500)),
       ),
     );
   }
 }
 
 /// 지난 대화 타이틀 검색창. `chat_input_bar.dart`의 알약형 입력창과 같은
-/// 스타일(`colors.inputBar` 배경 + `colors.inputBarBorder` 테두리)을 따른다.
-/// 입력값이 있으면 지우기(X) 버튼을 보여준다.
+/// 테두리(`colors.inputBarBorder`) 스타일을 따르되, 배경은 사용자 지정대로
+/// `colors.inputBar`를 20%(0x33/0xFF) 알파로 낮춘 반투명(#252A3133)을 쓴다.
+/// 플레이스홀더 문구 대신 왼쪽에 `search.svg` 아이콘으로 검색창임을 표시한다
+/// (사용자 요청). 입력값이 있으면 지우기(X) 버튼을 보여준다.
 class _SearchField extends StatelessWidget {
-  const _SearchField({required this.controller, required this.hintText});
+  const _SearchField({required this.controller});
 
   final TextEditingController controller;
-  final String hintText;
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
-        color: colors.inputBar,
+        color: colors.inputBar.withAlpha(0x33),
         borderRadius: BorderRadius.circular(99),
-        border: Border.all(color: colors.inputBarBorder, width: 1.5),
+        border: Border.all(color: colors.inputBarBorder),
       ),
       child: Row(
         children: [
+          SvgPicture.asset(
+            'assets/images/search.svg',
+            width: 16,
+            height: 16,
+          ),
+          const SizedBox(width: 10),
           Expanded(
             child: TextField(
               controller: controller,
               style: AppTextStyles.body(fontSize: 15, color: colors.ink),
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 isDense: true,
                 border: InputBorder.none,
-                hintText: hintText,
-                hintStyle:
-                    AppTextStyles.body(fontSize: 15, color: colors.ink600),
               ),
             ),
           ),
@@ -364,6 +619,29 @@ class _SearchField extends StatelessWidget {
   }
 }
 
+/// `session.lastActiveAt` 기준 상대 시각 문구("n분전"/"n시간전"/"n일전",
+/// 1분 미만은 "방금전")를 만든다(사용자 요청 — 기존 `MM.dd` 절대 날짜
+/// 표기를 대체). 자정을 걸친 "오늘"/"어제" 같은 구분은 두지 않고 순수하게
+/// 지금 시각과의 차이만 본다. `time`이 미래(기기 시계 오차 등)면 음수
+/// `Duration`이 나와 아래 각 `in*` 비교를 전부 건너뛰므로 자연히 "방금전"으로
+/// 처리된다.
+String _formatRelativeTime(DateTime time, AppLocalizations l10n) {
+  final diff = DateTime.now().difference(time);
+  if (diff.inDays >= 1) return l10n.historyRelativeDays(diff.inDays);
+  if (diff.inHours >= 1) return l10n.historyRelativeHours(diff.inHours);
+  if (diff.inMinutes >= 1) return l10n.historyRelativeMinutes(diff.inMinutes);
+  return l10n.historyRelativeJustNow;
+}
+
+/// 지난 대화 항목 카드(사용자 지정 시안 — 배경 `colors.graphite`(#292C36),
+/// 테두리 `colors.inputBarBorder`(#4E5963) 1.5px, 모서리 반경 9, 안쪽 여백
+/// horizontal 16 / vertical 12; 제목은 14px·줄높이 1.5·굵기 500·`colors.ink`
+/// (#F2F6F9 — 지정된 `#fff`와 사실상 같은 "거의 흰색" 톤이라 앱 전역에서
+/// 본문 텍스트에 이미 쓰는 이 토큰을 그대로 재사용, 새 순백색 토큰을 따로
+/// 만들지 않음), 날짜는 13px·굵기 500·`colors.voiceListeningHint`(#737B87 —
+/// 지정된 색과 정확히 일치하는 기존 토큰을 재사용)). 제목/날짜 배치를 기존
+/// 가로 `Row`(제목 `Expanded` + 날짜)에서 세로 `Column`(제목 위, 날짜 아래)
+/// 으로 바꿨다(사용자 요청).
 class _HistoryTile extends StatelessWidget {
   const _HistoryTile({required this.session, required this.onTap});
 
@@ -377,23 +655,32 @@ class _HistoryTile extends StatelessWidget {
     final lastActiveAt = session.lastActiveAt;
     return InkWell(
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        child: Row(
+      borderRadius: BorderRadius.circular(9),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: colors.graphite,
+          border: Border.all(color: colors.inputBarBorder, width: 1.5),
+          borderRadius: BorderRadius.circular(9),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Text(
-                session.title ?? l10n.historyUntitledSession,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.body(fontSize: 16, color: colors.ink),
-              ),
+            Text(
+              session.title ?? l10n.historyUntitledSession,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.body(
+                      fontSize: 14, height: 1.2, color: colors.ink)
+                  .copyWith(fontWeight: FontWeight.w500),
             ),
             if (lastActiveAt != null) ...[
-              const SizedBox(width: 10),
+              const SizedBox(height: 4),
               Text(
-                DateFormat('MM.dd').format(lastActiveAt),
-                style: AppTextStyles.body(fontSize: 13, color: colors.ink600),
+                _formatRelativeTime(lastActiveAt, l10n),
+                style: AppTextStyles.body(
+                        fontSize: 13, color: colors.voiceListeningHint)
+                    .copyWith(fontWeight: FontWeight.w500),
               ),
             ],
           ],

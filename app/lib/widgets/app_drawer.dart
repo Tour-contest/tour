@@ -113,11 +113,6 @@ class AppDrawerState extends State<AppDrawer> {
     setState(() => _openingSessionId = null);
   }
 
-  void _openSettings() {
-    widget.onClose();
-    context.pushNamed(RouteNames.settings);
-  }
-
   void _openHistory() {
     widget.onClose();
     context.pushNamed(RouteNames.history);
@@ -156,7 +151,7 @@ class AppDrawerState extends State<AppDrawer> {
               ),
             ),
             Expanded(child: _buildRecentList(colors, l10n)),
-            _DrawerFooter(onNewChat: _newChat, onSettingsTap: _openSettings),
+            _DrawerFooter(onNewChat: _newChat),
           ],
         ),
       ),
@@ -245,10 +240,9 @@ class AppDrawerState extends State<AppDrawer> {
 }
 
 class _DrawerFooter extends StatelessWidget {
-  const _DrawerFooter({required this.onNewChat, required this.onSettingsTap});
+  const _DrawerFooter({required this.onNewChat});
 
   final VoidCallback onNewChat;
-  final VoidCallback onSettingsTap;
 
   @override
   Widget build(BuildContext context) {
@@ -257,13 +251,8 @@ class _DrawerFooter extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          _CircleIconButton(
-            onTap: onSettingsTap,
-            tooltip: l10n.commonSettings,
-            child: SvgPicture.asset('assets/images/setting.svg'),
-          ),
           InkWell(
             borderRadius: BorderRadius.circular(999),
             onTap: onNewChat,
@@ -287,38 +276,6 @@ class _DrawerFooter extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _CircleIconButton extends StatelessWidget {
-  const _CircleIconButton({
-    required this.onTap,
-    required this.tooltip,
-    required this.child,
-  });
-
-  final VoidCallback onTap;
-  final String tooltip;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        child: Container(
-          width: 40,
-          height: 40,
-          alignment: Alignment.center,
-          decoration:
-              BoxDecoration(color: colors.surfaceMuted, shape: BoxShape.circle),
-          child: child,
-        ),
       ),
     );
   }

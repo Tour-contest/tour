@@ -102,7 +102,7 @@ class MapAppSheet extends StatelessWidget {
             onTap: () => _open(context,
                 openNaverMap ?? () => MapLauncherService.openNaverMap(placeName)),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 12),
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text(
@@ -112,6 +112,7 @@ class MapAppSheet extends StatelessWidget {
                   .copyWith(fontWeight: FontWeight.w500),
             ),
           ),
+          const SizedBox(height: 24),
         ],
       ),
     );
@@ -141,7 +142,7 @@ class _SheetButton extends StatelessWidget {
         child: Text(
           label,
           style: AppTextStyles.heading(
-                  fontSize: 15, height: 1.5, color: colors.ink)
+                  fontSize: 14, height: 1.5, color: colors.ink)
               .copyWith(fontWeight: FontWeight.w500),
         ),
       ),
