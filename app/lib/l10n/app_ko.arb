@@ -294,6 +294,26 @@
   "@historyResumeError": {
     "description": "지난 대화 항목 탭 시 ChatApi.fetchMessages 조회 실패 안내 토스트"
   },
+  "historySearchHint": "대화 제목 검색",
+  "@historySearchHint": {
+    "description": "지난 대화 화면 검색창 placeholder — 서버에 검색 엔드포인트가 없어 이미 불러온 목록(title) 안에서만 클라이언트 쪽으로 걸러낸다"
+  },
+  "historySearchEmptyMessage": "검색 결과가 없어요.",
+  "@historySearchEmptyMessage": {
+    "description": "지난 대화 검색어에 맞는 세션이 하나도 없을 때 안내 문구(세션 목록 자체는 있는 상태, historyEmptyMessage와 구분)"
+  },
+  "historyFilterAll": "전체",
+  "@historyFilterAll": {
+    "description": "지난 대화 화면 날짜 필터 - 전체(기본 선택)"
+  },
+  "historyFilterToday": "오늘",
+  "@historyFilterToday": {
+    "description": "지난 대화 화면 날짜 필터 - 오늘(lastActiveAt이 오늘 날짜인 세션만)"
+  },
+  "historyTodayEmptyMessage": "오늘 나눈 대화가 없어요.",
+  "@historyTodayEmptyMessage": {
+    "description": "\"오늘\" 필터를 선택했는데 오늘 활동한 세션이 하나도 없을 때 안내 문구(검색어가 없는 경우에 한함, 검색어가 있으면 historySearchEmptyMessage를 우선함)"
+  },
   "regionCardTitle": "{region} 여행지 추천",
   "@regionCardTitle": {
     "description": "지역 현황 카드 B의 제목",
