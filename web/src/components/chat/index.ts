@@ -1,3 +1,4 @@
 import ChatCardView from "./ChatCardView";
+import ChatFollowUps from "./ChatFollowUps";
 
-export { ChatCardView };
+export { ChatCardView, ChatFollowUps };

@@ -1,131 +1,101 @@
-import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router";
+import { useEffect, useRef } from "react";
+import { useNavigate, useParams } from "react-router";
 import clsx from "clsx";
-import { ChatCardView } from "@/components/chat";
-import { useChatStream } from "@/hooks/api";
+import { useChatStore, EMPTY_CONVERSATION, NEW_CONVERSATION_KEY } from "@/store/chat";
 import ChatbotAgenda from "./ChatbotAgenda";
+import ChatbotMessages from "./ChatbotMessages";
+import ChatbotStreaming from "./ChatbotStreaming";
+import ChatbotInput from "./ChatbotInput";
 
 const ATTRIBUTION = "출처: ⓒ한국관광공사";
 
-const bubbleBaseStyle = clsx("max-w-[640px]", "rounded-[16px]", "px-[16px]", "py-[12px]", "text-[14px]");
-
-const BubbleStyle = {
-    user: clsx(bubbleBaseStyle, "self-end", "bg-[#222]", "text-white"),
-    assistant: clsx(bubbleBaseStyle, "self-start", "bg-[#f4f3ec]"),
-} as const;
-
+// 대화 상태는 store 가 대화 id 단위로 들고 있고, 화면은 URL 의 대화 칸을 읽기만 한다.
+// 다른 대화로 이동해도 진행 중인 답변은 자기 칸에서 계속 쌓이고, 돌아오면 이어서 보인다
 function Home() {
+    const navigate = useNavigate();
     // 세션은 URL 이 소유한다 — 사이드바에서 고른 대화(/c/:sessionId), 없으면 새 대화(/)
     const { sessionId } = useParams<{ sessionId: string }>();
-    const { chat, sendMessage, loadSession, resetChat } = useChatStream();
-  
-    const [inputValue, setInputValue] = useState<string>("");
+
+    const promotedSessionId = useChatStore((state) => state.promotedSessionId);
+    const sendMessage = useChatStore((state) => state.sendMessage);
+    const openConversation = useChatStore((state) => state.openConversation);
+    const prepareNewConversation = useChatStore((state) => state.prepareNewConversation);
+    const clearPromotedSession = useChatStore((state) => state.clearPromotedSession);
+
+    // 새 대화가 방금 서버 id 를 받았다면 URL 이 바뀌기 전 한 프레임도 옮겨간 칸을 읽는다 (빈 화면 깜빡임 방지)
+    const activeKey = sessionId ?? promotedSessionId ?? NEW_CONVERSATION_KEY;
+    const conversation = useChatStore((state) => state.conversations[activeKey]) ?? EMPTY_CONVERSATION;
+
     const scrollAnchorRef = useRef<HTMLDivElement | null>(null);
 
+    // store 액션은 참조가 고정이라 의존성에 넣어도 sessionId 가 바뀔 때만 실행된다
     useEffect(() => {
-        if (sessionId) loadSession(sessionId);
-        else resetChat();
-    }, [sessionId]);
+        if (sessionId) openConversation(sessionId);
+        else prepareNewConversation();
+    }, [sessionId, openConversation, prepareNewConversation]);
+
+    // 새 대화가 서버 id 를 받으면 주소만 교체한다 — 같은 칸을 계속 읽으므로 이력을 다시 부르지 않는다
+    useEffect(() => {
+        if (sessionId) {
+            clearPromotedSession();
+            return;
+        }
+        if (promotedSessionId) navigate(`/c/${promotedSessionId}`, { replace: true });
+    }, [sessionId, promotedSessionId, clearPromotedSession, navigate]);
 
     useEffect(() => {
         scrollAnchorRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [chat.messages, chat.streamingText]);
+    }, [conversation.messages, conversation.draft]);
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-
-        sendMessage(inputValue);
-        setInputValue("");
+    const handleSendMessage = (message: string) => {
+        sendMessage(activeKey, message);
     };
 
-    const isEmptyChat = chat.messages.length === 0 && !chat.isStreaming;
+    const isEmptyChat = conversation.messages.length === 0 && !conversation.isStreaming;
 
     return (
         <div className={ChatbotContainer}>
             <div className={ChatbotLayout}>
-                {isEmptyChat && <ChatbotAgenda />}
-                {chat.messages.map((message) => (
-                    <div key={message.key} className={clsx("flex", "flex-col", "gap-[8px]")}>
-                        {message.cards.map((card, index) => (
-                            <ChatCardView key={`${message.key}-${index}`} card={card} />
-                        ))}
-                        <p className={BubbleStyle[message.role]}>{message.content}</p>
-                        {message.sourceNote && (
-                            <p className={clsx("text-[12px]", "text-[#6b6375]")}>{message.sourceNote}</p>
-                        )}
-                    </div>
-                ))}
-
-                {chat.isStreaming && (
-                    <div className={clsx("flex", "flex-col", "gap-[8px]")}>
-                        {chat.streamingCards.map((card, index) => (
-                            <ChatCardView key={`streaming-${index}`} card={card} />
-                        ))}
-                        {chat.statusLabel && (
-                            <p className={clsx("text-[13px]", "text-[#6b6375]")}>{chat.statusLabel}…</p>
-                        )}
-                        {chat.streamingText && <p className={BubbleStyle.assistant}>{chat.streamingText}</p>}
-                    </div>
+                {isEmptyChat && <ChatbotAgenda onQuickStart={handleSendMessage} />}
+                <ChatbotMessages
+                    chatMessage={conversation.messages}
+                    onSendMessage={handleSendMessage}
+                    isSendDisabled={conversation.isStreaming}
+                />
+                {conversation.isStreaming && (
+                    <ChatbotStreaming
+                        streamingCards={conversation.draft?.cards ?? []}
+                        statusLabel={conversation.statusLabel}
+                        streamingText={conversation.draft?.text ?? ""}
+                    />
                 )}
-
-                {chat.errorMessage && (
-                    <p className={clsx("text-[13px]", "text-[#ff3b30]")}>{chat.errorMessage}</p>
-                )}
-
+                {conversation.errorMessage && <p className={ErrorMessage}>{conversation.errorMessage}</p>}
                 <div ref={scrollAnchorRef} />
             </div>
-
-            <form
-                onSubmit={handleSubmit}
-                className={clsx("flex", "w-[720px]", "max-w-full", "gap-[8px]", "p-[24px]", "pt-0")}
-            >
-                <input
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    maxLength={500}
-                    placeholder="오늘은 어떤 여행지를 찾으시나요?"
-                    aria-label="메시지 입력"
-                    className={clsx("flex-1", "min-w-0", "rounded-[16px]", "border-[1px]", "border-[#b1bdc8]", "px-[16px]", "py-[12px]")}
-                />
-                <button
-                    type="submit"
-                    disabled={chat.isStreaming}
-                    className={clsx("rounded-[16px]", "bg-[#222]", "px-[20px]", "text-white", "disabled:opacity-50")}
-                >
-                    전송
-                </button>
-            </form>
-
-            <p className={clsx("pb-[16px]", "text-[12px]", "text-[#6b6375]")}>{ATTRIBUTION}</p>
+            <ChatbotInput isStreaming={conversation.isStreaming} onSubmit={handleSendMessage} />
+            <p className={Attribution}>{ATTRIBUTION}</p>
         </div>
     );
 }
 export default Home;
 //style configuration
 const ChatbotContainer = clsx(
-    "flex flex-col items-center", 
+    "flex flex-col items-center",
     "h-full"
 );
 
 const ChatbotLayout = clsx(
-    "flex flex-col gap-4 flex-1", 
-    "w-180 max-w-full", 
-    "overflow-y-auto", 
+    "flex flex-col gap-4 flex-1",
+    "w-180 max-w-full",
+    "overflow-y-auto",
     "p-6 box-border"
 );
 
-const ChatboxGuideLayout = clsx(
-    "flex", "flex-1", "flex-col", "justify-center", "gap-6"
+const ErrorMessage = clsx(
+    "text-[13px] text-[#ff3b30]"
 );
 
-const ChatboxGuideTitleGroup = clsx(
-    "flex flex-col gap-2"
-);
-
-const ChatboxGuideTitle = clsx(
-    "text-[24px] font-bold"
-);
-
-const ChatboxGuideAddendumText = clsx(
-    "text-[14px] text-[#6b6375]"
+const Attribution = clsx(
+    "pb-4",
+    "text-[12px] text-[#6b6375]"
 );

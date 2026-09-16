@@ -1,4 +1,4 @@
-import { useChatStream, useUser } from "@/hooks/api";
+import { useUser } from "@/hooks/api";
 import clsx from "clsx";
 import { useEffect } from "react";
 
@@ -9,16 +9,20 @@ const QUICK_START_PRESETS = [
     { id: 3, title: "캠핑 여행지 추천", description: "야영장·오토캠핑", message: "한적한 캠핑 여행지 추천해줘" },
 ] as const;
 
-const ChatbotAgenda = () => {
+// 어느 대화 칸(새 대화 / 기존 세션)에 보낼지는 URL 을 아는 Home 이 정하므로 전송 함수를 props 로 받는다
+type ChatbotAgendaNeedProps = {
+    onQuickStart: (message: string) => void;
+};
+
+const ChatbotAgenda = ({ onQuickStart } : ChatbotAgendaNeedProps) => {
     const { fetchMyInfo, myInfo } = useUser();
-    const { sendMessage } = useChatStream();
 
     useEffect(() => {
         fetchMyInfo();
     }, [])
 
     const handleQuickStartClick = (message: string) => {
-        sendMessage(message);
+        onQuickStart(message);
     };
 
     return <div className={ChatbotTouristAgendaLayout}>

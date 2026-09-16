@@ -1,6 +1,8 @@
 import { requestRefresh as requestRefreshApi } from "@/service/auth";
 import { useAuthenticateStore } from "@/store/authenticate";
 import { useAuthorityStore } from "@/store/authority";
+import { useChatStore } from "@/store/chat";
+import { useChatSessionStore } from "@/store/chatSession";
 import { jwtDecoder } from "@/utils";
 
 // 만료 10초 전부터 만료로 취급 — 전송 중 만료되는 경계 케이스 방지 여유마진
@@ -33,8 +35,11 @@ export const applyRefreshedToken = ({ access_token, refresh_token }: ResponseAcc
     useAuthorityStore.getState().setAuthority(access_token);
 };
 
-// 세션 종료 처리 (refresh 실패/세션 만료/로그인 화면 진입) — 인증/권한 store 를 함께 초기화
+// 세션 종료 처리 (refresh 실패/세션 만료/로그인 화면 진입) — 인증/권한 store 를 함께 초기화.
+// 대화 캐시도 사용자 단위라 같이 비운다 (SPA 이동이라 메모리가 남아 다음 로그인 사용자에게 보일 수 있다)
 export const clearSession = () => {
     useAuthenticateStore.getState().clearAuthenticate();
     useAuthorityStore.getState().clearAuthority();
+    useChatStore.getState().clearConversations();
+    useChatSessionStore.getState().clearSessions();
 };

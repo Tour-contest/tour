@@ -1,4 +1,8 @@
 import clsx from "clsx";
+import { isAreaOverviewPayload, resolveFollowUps } from "./followUp";
+import AlternativesCard from "./cards/AlternativesCard";
+import CrowdAttractionCard from "./cards/CrowdAttractionCard";
+import { formatDateLabel } from "./cards/crowdVisual";
 
 const cardStyle = clsx(
     "flex",
@@ -20,25 +24,23 @@ const LevelTextStyle = {
     한적: "text-[#1a8c4a]",
 } as const;
 
-// 지역 전체 혼잡도는 summary 가 있고, 관광지 지정 혼잡도는 items 에 series 가 있다
-const isAreaOverviewPayload = (
-    payload: ChatCrowdAttractionPayload | AreaOverviewData,
-): payload is AreaOverviewData => "summary" in payload && payload.summary !== undefined;
-
 type ChatCardViewProps = {
     card: ChatCard;
 };
 
-// TODO: SB-03 카드 디자인으로 교체 — 현재는 수신 데이터 확인용 최소 렌더
+// 카드 종류별 렌더러로 분기한다. SB-03 두 카드는 cards/ 로 분리했고, 나머지는 아직 수신 확인용 최소 렌더
 const ChatCardView = ({ card }: ChatCardViewProps) => {
+    // 데이터가 없는 카드는 그리지 않는다 — 대신 말풍선 아래 후속 질문 버튼(ChatFollowUps)으로 대체된다
+    if (resolveFollowUps(card) !== null) return null;
+
     switch (card.type) {
         case "crowd": {
             if (isAreaOverviewPayload(card.payload)) {
-                const { signgu_nm, summary, coverage, source } = card.payload;
+                const { signgu_nm, date, summary, coverage, source } = card.payload;
 
                 return (
                     <div className={cardStyle}>
-                        <p className={cardTitleStyle}>{signgu_nm} 오늘 현황</p>
+                        <p className={cardTitleStyle}>{signgu_nm} {formatDateLabel(date)} 현황</p>
                         <p>
                             <span className={LevelTextStyle.혼잡}>혼잡 {summary?.crowded ?? 0}곳</span>
                             {" · "}
@@ -56,21 +58,7 @@ const ChatCardView = ({ card }: ChatCardViewProps) => {
                 );
             }
 
-            const target = card.payload.items.find((item) => item.series.length > 0);
-
-            return (
-                <div className={cardStyle}>
-                    <p className={cardTitleStyle}>
-                        {target?.name ?? "혼잡도"} {card.payload.signgu_nm && `· ${card.payload.signgu_nm}`}
-                    </p>
-                    {target?.series.map((day) => (
-                        <p key={day.date}>
-                            {day.weekday} <span className={LevelTextStyle[day.level]}>{day.level}</span> {day.rate}
-                        </p>
-                    ))}
-                    {card.payload.source && <p className={sourceStyle}>{card.payload.source}</p>}
-                </div>
-            );
+            return <CrowdAttractionCard payload={card.payload} />;
         }
 
         case "attraction_list":
@@ -88,19 +76,7 @@ const ChatCardView = ({ card }: ChatCardViewProps) => {
             );
 
         case "alternatives":
-            return (
-                <div className={cardStyle}>
-                    <p className={cardTitleStyle}>
-                        {card.payload.base.name} 대신 여기는 어때요?
-                    </p>
-                    {card.payload.items.map((item) => (
-                        <p key={item.content_id}>
-                            {item.name} <span className={LevelTextStyle[item.level]}>{item.level}</span> {item.rate}
-                        </p>
-                    ))}
-                    {card.payload.source && <p className={sourceStyle}>{card.payload.source}</p>}
-                </div>
-            );
+            return <AlternativesCard payload={card.payload} />;
 
         case "detail":
         case "attraction":
@@ -113,11 +89,11 @@ const ChatCardView = ({ card }: ChatCardViewProps) => {
             );
 
         case "area_overview": {
-            const { signgu_nm, summary, source } = card.payload;
+            const { signgu_nm, date, summary, source } = card.payload;
 
             return (
                 <div className={cardStyle}>
-                    <p className={cardTitleStyle}>{signgu_nm} 오늘 현황</p>
+                    <p className={cardTitleStyle}>{signgu_nm} {formatDateLabel(date)} 현황</p>
                     <p>
                         혼잡 {summary?.crowded ?? 0}곳 · 보통 {summary?.normal ?? 0}곳 · 한적 {summary?.quiet ?? 0}곳
                     </p>

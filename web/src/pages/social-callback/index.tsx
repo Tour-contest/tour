@@ -1,4 +1,4 @@
-import { useActionState, useEffect, useRef } from "react";
+import { startTransition, useActionState, useEffect, useRef } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router";
 import clsx from "clsx";
 import { useAuth, INITIAL_ADMIN_LOGIN_STATE } from "@/hooks/api";
@@ -29,7 +29,8 @@ function SocialCallback() {
         }
 
         hasRequestedRef.current = true;
-        dispatchSocialLogin({ provider, code, redirectUri: REDIRECT_URI });
+        // effect 안의 dispatch 도 트랜지션 밖이라 감싸야 한다
+        startTransition(() => dispatchSocialLogin({ provider, code, redirectUri: REDIRECT_URI }));
     }, []);
 
     // 권한별 최종 목적지는 라우터 가드가 다시 정리한다

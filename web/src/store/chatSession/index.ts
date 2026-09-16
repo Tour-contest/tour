@@ -6,6 +6,7 @@ import { getChatSessions } from "@/service/chat";
 type ChatSessionState = {
     sessions: ChatSession[];
     refreshSessions: () => Promise<void>;
+    clearSessions: () => void;
 };
 
 export const useChatSessionStore = create<ChatSessionState>((set) => ({
@@ -18,4 +19,5 @@ export const useChatSessionStore = create<ChatSessionState>((set) => ({
             console.error(e);
         }
     },
+    clearSessions: () => set({ sessions: [] }),
 }));

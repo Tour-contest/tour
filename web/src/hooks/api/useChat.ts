@@ -1,3 +1,4 @@
+import { isAxiosError } from "axios";
 import {
     getChatSessions,
     getChatMessages,
@@ -30,6 +31,8 @@ const useChat = () => {
             const res = await deleteChatSession(sessionId);
             return res.data.ok;
         } catch (e) {
+            // 이미 없는 대화(404)는 목록에서만 지우면 된다 (명세)
+            if (isAxiosError(e) && e.response?.status === 404) return true;
             console.error(e);
             return false;
         };
