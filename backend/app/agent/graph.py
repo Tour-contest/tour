@@ -131,6 +131,24 @@ def restore_name(asked: str, message: str) -> str:
     return asked
 
 
+_SIDO_WORDS = (
+    "서울", "경기", "경기도", "인천", "강원", "강원도", "충북", "충남", "충청도", "충청북도",
+    "충청남도", "전북", "전남", "전라도", "전라북도", "전라남도", "경북", "경남", "경상도",
+    "경상북도", "경상남도", "제주", "제주도", "부산", "대구", "광주", "대전", "울산", "세종",
+)
+
+
+def restore_region(asked: str, message: str) -> str:
+    """모델이 "전라도 광주" 에서 "광주" 만 넘기면 앞의 시도 표현을 되살린다. 동명 지역 되묻기를 줄인다."""
+    if not asked or " " in asked:
+        return asked
+    raw = _TOKEN.findall(message)
+    for i in range(1, len(raw)):
+        if strip_josa(raw[i]) == asked and raw[i - 1] in _SIDO_WORDS and raw[i - 1] != asked:
+            return f"{raw[i - 1]} {asked}"
+    return asked
+
+
 def args(raw: str) -> dict | None:
     try:
         v = json.loads(raw or "{}")
@@ -145,7 +163,8 @@ VISITOR_LABEL = {"local": "현지인", "outsider": "외지인", "foreigner": "�
 def for_model(name: str, result: dict) -> dict:
     st = result.get("status")
     base: dict = {"status": st}
-    for k in ("message", "hint", "signgu_nm", "signgu_cd", "coverage", "date", "summary"):
+    for k in ("message", "hint", "signgu_nm", "signgu_cd", "coverage", "date", "summary",
+              "has_crowd_data"):
         if k in result:
             base[k] = result[k]
 
@@ -156,7 +175,7 @@ def for_model(name: str, result: dict) -> dict:
                 "candidates": [c["label"] for c in result.get("candidates", [])],
                 "instruction": "후보 이름만 보여주고 어느 곳인지 되물어라. 코드는 말하지 마라.",
             }
-        drop = ("aliases", "area_cd", "tour_cd")
+        drop = ("aliases", "area_cd", "tour_cd", "legacy_cd")
         out = {k: v for k, v in result.items() if k not in drop}
         if out.get("has_crowd_data") is None:
             out.pop("has_crowd_data", None)
@@ -484,6 +503,8 @@ async def run(
                 }, False
             if name == "find_attraction" and params.get("name"):
                 params["name"] = restore_name(str(params["name"]), message)
+            if name == "resolve_area" and params.get("query"):
+                params["query"] = restore_region(str(params["query"]).strip(), message)
             key = f"{name}:{json.dumps(params, sort_keys=True, ensure_ascii=False)}"
             if key in seen_calls:
                 prior = seen_calls[key]

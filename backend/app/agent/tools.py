@@ -18,7 +18,8 @@ SCHEMA = [
                 "properties": {
                     "query": {
                         "type": "string",
-                        "description": "사용자가 말한 지역 표현. 예: 경주, 경북 경주, 제주시",
+                        "description": "사용자가 말한 지역 표현. 앞에 붙은 도·시도 이름을 빼지 말고 "
+                                       "그대로 넘긴다. 예: 경주, 경북 경주, 전라도 광주, 제주시",
                     }
                 },
                 "required": ["query"],

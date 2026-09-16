@@ -61,6 +61,17 @@ def from_cards(cards: list[dict], message: str | None = None) -> str:
     one, area = crowd_of(cards)
     name = (attraction or {}).get("title") or (one or {}).get("name") or (one or {}).get("matched_name") or ""
 
+    uncovered = next(
+        (c.get("payload") or {} for c in cards
+         if c.get("type") == "crowd" and (c.get("payload") or {}).get("has_crowd_data") is False),
+        None,
+    )
+    if uncovered:
+        parts.append(
+            f"{josa(uncovered.get('signgu_nm') or '이 지역', '은는')} 아직 관광지 혼잡도가 "
+            "제공되지 않는 지역이에요. 관광지 검색이나 갈래별 목록은 볼 수 있어요."
+        )
+
     if one and one.get("series"):
         s = one.get("summary") or {}
         first = one["series"][0] or {}
@@ -154,6 +165,9 @@ def from_cards(cards: list[dict], message: str | None = None) -> str:
 
     if not parts:
         return "조회 결과가 없어요. 지역명이나 관광지명을 다시 알려주세요."
+
+    if uncovered and not (one or area):
+        return " ".join(parts)
 
     if one or area or (alt and alt.get("items")):
         parts.append("집중률은 예측값이라 실제와 다를 수 있습니다.")

@@ -23,6 +23,11 @@ def fmt(ymd: str) -> str:
     return f"{ymd[0:4]}-{ymd[4:6]}-{ymd[6:8]}"
 
 
+def codes_of(a: dict) -> list[str]:
+    """집중률을 물어볼 코드. 통합으로 코드가 바뀐 지역은 새 코드, 옛 코드 순으로 둘 다 본다."""
+    return [c for c in (a["crowd_cd"], a.get("legacy_cd")) if c]
+
+
 async def has_data(signgu_cd: str) -> bool:
     _, total = await client.call(
         "TatsCnctrRateService/tatsCnctrRatedList",
@@ -30,6 +35,21 @@ async def has_data(signgu_cd: str) -> bool:
         ttl=86400,
     )
     return total > 0
+
+
+async def has_data_for(a: dict) -> bool:
+    for cd in codes_of(a):
+        if await has_data(cd):
+            return True
+    return False
+
+
+async def fetch_area(a: dict, session_id: str | None = None) -> dict[str, list[dict]]:
+    for cd in codes_of(a):
+        by_name = await fetch_signgu(cd, session_id=session_id)
+        if by_name:
+            return by_name
+    return {}
 
 
 async def fetch_signgu(signgu_cd: str, session_id: str | None = None) -> dict[str, list[dict]]:

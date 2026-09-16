@@ -62,6 +62,7 @@ class AreaCode(Base):
     signgu_nm: Mapped[str] = mapped_column(Text)
     aliases: Mapped[str] = mapped_column(Text, server_default="[]")
     has_crowd_data: Mapped[int | None] = mapped_column(Integer)
+    legacy_cd: Mapped[str | None] = mapped_column(Text)
 
 
 class AttractionNameMap(Base):

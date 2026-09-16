@@ -53,7 +53,7 @@ async def crowd_flags(budget: int = 400) -> None:
             log.warning("할당량 도달, %d/%d 처리", len(done), len(rows))
             break
         try:
-            await db.set_crowd_flag(a["crowd_cd"], await crowding.has_data(a["crowd_cd"]))
+            await db.set_crowd_flag(a["crowd_cd"], await crowding.has_data_for(a))
         except Exception as e:
             log.warning("%s 혼잡도 확인 실패: %s", a["label"], type(e).__name__)
             await db.set_crowd_flag(a["crowd_cd"], False)
@@ -87,7 +87,7 @@ async def build_name_map(codes: list[str], budget: int = 800) -> None:
             log.warning("%s 미등록 지역", code)
             continue
         try:
-            by_name = await crowding.fetch_signgu(a["crowd_cd"])
+            by_name = await crowding.fetch_area(a)
         except Exception as e:
             log.warning("%s 혼잡도 조회 실패: %s", a["label"], type(e).__name__)
             continue
