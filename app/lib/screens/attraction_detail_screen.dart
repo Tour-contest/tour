@@ -451,7 +451,7 @@ class _SectionLabel extends StatelessWidget {
       child: Text(
         text,
         style: AppTextStyles.body(
-            fontSize: 11, color: colors.accentBright, letterSpacing: 1.8),
+            fontSize: 16, color: colors.accentBright, letterSpacing: 1.8),
       ),
     );
   }
@@ -802,7 +802,7 @@ class _SimilarSection extends StatelessWidget {
                       Text(
                         item.summary.title,
                         style: AppTextStyles.heading(
-                            fontSize: 14, color: colors.accentBright),
+                            fontSize: 14, color: colors.ink),
                       ),
                       if (item.summary.address.isNotEmpty) ...[
                         const SizedBox(height: 2),

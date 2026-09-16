@@ -19,7 +19,6 @@ import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_locale_controller.dart';
 import 'package:nullnull/theme/app_text_scale_controller.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
-import 'package:nullnull/widgets/app_icon.dart';
 import 'package:nullnull/widgets/confirm_dialog.dart';
 import 'package:nullnull/widgets/nullnull/plain_header.dart';
 import 'package:nullnull/widgets/nullnull/profile_avatar.dart';
@@ -174,7 +173,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (_) => ConfirmDialog(
         title: l10n.settingsLogoutDialogTitle,
         message: l10n.settingsLogoutDialogMessage,
-        confirmLabel: l10n.settingsLogout,
+        confirmLabel: l10n.settingsLogoutDialogConfirm,
+        cancelLabel: l10n.settingsLogoutDialogCancel,
       ),
     );
     if (confirmed != true || !context.mounted) return;
@@ -430,11 +430,6 @@ class _SettingsRow extends StatelessWidget {
                 trailingText!,
                 style: AppTextStyles.body(fontSize: 12.5, color: colors.ink600),
               ),
-            ],
-            if (onTap != null) ...[
-              const SizedBox(width: 8),
-              AppIcon(AppIconShape.arrowUpRight,
-                  size: 12, color: colors.accent),
             ],
           ],
         ),

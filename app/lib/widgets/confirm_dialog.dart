@@ -13,11 +13,17 @@ class ConfirmDialog extends StatelessWidget {
     required this.title,
     required this.message,
     required this.confirmLabel,
+    this.cancelLabel,
   });
 
   final String title;
   final String message;
   final String confirmLabel;
+
+  /// 취소 버튼 문구. 기본값(`null`)이면 공용 `commonCancel`("취소")을 쓴다.
+  /// 로그아웃 확인 팝업처럼 이 다이얼로그 하나만 다른 문구("취소하기")가
+  /// 필요한 경우에만 넘긴다(사용자 요청).
+  final String? cancelLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +56,7 @@ class ConfirmDialog extends StatelessWidget {
               children: [
                 Expanded(
                   child: _DialogButton(
-                    label: AppLocalizations.of(context)!.commonCancel,
+                    label: cancelLabel ?? AppLocalizations.of(context)!.commonCancel,
                     filled: false,
                     onTap: () => Navigator.of(context).pop(false),
                   ),

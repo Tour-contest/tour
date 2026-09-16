@@ -114,6 +114,8 @@
   "settingsDisconnectError": "Couldn't delete your account. Please try again in a moment.",
   "settingsLogoutDialogTitle": "Log out",
   "settingsLogoutDialogMessage": "Are you sure you want to log out?",
+  "settingsLogoutDialogCancel": "Cancel",
+  "settingsLogoutDialogConfirm": "Log out",
   "settingsLoggedInWith": "Logged in with {provider}",
   "placeDetailTitle": "Place info",
   "placeDetailIntroSection": "About this place",

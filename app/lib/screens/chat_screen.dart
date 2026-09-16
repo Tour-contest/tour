@@ -789,7 +789,8 @@ class _ProfileAvatarButtonState extends State<_ProfileAvatarButton> {
       builder: (_) => ConfirmDialog(
         title: l10n.settingsLogoutDialogTitle,
         message: l10n.settingsLogoutDialogMessage,
-        confirmLabel: l10n.settingsLogout,
+        confirmLabel: l10n.settingsLogoutDialogConfirm,
+        cancelLabel: l10n.settingsLogoutDialogCancel,
       ),
     );
     if (confirmed != true || !mounted) return;
