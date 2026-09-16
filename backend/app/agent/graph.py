@@ -580,7 +580,10 @@ async def run(
             if card_type and not repeated and result.get("status") in ("ok", "no_data"):
                 card = {"type": card_type, "payload": result}
                 cards_out.append(card)
-                yield "card", card
+                # 지역 자체에 혼잡도가 없으면 카드를 보내지 않는다. 화면이 no_data 카드를 보면
+                # "전체 현황 보기" 버튼을 그리는데, 눌러도 같은 답이라 문장만 남긴다.
+                if result.get("has_crowd_data") is not False:
+                    yield "card", card
 
             messages.append(
                 {
