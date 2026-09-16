@@ -1,6 +1,8 @@
 import { getUser, getMyInfo } from "@/service/user";
+import { useState } from "react";
 
 const useUser = () => {
+    const [myInfo, setMyInfo] = useState<MyInfo>();
     const fetchUsers = async (params?: GetUserParams) => {
         try {
             const res = await getUser(params);
@@ -14,8 +16,10 @@ const useUser = () => {
 
     const fetchMyInfo = async () => {
         try {
-            const res = await getMyInfo();
-            console.log({ res });
+            const res = await getMyInfo() as ResponseMyInfo;
+            if (!res.success) return;
+            const myInformation = res.data as MyInfo;
+            setMyInfo(myInformation);
         } catch (e) {
             console.error(e);
         }
@@ -23,7 +27,8 @@ const useUser = () => {
 
     return { 
         fetchUsers, 
-        fetchMyInfo 
+        fetchMyInfo,
+        myInfo 
     };
 };
 export default useUser;

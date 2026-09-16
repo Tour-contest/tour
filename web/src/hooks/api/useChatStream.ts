@@ -11,7 +11,7 @@ export type ChatViewMessage = {
     sourceNote: string | null;
 };
 
-type ChatStreamState = {
+export type ChatStreamState = {
     sessionId: string | null;
     messages: ChatViewMessage[];
     streamingText: string;

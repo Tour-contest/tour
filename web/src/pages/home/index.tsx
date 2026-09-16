@@ -3,15 +3,7 @@ import { useParams } from "react-router";
 import clsx from "clsx";
 import { ChatCardView } from "@/components/chat";
 import { useChatStream } from "@/hooks/api";
-import { useAuthenticateStore } from "@/store/authenticate";
-
-// 테마 ↔ 신분류체계 프리셋 (SB-02 Quick Start)
-const QUICK_START_PRESETS = [
-    { title: "웰니스 여행지 추천", description: "온천·휴양림 등 쉼", message: "한적한 웰니스 여행지 추천해줘" },
-    { title: "의료 관광지 추천", description: "의료·헬스케어 연계", message: "의료 관광지 추천해줘" },
-    { title: "반려동물 동반", description: "반려동물 입장 가능", message: "반려동물이랑 갈 수 있는 여행지 추천해줘" },
-    { title: "캠핑 여행지 추천", description: "야영장·오토캠핑", message: "한적한 캠핑 여행지 추천해줘" },
-] as const;
+import ChatbotAgenda from "./ChatbotAgenda";
 
 const ATTRIBUTION = "출처: ⓒ한국관광공사";
 
@@ -26,8 +18,7 @@ function Home() {
     // 세션은 URL 이 소유한다 — 사이드바에서 고른 대화(/c/:sessionId), 없으면 새 대화(/)
     const { sessionId } = useParams<{ sessionId: string }>();
     const { chat, sendMessage, loadSession, resetChat } = useChatStream();
-    const user = useAuthenticateStore((state) => state.user);
-
+  
     const [inputValue, setInputValue] = useState<string>("");
     const scrollAnchorRef = useRef<HTMLDivElement | null>(null);
 
@@ -47,49 +38,12 @@ function Home() {
         setInputValue("");
     };
 
-    const handleQuickStartClick = (message: string) => {
-        sendMessage(message);
-    };
-
     const isEmptyChat = chat.messages.length === 0 && !chat.isStreaming;
 
     return (
-        <div className={clsx("flex", "h-full", "flex-col", "items-center")}>
-            <div className={clsx("flex", "w-[720px]", "max-w-full", "flex-1", "flex-col", "gap-[16px]", "overflow-y-auto", "p-[24px]")}>
-                {isEmptyChat && (
-                    <div className={clsx("flex", "flex-1", "flex-col", "justify-center", "gap-[24px]")}>
-                        <div className={clsx("flex", "flex-col", "gap-[8px]")}>
-                            <h2 className={clsx("text-[24px]", "font-bold")}>
-                                안녕하세요, {user?.nickname ?? "여행자"} 님
-                            </h2>
-                            <p className={clsx("text-[14px]", "text-[#6b6375]")}>어떤 여행지를 찾으시나요?</p>
-                        </div>
-
-                        <div className={clsx("grid", "grid-cols-2", "gap-[12px]")}>
-                            {QUICK_START_PRESETS.map((preset) => (
-                                <button
-                                    key={preset.title}
-                                    type="button"
-                                    onClick={() => handleQuickStartClick(preset.message)}
-                                    className={clsx(
-                                        "flex",
-                                        "flex-col",
-                                        "gap-[4px]",
-                                        "rounded-[12px]",
-                                        "border-[1px]",
-                                        "border-[#e5e4e7]",
-                                        "p-[16px]",
-                                        "text-left",
-                                    )}
-                                >
-                                    <span className={clsx("text-[14px]", "font-bold")}>{preset.title}</span>
-                                    <span className={clsx("text-[12px]", "text-[#6b6375]")}>{preset.description}</span>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
+        <div className={ChatbotContainer}>
+            <div className={ChatbotLayout}>
+                {isEmptyChat && <ChatbotAgenda />}
                 {chat.messages.map((message) => (
                     <div key={message.key} className={clsx("flex", "flex-col", "gap-[8px]")}>
                         {message.cards.map((card, index) => (
@@ -147,3 +101,31 @@ function Home() {
     );
 }
 export default Home;
+//style configuration
+const ChatbotContainer = clsx(
+    "flex flex-col items-center", 
+    "h-full"
+);
+
+const ChatbotLayout = clsx(
+    "flex flex-col gap-4 flex-1", 
+    "w-180 max-w-full", 
+    "overflow-y-auto", 
+    "p-6 box-border"
+);
+
+const ChatboxGuideLayout = clsx(
+    "flex", "flex-1", "flex-col", "justify-center", "gap-6"
+);
+
+const ChatboxGuideTitleGroup = clsx(
+    "flex flex-col gap-2"
+);
+
+const ChatboxGuideTitle = clsx(
+    "text-[24px] font-bold"
+);
+
+const ChatboxGuideAddendumText = clsx(
+    "text-[14px] text-[#6b6375]"
+);
