@@ -269,6 +269,8 @@ def for_model(name: str, result: dict) -> dict:
 
     if name == "list_places":
         base["category"] = result.get("category")
+        if result.get("instruction"):
+            base["instruction"] = result["instruction"]
         base["items"] = [
             {"title": i["title"], "addr1": i.get("addr1", "")}
             for i in (result.get("items") or [])[:8]
@@ -582,7 +584,9 @@ async def run(
                 cards_out.append(card)
                 # 지역 자체에 혼잡도가 없으면 카드를 보내지 않는다. 화면이 no_data 카드를 보면
                 # "전체 현황 보기" 버튼을 그리는데, 눌러도 같은 답이라 문장만 남긴다.
-                if result.get("has_crowd_data") is not False:
+                # 갈래 목록이 비었을 때도 마찬가지. 빈 카드가 가면 화면이 같은 버튼을 그린다.
+                empty_list = card_type == "attraction_list" and result.get("status") == "no_data"
+                if result.get("has_crowd_data") is not False and not empty_list:
                     yield "card", card
 
             messages.append(

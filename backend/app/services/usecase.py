@@ -290,7 +290,10 @@ async def list_places(
             "status": "no_data",
             "items": [],
             "signgu_nm": a["signgu_nm"],
-            "message": f"{a['signgu_nm']}의 {category} 정보가 아직 없어요",
+            "category": category,
+            "message": f"{a['signgu_nm']}에 {category}(으)로 등록된 곳이 없어요",
+            "instruction": "이 갈래로 등록된 곳이 없다고 한 문장으로 답하고 끝내라. "
+                           "다른 갈래로 대신 조회하거나 앞서 보여준 목록을 다시 내놓지 마라.",
         }
     return {
         "status": "ok",
