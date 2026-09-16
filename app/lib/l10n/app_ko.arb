@@ -603,13 +603,9 @@
   "@attractionDetailInfoSection": {
     "description": "관광지 상세 화면 이용정보(+지도에서 보기) 섹션 라벨"
   },
-  "attractionDetailOpenInKakaoMap": "카카오맵으로 열기",
-  "@attractionDetailOpenInKakaoMap": {
-    "description": "관광지 상세 화면 카카오맵 딥링크 버튼"
-  },
-  "attractionDetailOpenInNaverMap": "네이버 지도로 열기",
-  "@attractionDetailOpenInNaverMap": {
-    "description": "관광지 상세 화면 네이버 지도 딥링크 버튼"
+  "attractionDetailOpenMapButton": "지도에서 보기",
+  "@attractionDetailOpenMapButton": {
+    "description": "관광지 상세 화면 지도 버튼(카카오맵/네이버지도 통합) — 탭하면 MapAppSheet가 뜸"
   },
   "attractionDetailIntroSection": "상세 소개",
   "@attractionDetailIntroSection": {

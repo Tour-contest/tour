@@ -7,19 +7,38 @@ import 'package:nullnull/theme/app_text_styles.dart';
 import 'package:nullnull/widgets/app_toast.dart';
 
 /// "지도로 보기" 액션 시트(`assets/images/STEP 1 · 앱 선택 시트.png` 시안). 카카오맵/
-/// 네이버지도 중 하나를 고르면 [MapLauncherService]로 [placeName]을 검색해 연다.
+/// 네이버지도 중 하나를 고르면 연다. [openKakaoMap]/[openNaverMap]을 주지 않으면
+/// [MapLauncherService]로 [placeName]을 검색해 여는 기본 동작을 쓰고(`place_detail_screen.dart`
+/// 처럼 좌표가 없는 화면), 주면 그 함수를 그대로 쓴다(`attraction_detail_screen.dart`처럼
+/// 좌표가 있으면 정확한 지점을 여는 `openKakaoMapAt`/`openNaverMapAt`을 넘길 수 있음).
 /// 앱이 미설치면 [MapLauncherService]가 스토어로 대신 이동시키고, 그마저
 /// 실패하면(브라우저조차 없는 극단적인 경우) [AppToast]로 안내한다.
 class MapAppSheet extends StatelessWidget {
-  const MapAppSheet({super.key, required this.placeName});
+  const MapAppSheet({
+    super.key,
+    required this.placeName,
+    this.openKakaoMap,
+    this.openNaverMap,
+  });
 
   final String placeName;
+  final Future<bool> Function()? openKakaoMap;
+  final Future<bool> Function()? openNaverMap;
 
-  static Future<void> show(BuildContext context, {required String placeName}) {
+  static Future<void> show(
+    BuildContext context, {
+    required String placeName,
+    Future<bool> Function()? openKakaoMap,
+    Future<bool> Function()? openNaverMap,
+  }) {
     return showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (_) => MapAppSheet(placeName: placeName),
+      builder: (_) => MapAppSheet(
+        placeName: placeName,
+        openKakaoMap: openKakaoMap,
+        openNaverMap: openNaverMap,
+      ),
     );
   }
 
@@ -70,14 +89,14 @@ class MapAppSheet extends StatelessWidget {
           const SizedBox(height: 20),
           _SheetButton(
             label: l10n.mapAppSheetKakaoButton,
-            onTap: () => _open(
-                context, () => MapLauncherService.openKakaoMap(placeName)),
+            onTap: () => _open(context,
+                openKakaoMap ?? () => MapLauncherService.openKakaoMap(placeName)),
           ),
           const SizedBox(height: 16),
           _SheetButton(
             label: l10n.mapAppSheetNaverButton,
-            onTap: () => _open(
-                context, () => MapLauncherService.openNaverMap(placeName)),
+            onTap: () => _open(context,
+                openNaverMap ?? () => MapLauncherService.openNaverMap(placeName)),
           ),
           const SizedBox(height: 6),
           TextButton(

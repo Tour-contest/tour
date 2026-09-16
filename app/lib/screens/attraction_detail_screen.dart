@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:nullnull/api/api_client.dart';
@@ -14,7 +15,7 @@ import 'package:nullnull/screens/photo_viewer_screen.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
 import 'package:nullnull/widgets/app_icon.dart';
-import 'package:nullnull/widgets/app_toast.dart';
+import 'package:nullnull/widgets/map_app_sheet.dart';
 import 'package:nullnull/widgets/nullnull/alternatives_section.dart';
 import 'package:nullnull/widgets/nullnull/congestion_badge.dart';
 import 'package:nullnull/widgets/nullnull/crowd_bar_chart.dart';
@@ -202,16 +203,6 @@ class _AttractionDetailScreenState extends State<AttractionDetailScreen> {
     }
   }
 
-  Future<void> _openMap(
-      BuildContext context, Future<bool> Function() launch) async {
-    final unavailableMessage =
-        AppLocalizations.of(context)!.mapAppSheetUnavailable;
-    final opened = await launch();
-    if (opened) return;
-    if (!context.mounted) return;
-    AppToast.show(unavailableMessage, type: AppToastType.info);
-  }
-
   void _openAttraction(String contentId, String title) {
     context.pushNamed(
       RouteNames.attractionDetail,
@@ -314,16 +305,14 @@ class _AttractionDetailScreenState extends State<AttractionDetailScreen> {
             _SectionLabel(l10n.attractionDetailInfoSection),
             _InfoSection(
               info: detail.info,
-              onOpenKakaoMap: () => _openMap(
+              onOpenMap: () => MapAppSheet.show(
                 context,
-                () => summary.mapX != null && summary.mapY != null
+                placeName: summary.title,
+                openKakaoMap: () => summary.mapX != null && summary.mapY != null
                     ? MapLauncherService.openKakaoMapAt(
                         summary.mapY!, summary.mapX!)
                     : MapLauncherService.openKakaoMap(summary.title),
-              ),
-              onOpenNaverMap: () => _openMap(
-                context,
-                () => summary.mapX != null && summary.mapY != null
+                openNaverMap: () => summary.mapX != null && summary.mapY != null
                     ? MapLauncherService.openNaverMapAt(
                         summary.mapY!, summary.mapX!, summary.title)
                     : MapLauncherService.openNaverMap(summary.title),
@@ -674,22 +663,18 @@ class _DayOptionPill extends StatelessWidget {
 }
 
 /// 5. 이용정보(`data.info`의 키-값 목록, 서버 응답에 따라 항목이 달라 키를
-/// 그대로 라벨로 쓴다) + 지도에서 보기(카카오맵/네이버지도) 버튼.
+/// 그대로 라벨로 쓴다) + 지도에서 보기 버튼. 원래 카카오맵/네이버지도 버튼 2개를
+/// 나란히 뒀었는데(`_OutlineButton` 2개), 사용자 요청으로 [MapAppSheet]를 띄우는
+/// 버튼 하나(`_MapButton`)로 통합했다.
 class _InfoSection extends StatelessWidget {
-  const _InfoSection({
-    required this.info,
-    required this.onOpenKakaoMap,
-    required this.onOpenNaverMap,
-  });
+  const _InfoSection({required this.info, required this.onOpenMap});
 
   final List<AttractionInfoItem> info;
-  final VoidCallback onOpenKakaoMap;
-  final VoidCallback onOpenNaverMap;
+  final VoidCallback onOpenMap;
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    final l10n = AppLocalizations.of(context)!;
     final entries = info.where((item) => item.value.trim().isNotEmpty).toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -707,71 +692,48 @@ class _InfoSection extends StatelessWidget {
           ),
           const SizedBox(height: 14),
         ],
-        Row(
-          children: [
-            Expanded(
-              child: _OutlineButton(
-                label: l10n.attractionDetailOpenInKakaoMap,
-                icon: AppIconShape.arrowUpRight,
-                onTap: onOpenKakaoMap,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _OutlineButton(
-                label: l10n.attractionDetailOpenInNaverMap,
-                icon: AppIconShape.arrowUpRight,
-                onTap: onOpenNaverMap,
-              ),
-            ),
-          ],
-        ),
+        _MapButton(onTap: onOpenMap),
       ],
     );
   }
 }
 
-class _OutlineButton extends StatelessWidget {
-  const _OutlineButton({
-    required this.label,
-    required this.onTap,
-    this.icon,
-  });
+/// 카카오맵/네이버지도 버튼을 통합한 "지도에서 보기" 버튼(사용자 지정 시안:
+/// `assets/images/map.svg` + 텍스트, `colors.accent`(#68BDF9) 1.5px 테두리,
+/// `colors.paper`(#1C2023) 배경, 모서리 11, 높이 97, 너비 무한). 탭하면
+/// [MapAppSheet]로 카카오맵/네이버지도 중 하나를 고르게 한다.
+class _MapButton extends StatelessWidget {
+  const _MapButton({required this.onTap});
 
-  final String label;
   final VoidCallback onTap;
-  final AppIconShape? icon;
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(11),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: ),
         decoration: BoxDecoration(
-          border: Border.all(color: colors.accent),
-          borderRadius: BorderRadius.circular(4),
+          color: colors.paper,
+          border: Border.all(color: colors.accent, width: 1.5),
+          borderRadius: BorderRadius.circular(11),
         ),
         alignment: Alignment.center,
         child: Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Flexible(
-              child: Text(
-                label,
-                overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.body(
-                    fontSize: 13,
-                    color: colors.accentBright,
-                    letterSpacing: .3),
-              ),
+            SvgPicture.asset('assets/images/map.svg', height: 26),
+            const SizedBox(width: 10),
+            Text(
+              l10n.attractionDetailOpenMapButton,
+              style: AppTextStyles.heading(fontSize: 15, color: colors.accent)
+                  .copyWith(fontWeight: FontWeight.w600),
             ),
-            if (icon != null) ...[
-              const SizedBox(width: 6),
-              AppIcon(icon!, size: 12, color: colors.accentBright),
-            ],
           ],
         ),
       ),
