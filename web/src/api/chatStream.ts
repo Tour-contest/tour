@@ -4,6 +4,17 @@ import type { ErrorResponse } from "@/types/error";
 
 const CHAT_STREAM_URL = "/api/v1/chat/stream";
 
+// 스트림이 시작되기 전에 실패한 경우. 명세의 retriable 을 실어 화면이 재시도 버튼을 보일지 정한다
+export class ChatStreamError extends Error {
+    readonly retriable: boolean;
+
+    constructor(message: string, retriable: boolean) {
+        super(message);
+        this.name = "ChatStreamError";
+        this.retriable = retriable;
+    }
+}
+
 // axios 인터셉터를 타지 않는 경로라 Bearer 준비를 여기서 직접 한다 (선제 만료 검사 포함)
 const resolveAccessToken = async () => {
     const accessToken = useAuthenticateStore.getState().accessToken;
@@ -55,7 +66,7 @@ type ChatStreamOptions = {
 
 const requireAccessToken = async () => {
     const accessToken = await resolveAccessToken();
-    if (!accessToken) throw new Error("세션이 만료되었습니다. 다시 로그인해주세요.");
+    if (!accessToken) throw new ChatStreamError("세션이 만료되었습니다. 다시 로그인해주세요.", false);
     return accessToken;
 };
 
@@ -64,7 +75,11 @@ const consumeEventStream = async (response: Response, onEvent: ChatStreamOptions
     // 스트림이 시작되기 전의 오류는 공통 응답 형식으로 내려온다
     if (!response.ok || !response.body) {
         const errorResponse = (await response.json().catch(() => null)) as ErrorResponse | null;
-        throw new Error(errorResponse?.message ?? "대화를 시작하지 못했습니다.");
+        // 본문이 없으면(게이트웨이 오류 등) 서버 쪽 문제로 보고 재시도를 허용한다
+        throw new ChatStreamError(
+            errorResponse?.message ?? "대화를 시작하지 못했습니다.",
+            errorResponse?.retriable ?? response.status >= 500,
+        );
     }
 
     const reader = response.body.getReader();

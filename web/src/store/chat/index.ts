@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { openChatStream, resumeChatStream } from "@/api/chatStream";
+import { ChatStreamError, openChatStream, resumeChatStream } from "@/api/chatStream";
 import { getChatMessages } from "@/service/chat";
 import { useChatSessionStore } from "@/store/chatSession";
 
@@ -39,6 +39,10 @@ export type Conversation = {
     hasMoreHistory: boolean;
     isLoadingOlder: boolean;
     errorMessage: string | null;
+    // 명세: error.retriable 이 true 면 재시도 버튼을 보인다 (스트림 시작 전 실패도 같은 규칙)
+    isRetriable: boolean;
+    // 답을 받지 못한 마지막 전송. 재시도는 이 말풍선을 걷어내고 같은 내용을 다시 보낸다. done 이 오면 비운다
+    pendingSend: { messageKey: string; content: string } | null;
 };
 
 export const EMPTY_CONVERSATION: Conversation = {
@@ -51,6 +55,8 @@ export const EMPTY_CONVERSATION: Conversation = {
     hasMoreHistory: false,
     isLoadingOlder: false,
     errorMessage: null,
+    isRetriable: false,
+    pendingSend: null,
 };
 
 const toViewMessage = (message: ChatMessage): ChatViewMessage => ({
@@ -60,6 +66,16 @@ const toViewMessage = (message: ChatMessage): ChatViewMessage => ({
     cards: message.tool_trace,
     sourceNote: null,
 });
+
+// 명세: 출처명(items[].name)과 안내 문장(note)을 말풍선 하단 1행에 함께 보인다.
+// 안내 문장에 이미 들어 있는 출처명은 두 번 쓰지 않는다 ("출처: ⓒ한국관광공사" 에 "한국관광공사" 를 또 붙이지 않음)
+const formatSourceNote = ({ items, note }: { items: { name: string }[]; note: string | null }): string | null => {
+    const baseNote = note ?? "";
+    const extraNames = items.map((item) => item.name).filter((name) => name && !baseNote.includes(name));
+
+    if (extraNames.length === 0) return baseNote || null;
+    return baseNote ? `${baseNote} (${extraNames.join(", ")})` : `출처: ${extraNames.join(", ")}`;
+};
 
 const EMPTY_DRAFT: StreamingDraft = {
     text: "",
@@ -98,7 +114,7 @@ const reduceStreamEvent = (conversation: Conversation, streamEvent: ChatStreamEv
         case "delta":
             return { ...conversation, isStreaming: true, draft: { ...draft, text: draft.text + streamEvent.data.text } };
         case "sources":
-            return { ...conversation, draft: { ...draft, sourceNote: streamEvent.data.note } };
+            return { ...conversation, draft: { ...draft, sourceNote: formatSourceNote(streamEvent.data) } };
         // final 은 delta 누적 결과와 같지만, 누락된 조각이 있어도 여기서 확정된다
         case "final":
             return { ...conversation, draft: { ...draft, text: streamEvent.data.text } };
@@ -109,6 +125,7 @@ const reduceStreamEvent = (conversation: Conversation, streamEvent: ChatStreamEv
                 draft: null,
                 statusLabel: null,
                 isStreaming: false,
+                pendingSend: null,
             };
         // 실패해도 이미 받은 카드·문장은 남긴다
         case "error":
@@ -119,6 +136,7 @@ const reduceStreamEvent = (conversation: Conversation, streamEvent: ChatStreamEv
                 statusLabel: null,
                 isStreaming: false,
                 errorMessage: streamEvent.data.message,
+                isRetriable: streamEvent.data.retriable,
             };
         default:
             return conversation;
@@ -132,6 +150,8 @@ type ChatState = {
     // 새 대화가 방금 서버 id 를 받았다는 신호. 화면이 URL 을 교체한 뒤 비운다
     promotedSessionId: string | null;
     sendMessage: (key: string, message: string) => Promise<void>;
+    // 실패한 마지막 전송을 같은 내용으로 다시 보낸다 (재시도 가능한 실패일 때만)
+    retryLastMessage: (key: string) => Promise<void>;
     openConversation: (sessionId: string) => Promise<void>;
     loadOlderMessages: (sessionId: string) => Promise<void>;
     prepareNewConversation: () => void;
@@ -196,7 +216,8 @@ export const useChatStore = create<ChatState>((set, get) => {
             await open(controller.signal, onEvent);
 
             // done·error 없이 끊기면 미완성이다. 서버는 끝까지 생성해 저장하므로,
-            // 다음 진입 때 이력을 다시 받고 이어받기로 복원되도록 로드 상태를 되돌린다
+            // 다음 진입 때 이력을 다시 받고 이어받기로 복원되도록 로드 상태를 되돌린다.
+            // 재전송하면 같은 질문이 두 번 처리되므로 재시도 대상이 아니다
             if (!settled) {
                 patchConversation(key, (conversation) => ({
                     ...conversation,
@@ -206,6 +227,8 @@ export const useChatStore = create<ChatState>((set, get) => {
                     isStreaming: false,
                     isHistoryLoaded: false,
                     errorMessage: "연결이 끊겼어요. 다시 들어오면 이어서 받을 수 있어요.",
+                    isRetriable: false,
+                    pendingSend: null,
                 }));
             }
 
@@ -220,6 +243,8 @@ export const useChatStore = create<ChatState>((set, get) => {
                 statusLabel: null,
                 isStreaming: false,
                 errorMessage: e instanceof Error ? e.message : "대화 중 오류가 발생했습니다.",
+                // 서버가 retriable 을 알려준 경우는 그대로, 네트워크 단절 같은 나머지는 다시 보내볼 만하다
+                isRetriable: e instanceof ChatStreamError ? e.retriable : true,
             }));
         } finally {
             if (activeStreams.get(key) === controller) activeStreams.delete(key);
@@ -237,16 +262,19 @@ export const useChatStore = create<ChatState>((set, get) => {
             // 생성 중에 다시 보내면 서버가 CHAT_BUSY 로 거절하고 메시지도 저장되지 않는다
             if (!trimmed || current.isStreaming) return;
 
+            const messageKey = `user-${Date.now()}`;
             patchConversation(key, (conversation) => ({
                 ...conversation,
                 messages: [
                     ...conversation.messages,
-                    { key: `user-${Date.now()}`, role: "user", content: trimmed, cards: [], sourceNote: null },
+                    { key: messageKey, role: "user", content: trimmed, cards: [], sourceNote: null },
                 ],
                 draft: null,
                 statusLabel: null,
                 isStreaming: true,
                 errorMessage: null,
+                isRetriable: false,
+                pendingSend: { messageKey, content: trimmed },
             }));
 
             const sessionId = key === NEW_CONVERSATION_KEY ? null : key;
@@ -256,6 +284,28 @@ export const useChatStore = create<ChatState>((set, get) => {
                 (signal, onEvent) => openChatStream({ message: trimmed, session_id: sessionId }, { onEvent, signal }),
                 true,
             );
+        },
+
+        // 실패한 질문 말풍선(과 그 뒤에 남은 부분 답변)을 걷어내고 같은 내용을 새로 보낸다.
+        // 화면에는 질문이 한 번만 남는다. CHAT_BUSY 는 서버에도 저장되지 않았으므로 정확히 처음 상태로 돌아간다
+        retryLastMessage: async (key) => {
+            const current = get().conversations[key];
+            if (!current?.pendingSend || !current.errorMessage || !current.isRetriable || current.isStreaming) return;
+
+            const { messageKey, content } = current.pendingSend;
+            patchConversation(key, (conversation) => {
+                const failedIndex = conversation.messages.findIndex((message) => message.key === messageKey);
+
+                return {
+                    ...conversation,
+                    messages: failedIndex === -1 ? conversation.messages : conversation.messages.slice(0, failedIndex),
+                    errorMessage: null,
+                    isRetriable: false,
+                    pendingSend: null,
+                };
+            });
+
+            await get().sendMessage(key, content);
         },
 
         openConversation: async (sessionId) => {

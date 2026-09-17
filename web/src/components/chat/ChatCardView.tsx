@@ -2,8 +2,8 @@ import { Link } from "react-router";
 import clsx from "clsx";
 import { isAreaOverviewPayload, resolveFollowUps } from "./followUp";
 import AlternativesCard from "./cards/AlternativesCard";
+import AreaOverviewCard from "./cards/AreaOverviewCard";
 import CrowdAttractionCard from "./cards/CrowdAttractionCard";
-import { formatDateLabel } from "./cards/crowdVisual";
 
 const cardStyle = clsx(
     "flex",
@@ -41,12 +41,6 @@ const AttractionLinkRow = ({ contentId, title, image, note }: AttractionLinkRowP
     </div>
 );
 
-const LevelTextStyle = {
-    혼잡: "text-[#ff3b30]",
-    보통: "text-[#c8860a]",
-    한적: "text-[#1a8c4a]",
-} as const;
-
 type ChatCardViewProps = {
     card: ChatCard;
 };
@@ -57,32 +51,11 @@ const ChatCardView = ({ card }: ChatCardViewProps) => {
     if (resolveFollowUps(card) !== null) return null;
 
     switch (card.type) {
-        case "crowd": {
-            if (isAreaOverviewPayload(card.payload)) {
-                const { signgu_nm, date, summary, coverage, source } = card.payload;
-
-                return (
-                    <div className={cardStyle}>
-                        <p className={cardTitleStyle}>{signgu_nm} {formatDateLabel(date)} 현황</p>
-                        <p>
-                            <span className={LevelTextStyle.혼잡}>혼잡 {summary?.crowded ?? 0}곳</span>
-                            {" · "}
-                            <span className={LevelTextStyle.보통}>보통 {summary?.normal ?? 0}곳</span>
-                            {" · "}
-                            <span className={LevelTextStyle.한적}>한적 {summary?.quiet ?? 0}곳</span>
-                        </p>
-                        {coverage && (
-                            <p className={sourceStyle}>
-                                관광정보 {coverage.tourapi_total}곳 중 집중률 보유 {coverage.with_crowd_data}곳
-                            </p>
-                        )}
-                        {source && <p className={sourceStyle}>{source}</p>}
-                    </div>
-                );
-            }
-
-            return <CrowdAttractionCard payload={card.payload} />;
-        }
+        // 지역 전체 형태(summary 보유)는 SB-05 도넛 카드, 관광지 지정 형태는 SB-03 막대 카드
+        case "crowd":
+            return isAreaOverviewPayload(card.payload)
+                ? <AreaOverviewCard payload={card.payload} />
+                : <CrowdAttractionCard payload={card.payload} />;
 
         case "attraction_list":
             return (
@@ -118,19 +91,8 @@ const ChatCardView = ({ card }: ChatCardViewProps) => {
                 </div>
             );
 
-        case "area_overview": {
-            const { signgu_nm, date, summary, source } = card.payload;
-
-            return (
-                <div className={cardStyle}>
-                    <p className={cardTitleStyle}>{signgu_nm} {formatDateLabel(date)} 현황</p>
-                    <p>
-                        혼잡 {summary?.crowded ?? 0}곳 · 보통 {summary?.normal ?? 0}곳 · 한적 {summary?.quiet ?? 0}곳
-                    </p>
-                    {source && <p className={sourceStyle}>{source}</p>}
-                </div>
-            );
-        }
+        case "area_overview":
+            return <AreaOverviewCard payload={card.payload} />;
 
         case "visitors":
             return (

@@ -4,6 +4,7 @@ import clsx from "clsx";
 import { LoadingIndicator } from "@/components/common";
 import { useChatStore, EMPTY_CONVERSATION, NEW_CONVERSATION_KEY } from "@/store/chat";
 import ChatbotAgenda from "./ChatbotAgenda";
+import ChatbotError from "./ChatbotError";
 import ChatbotHistoryLoader from "./ChatbotHistoryLoader";
 import ChatbotMessages from "./ChatbotMessages";
 import ChatbotStreaming from "./ChatbotStreaming";
@@ -22,6 +23,7 @@ function Home() {
 
     const promotedSessionId = useChatStore((state) => state.promotedSessionId);
     const sendMessage = useChatStore((state) => state.sendMessage);
+    const retryLastMessage = useChatStore((state) => state.retryLastMessage);
     const openConversation = useChatStore((state) => state.openConversation);
     const loadOlderMessages = useChatStore((state) => state.loadOlderMessages);
     const prepareNewConversation = useChatStore((state) => state.prepareNewConversation);
@@ -98,6 +100,8 @@ function Home() {
     const isOpeningConversation = !!sessionId && !conversation.isHistoryLoaded
         && conversation.messages.length === 0 && !conversation.errorMessage;
     const isEmptyChat = !isOpeningConversation && conversation.messages.length === 0 && !conversation.isStreaming;
+    // 재시도는 답을 못 받은 전송이 남아 있고 서버가 재시도를 허용했을 때만
+    const canRetry = conversation.isRetriable && conversation.pendingSend !== null && !conversation.isStreaming;
 
     return (
         <div className={ChatbotContainer}>
@@ -125,7 +129,13 @@ function Home() {
                         streamingText={conversation.draft?.text ?? ""}
                     />
                 )}
-                {conversation.errorMessage && <p className={ErrorMessage}>{conversation.errorMessage}</p>}
+                {conversation.errorMessage && (
+                    <ChatbotError
+                        message={conversation.errorMessage}
+                        canRetry={canRetry}
+                        onRetry={() => retryLastMessage(activeKey)}
+                    />
+                )}
                 <div ref={scrollAnchorRef} />
             </div>
             <ChatbotInput isStreaming={conversation.isStreaming} onSubmit={handleSendMessage} />
@@ -145,10 +155,6 @@ const ChatbotLayout = clsx(
     "w-180 max-w-full",
     "overflow-y-auto",
     "p-6 box-border"
-);
-
-const ErrorMessage = clsx(
-    "text-[13px] text-[#ff3b30]"
 );
 
 const CenterNote = clsx(

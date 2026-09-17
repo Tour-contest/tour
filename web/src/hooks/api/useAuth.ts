@@ -108,11 +108,16 @@ const useAuth = () => {
         };
     };
 
-    const handleWithdrawMembership = async () => {
+    // 복구 불가라 화면이 성공 여부를 알아야 한다 — 명세: 로컬 토큰은 성공 응답을 받은 뒤에만 지운다
+    const handleWithdrawMembership = async (): Promise<AdminLoginState> => {
         try {
-            await withdrawMembership();
+            const res = await withdrawMembership();
+            return res.data.ok
+                ? { isSuccess: true, errorMessage: null }
+                : { isSuccess: false, errorMessage: "탈퇴를 처리하지 못했어요. 잠시 후 다시 시도해주세요." };
         } catch (e) {
             console.error(e);
+            return { isSuccess: false, errorMessage: resolveAuthErrorMessage(e, "탈퇴를 처리하지 못했어요. 잠시 후 다시 시도해주세요.") };
         };
     };
 
