@@ -8,8 +8,8 @@ import 'package:nullnull/widgets/app_toast.dart';
 
 /// "지도로 보기" 액션 시트(`assets/images/STEP 1 · 앱 선택 시트.png` 시안). 카카오맵/
 /// 네이버지도 중 하나를 고르면 연다. [openKakaoMap]/[openNaverMap]을 주지 않으면
-/// [MapLauncherService]로 [placeName]을 검색해 여는 기본 동작을 쓰고(`place_detail_screen.dart`
-/// 처럼 좌표가 없는 화면), 주면 그 함수를 그대로 쓴다(`attraction_detail_screen.dart`처럼
+/// [MapLauncherService]로 [placeName]을 검색해 여는 기본 동작을 쓰고(좌표가
+/// 없는 호출부), 주면 그 함수를 그대로 쓴다(`attraction_detail_screen.dart`처럼
 /// 좌표가 있으면 정확한 지점을 여는 `openKakaoMapAt`/`openNaverMapAt`을 넘길 수 있음).
 /// 앱이 미설치면 [MapLauncherService]가 스토어로 대신 이동시키고, 그마저
 /// 실패하면(브라우저조차 없는 극단적인 경우) [AppToast]로 안내한다.

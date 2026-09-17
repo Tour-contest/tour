@@ -1,6 +1,5 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 
-import 'package:nullnull/data/demo_script.dart';
 import 'package:nullnull/data/login_preference.dart';
 
 /// Firebase Analytics 이벤트 로깅을 감싼 유틸리티.
@@ -15,9 +14,6 @@ class AnalyticsService {
 
   static Future<void> logLogin(SnsProvider provider) =>
       _analytics.logLogin(loginMethod: provider.name);
-
-  static Future<void> logPlaceDetailView(PlaceRecommendation place) =>
-      _analytics.logSelectContent(contentType: 'place', itemId: place.name);
 
   static Future<void> logChatMessageSent() =>
       _analytics.logEvent(name: 'chat_message_sent');

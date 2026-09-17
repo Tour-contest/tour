@@ -458,8 +458,7 @@ class _SectionLabel extends StatelessWidget {
 }
 
 /// 2. 이미지 가로 슬라이드 캐러셀. `PageView` + 하단 점 인디케이터. 이미지가
-/// 하나도 없으면 `_PlaceImage`(`place_detail_screen.dart`)와 동일하게
-/// 스켈레톤 한 장만 보여준다.
+/// 하나도 없으면 스켈레톤 한 장만 보여준다.
 class _ImageCarousel extends StatefulWidget {
   const _ImageCarousel({required this.imageUrls});
 

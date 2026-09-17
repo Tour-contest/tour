@@ -9,8 +9,7 @@ import 'package:nullnull/theme/app_text_styles.dart';
 import 'package:nullnull/widgets/nullnull/plain_header.dart';
 
 /// [WebViewScreen]을 `context.pushNamed(RouteNames.webView, extra: ...)`로
-/// 열 때 넘기는 인자. `place_detail_screen.dart`의 `PlaceRecommendation`,
-/// `chat_screen.dart`의 `ChatResumeData`와 동일한 패턴.
+/// 열 때 넘기는 인자. `chat_screen.dart`의 `ChatResumeData`와 동일한 패턴.
 class WebViewRouteArgs {
   const WebViewRouteArgs({required this.title, required this.url});
 

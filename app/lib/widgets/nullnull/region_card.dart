@@ -1,10 +1,5 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
-import 'package:nullnull/app_router.dart';
-import 'package:nullnull/data/analytics_service.dart';
 import 'package:nullnull/data/demo_script.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/theme/app_colors.dart';
@@ -92,23 +87,16 @@ class _SpotChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return InkWell(
-      borderRadius: BorderRadius.circular(999),
-      onTap: () {
-        unawaited(AnalyticsService.logPlaceDetailView(spot));
-        context.pushNamed(RouteNames.place, extra: spot);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: colors.surfaceMuted,
-          border: Border.all(color: colors.surfaceMutedBorder),
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(
-          spot.name,
-          style: AppTextStyles.body(fontSize: 12, color: colors.ink),
-        ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: colors.surfaceMuted,
+        border: Border.all(color: colors.surfaceMutedBorder),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        spot.name,
+        style: AppTextStyles.body(fontSize: 12, color: colors.ink),
       ),
     );
   }

@@ -2,12 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:nullnull/data/analytics_service.dart';
-import 'package:nullnull/data/demo_script.dart';
 import 'package:nullnull/screens/chat_screen.dart';
 import 'package:nullnull/screens/history_screen.dart';
 import 'package:nullnull/screens/login_screen.dart';
-import 'package:nullnull/screens/onboarding_screen.dart';
-import 'package:nullnull/screens/place_detail_screen.dart';
 import 'package:nullnull/screens/attraction_detail_screen.dart';
 import 'package:nullnull/screens/photo_viewer_screen.dart';
 import 'package:nullnull/screens/settings_screen.dart';
@@ -24,12 +21,10 @@ class RouteNames {
   RouteNames._();
 
   static const splash = 'splash';
-  static const onboarding = 'onboarding';
   static const login = 'login';
   static const chat = 'chat';
   static const history = 'history';
   static const settings = 'settings';
-  static const place = 'place';
   static const webView = 'webView';
   static const attractionDetail = 'attractionDetail';
   static const photoViewer = 'photoViewer';
@@ -44,11 +39,6 @@ final GoRouter appRouter = GoRouter(
       path: '/${RouteNames.splash}',
       name: RouteNames.splash,
       builder: (context, state) => const SplashScreen(),
-    ),
-    GoRoute(
-      path: '/${RouteNames.onboarding}',
-      name: RouteNames.onboarding,
-      builder: (context, state) => const OnboardingScreen(),
     ),
     GoRoute(
       path: '/${RouteNames.login}',
@@ -70,12 +60,6 @@ final GoRouter appRouter = GoRouter(
       path: '/${RouteNames.settings}',
       name: RouteNames.settings,
       builder: (context, state) => const SettingsScreen(),
-    ),
-    GoRoute(
-      path: '/${RouteNames.place}',
-      name: RouteNames.place,
-      builder: (context, state) =>
-          PlaceDetailScreen(place: state.extra as PlaceRecommendation),
     ),
     GoRoute(
       path: '/${RouteNames.webView}',

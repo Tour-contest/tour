@@ -1,29 +1,5 @@
 {
   "@@locale": "ko",
-  "onboardingKicker": "여유 · 쾌적 · 한적",
-  "@onboardingKicker": {
-    "description": "온보딩 상단 킥커 문구"
-  },
-  "onboardingIntro": "인파 대신 여백을, 확신 대신 여유를\n원하는 여행자를 위해 당신만의 속도로\n걸을 수 있는 여행을 안내합니다.",
-  "@onboardingIntro": {
-    "description": "온보딩 소개문 3줄"
-  },
-  "onboardingStep1": "실시간 혼잡도 데이터로 지금 붐비는 곳을 피합니다",
-  "@onboardingStep1": {
-    "description": "온보딩 번호 리스트 1번 설명"
-  },
-  "onboardingStep2": "취향은 같고 인파는 적은 대안지를 매칭합니다",
-  "@onboardingStep2": {
-    "description": "온보딩 번호 리스트 2번 설명"
-  },
-  "onboardingStep3": "한적한 시간대 중심으로 코스를 설계합니다",
-  "@onboardingStep3": {
-    "description": "온보딩 번호 리스트 3번 설명"
-  },
-  "onboardingCta": "여행 시작하기",
-  "@onboardingCta": {
-    "description": "온보딩 하단 CTA 버튼"
-  },
   "commonBack": "뒤로",
   "@commonBack": {
     "description": "뒤로가기 아이콘 버튼 툴팁 (여러 화면 공통)"
@@ -545,38 +521,6 @@
         "type": "String"
       }
     }
-  },
-  "placeDetailTitle": "장소 정보",
-  "@placeDetailTitle": {
-    "description": "장소 상세 화면 헤더 타이틀"
-  },
-  "placeDetailIntroSection": "장소 소개",
-  "@placeDetailIntroSection": {
-    "description": "장소 상세 화면 섹션 라벨"
-  },
-  "placeDetailLocationSection": "위치",
-  "@placeDetailLocationSection": {
-    "description": "장소 상세 화면 섹션 라벨"
-  },
-  "placeDetailOpenInMapApp": "지도 앱에서 보기",
-  "@placeDetailOpenInMapApp": {
-    "description": "카카오맵 딥링크 버튼"
-  },
-  "placeDetailOpenInNaverMap": "네이버 지도로 열기",
-  "@placeDetailOpenInNaverMap": {
-    "description": "네이버 지도 딥링크 버튼"
-  },
-  "placeDetailPhoneSection": "전화번호",
-  "@placeDetailPhoneSection": {
-    "description": "장소 상세 화면 섹션 라벨"
-  },
-  "placeDetailCallButton": "전화 걸기",
-  "@placeDetailCallButton": {
-    "description": "전화 걸기 버튼"
-  },
-  "placeDetailCallUnavailable": "전화 앱을 열 수 없어요.",
-  "@placeDetailCallUnavailable": {
-    "description": "전화 걸기 버튼 탭 시 다이얼러를 열지 못했을 때 안내 토스트"
   },
   "attractionListItemDetailCta": "자세히 보기 ›",
   "@attractionListItemDetailCta": {

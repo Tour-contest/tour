@@ -21,8 +21,8 @@ enum _DateFilter { all, today }
 
 /// 지난 대화 목록 화면. `docs/API_SPEC.md`의 `GET /api/v1/chat/sessions`(최근
 /// 활동 순)를 [ChatApi.fetchSessions]로 호출해 보여준다. `docs/DESIGN.md`에는
-/// 아직 이 화면의 레이아웃 스펙이 없어 `place_detail_screen.dart`와 같은 다른
-/// 화면의 색상/타이포그래피 컨벤션을 그대로 따라 구성했다. 항목을 탭하면
+/// 아직 이 화면의 레이아웃 스펙이 없어 다른 화면의 색상/타이포그래피
+/// 컨벤션을 그대로 따라 구성했다. 항목을 탭하면
 /// [ChatApi.fetchMessages]로 그 세션의 이력을 불러온 뒤 [ChatScreen]을
 /// [ChatResumeData]와 함께 `goNamed`로 띄운다(`ChatScreen`이 뒤로가기 시 앱을
 /// 종료하는 단일 홈 화면 전제라 `pushNamed`로 쌓지 않고 스택을 통째로
