@@ -92,24 +92,28 @@ class _DialogButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return SizedBox(
-      height: 44,
-      child: OutlinedButton(
-        onPressed: onTap,
-        style: OutlinedButton.styleFrom(
-          backgroundColor: filled ? colors.accent : null,
-          side: filled ? BorderSide.none : BorderSide(color: colors.accent),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          overlayColor: colors.accentTint08,
-        ),
-        child: Text(
-          label,
-          style: AppTextStyles.body(
-            fontSize: 13.5,
-            color: filled ? colors.paper : colors.accentBright,
-            letterSpacing: .3,
-          ),
+    return OutlinedButton(
+      onPressed: onTap,
+      style: OutlinedButton.styleFrom(
+        // 접근성 글자 크기 설정이 커지면 라벨이 두 줄로 늘어날 수 있는데,
+        // `SizedBox`로 높이를 44로 고정해두면 그 늘어난 텍스트가 잘리거나
+        // 오버플로가 났다(사용자 요청으로 발견) — 최소 높이만 44로 두고
+        // 필요하면 버튼이 그만큼 더 늘어나도록 바꿈.
+        minimumSize: const Size.fromHeight(44),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        backgroundColor: filled ? colors.accent : null,
+        side: filled ? BorderSide.none : BorderSide(color: colors.accent),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        overlayColor: colors.accentTint08,
+      ),
+      child: Text(
+        label,
+        textAlign: TextAlign.center,
+        style: AppTextStyles.body(
+          fontSize: 13.5,
+          color: filled ? colors.paper : colors.accentBright,
+          letterSpacing: .3,
         ),
       ),
     );

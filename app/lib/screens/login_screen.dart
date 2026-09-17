@@ -602,35 +602,39 @@ class _AdminDialogButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return SizedBox(
-      height: 44,
-      child: OutlinedButton(
-        onPressed: onTap,
-        style: OutlinedButton.styleFrom(
-          backgroundColor: filled ? colors.accent : null,
-          side: filled ? BorderSide.none : BorderSide(color: colors.accent),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          overlayColor: colors.accentTint08,
-        ),
-        child: loading
-            ? SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: filled ? colors.paper : colors.accentBright,
-                ),
-              )
-            : Text(
-                label,
-                style: AppTextStyles.body(
-                  fontSize: 13.5,
-                  color: filled ? colors.paper : colors.accentBright,
-                  letterSpacing: .3,
-                ),
-              ),
+    return OutlinedButton(
+      onPressed: onTap,
+      style: OutlinedButton.styleFrom(
+        // `ConfirmDialog`의 `_DialogButton`과 동일한 이유로 고정 높이
+        // `SizedBox` 대신 최소 높이만 지정한다 — 접근성 글자 크기 설정이
+        // 커져 라벨이 두 줄로 늘어나면 그만큼 버튼이 늘어나게 함(사용자
+        // 요청으로 발견).
+        minimumSize: const Size.fromHeight(44),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        backgroundColor: filled ? colors.accent : null,
+        side: filled ? BorderSide.none : BorderSide(color: colors.accent),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        overlayColor: colors.accentTint08,
       ),
+      child: loading
+          ? SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: filled ? colors.paper : colors.accentBright,
+              ),
+            )
+          : Text(
+              label,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.body(
+                fontSize: 13.5,
+                color: filled ? colors.paper : colors.accentBright,
+                letterSpacing: .3,
+              ),
+            ),
     );
   }
 }
