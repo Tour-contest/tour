@@ -3,6 +3,7 @@ import clsx from "clsx";
 import { isAreaOverviewPayload, resolveFollowUps } from "./followUp";
 import AlternativesCard from "./cards/AlternativesCard";
 import AreaOverviewCard from "./cards/AreaOverviewCard";
+import AreaVisitorsCard from "./cards/AreaVisitorsCard";
 import CrowdAttractionCard from "./cards/CrowdAttractionCard";
 
 const cardStyle = clsx(
@@ -95,17 +96,7 @@ const ChatCardView = ({ card }: ChatCardViewProps) => {
             return <AreaOverviewCard payload={card.payload} />;
 
         case "visitors":
-            return (
-                <div className={cardStyle}>
-                    <p className={cardTitleStyle}>{card.payload.signgu_nm} 방문자 추세</p>
-                    {card.payload.items.map((item) => (
-                        <p key={item.date}>
-                            {item.date} · {item.total.toLocaleString()}명
-                        </p>
-                    ))}
-                    <p className={sourceStyle}>{card.payload.data_through} 까지의 자료</p>
-                </div>
-            );
+            return <AreaVisitorsCard payload={card.payload} />;
 
         // 카드가 아니라 1행 안내이며, flat 이면 표시하지 않는다
         case "interest":
