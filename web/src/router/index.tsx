@@ -4,6 +4,7 @@ import { MainLayout } from "@/layout";
 import Login from "@/pages/login";
 import SocialCallback from "@/pages/social-callback";
 import Home from "@/pages/home";
+import Attraction from "@/pages/attraction";
 import Admin from "@/pages/admin";
 import AdminUsers from "@/pages/admin-users";
 import NotFound from "@/pages/not-found";
@@ -24,6 +25,7 @@ const Router = () => {
                             children: [
                                 { index: true, element: <Home /> },
                                 { path: "c/:sessionId", element: <Home /> },
+                                { path: "attractions/:contentId", element: <Attraction /> },
                             ],
                         },
                         {

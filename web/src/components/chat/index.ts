@@ -1,4 +1,6 @@
 import ChatCardView from "./ChatCardView";
 import ChatFollowUps from "./ChatFollowUps";
+import AlternativesCard from "./cards/AlternativesCard";
+import CrowdAttractionCard from "./cards/CrowdAttractionCard";
 
-export { ChatCardView, ChatFollowUps };
+export { ChatCardView, ChatFollowUps, AlternativesCard, CrowdAttractionCard };

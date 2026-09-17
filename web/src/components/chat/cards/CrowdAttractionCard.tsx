@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router";
 import clsx from "clsx";
 import LevelChip from "./LevelChip";
 import {
@@ -13,6 +14,8 @@ import {
 
 type CrowdAttractionCardNeedProps = {
     payload: ChatCrowdAttractionPayload;
+    // 상세 화면이 자기 혼잡도를 그릴 때는 제목이 자기 자신으로 가는 링크가 되지 않게 끈다
+    isTitleLink?: boolean;
 };
 
 // 카드 그래프는 한 주(SB-03)만 그리고, 나머지 날짜는 표 보기로 연다
@@ -21,7 +24,7 @@ const CHART_DAYS = 7;
 const BAR_MAX_HEIGHT_PERCENT = 80;
 
 // SB-03 STEP 2 — 관광지 지정 혼잡도
-const CrowdAttractionCard = ({ payload } : CrowdAttractionCardNeedProps) => {
+const CrowdAttractionCard = ({ payload, isTitleLink = true } : CrowdAttractionCardNeedProps) => {
     const [isForecastOpen, setIsForecastOpen] = useState<boolean>(false);
 
     // 명세: 그래프는 items 중 series 가 있는 첫 항목으로 구성한다
@@ -45,7 +48,11 @@ const CrowdAttractionCard = ({ payload } : CrowdAttractionCardNeedProps) => {
     return <div className={CardShell}>
         <div className={CardHeader}>
             <div className={TitleGroup}>
-                <p className={CardTitle}>{target.name}</p>
+                {isTitleLink && target.content_id ? (
+                    <Link to={`/attractions/${target.content_id}`} className={clsx(CardTitle, "hover:underline")}>{target.name}</Link>
+                ) : (
+                    <p className={CardTitle}>{target.name}</p>
+                )}
                 {region && <p className={Muted}>{region}</p>}
             </div>
             <LevelChip level={focusPoint.level} rate={focusPoint.rate} prefix={formatDateLabel(focusPoint.date)} />

@@ -13,7 +13,10 @@ const toDateKey = (date: Date) => {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 };
 
-export const isToday = (date: string | undefined) => date === toDateKey(new Date());
+// 혼잡도·대안 조회의 기준일 파라미터로 쓴다 (서버 날짜 형식과 같은 YYYY-MM-DD)
+export const todayKey = () => toDateKey(new Date());
+
+export const isToday = (date: string | undefined) => date === todayKey();
 
 // 요청한 기준일로 집계되므로 "오늘"로 고정하면 미래 날짜 조회가 오늘 자료처럼 보인다
 export const formatDateLabel = (date: string | undefined) => {
@@ -34,4 +37,9 @@ export const formatRate = (value: number) => String(Math.round(value * 100) / 10
 // 좌표가 없는 응답도 있어 이름으로 검색해 연다. API 키 없이 쓰는 카카오맵 검색 링크
 export const buildKakaoMapSearchUrl = (keyword: string) => {
     return `https://map.kakao.com/link/search/${encodeURIComponent(keyword)}`;
+};
+
+// 좌표가 있으면 검색 대신 그 지점을 바로 연다. 관광정보의 mapx 는 경도, mapy 는 위도다
+export const buildKakaoMapPointUrl = (name: string, mapx: number, mapy: number) => {
+    return `https://map.kakao.com/link/map/${encodeURIComponent(name)},${mapy},${mapx}`;
 };

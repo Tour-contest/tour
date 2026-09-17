@@ -1,3 +1,4 @@
+import { Link } from "react-router";
 import clsx from "clsx";
 import { isAreaOverviewPayload, resolveFollowUps } from "./followUp";
 import AlternativesCard from "./cards/AlternativesCard";
@@ -17,6 +18,28 @@ const cardStyle = clsx(
 
 const cardTitleStyle = clsx("text-[14px]", "font-bold");
 const sourceStyle = clsx("text-[12px]", "text-[#6b6375]");
+
+// 관광지 항목은 상세(/attractions/:id)로 이어진다. 응답에 딸려온 대표 이미지가 있으면 썸네일로 같이 보여준다
+const attractionRowStyle = clsx("flex", "items-center", "gap-[10px]");
+const thumbnailStyle = clsx("size-[40px]", "shrink-0", "rounded-[8px]", "object-cover", "bg-[#f4f3ec]");
+const attractionLinkStyle = clsx("min-w-0", "truncate", "hover:underline");
+
+type AttractionLinkRowProps = {
+    contentId: string;
+    title: string | null | undefined;
+    image?: string | null;
+    note?: string | null;
+};
+
+const AttractionLinkRow = ({ contentId, title, image, note }: AttractionLinkRowProps) => (
+    <div className={attractionRowStyle}>
+        {image && <img src={image} alt="" loading="lazy" className={thumbnailStyle} />}
+        <p className={clsx("min-w-0", "truncate")}>
+            <Link to={`/attractions/${contentId}`} className={attractionLinkStyle}>{title || "이름 없는 관광지"}</Link>
+            {note && <span className={sourceStyle}> · {note}</span>}
+        </p>
+    </div>
+);
 
 const LevelTextStyle = {
     혼잡: "text-[#ff3b30]",
@@ -66,10 +89,13 @@ const ChatCardView = ({ card }: ChatCardViewProps) => {
                 <div className={cardStyle}>
                     <p className={cardTitleStyle}>{card.payload.signgu_nm ?? "관광지"}</p>
                     {card.payload.items.map((item) => (
-                        <p key={item.content_id}>
-                            {item.title}
-                            {item.addr1 && <span className={sourceStyle}> · {item.addr1}</span>}
-                        </p>
+                        <AttractionLinkRow
+                            key={item.content_id}
+                            contentId={item.content_id}
+                            title={item.title}
+                            image={item.image}
+                            note={item.addr1 ?? item.period ?? item.note}
+                        />
                     ))}
                     {card.payload.source && <p className={sourceStyle}>{card.payload.source}</p>}
                 </div>
@@ -82,8 +108,12 @@ const ChatCardView = ({ card }: ChatCardViewProps) => {
         case "attraction":
             return (
                 <div className={cardStyle}>
-                    <p className={cardTitleStyle}>{card.payload.title}</p>
-                    {card.payload.addr1 && <p>{card.payload.addr1}</p>}
+                    <AttractionLinkRow
+                        contentId={card.payload.content_id}
+                        title={card.payload.title}
+                        image={card.payload.image}
+                        note={card.payload.addr1}
+                    />
                     {card.payload.source && <p className={sourceStyle}>{card.payload.source}</p>}
                 </div>
             );

@@ -1,7 +1,8 @@
 declare global {
     // 관광지 상세 — 호출 시 최근 본 관광지에 자동 기록된다
+    // OpenAPI 문서는 name 이라고 적혀 있지만 실제 응답은 label 로 온다 (2026-09-17 확인). /pet 항목과 같은 형태
     type TouristDetailInfo = {
-        name: string;
+        label: string;
         value: string;
     };
 

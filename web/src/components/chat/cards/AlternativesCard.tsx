@@ -1,3 +1,4 @@
+import { Link } from "react-router";
 import clsx from "clsx";
 import LevelChip from "./LevelChip";
 import { buildKakaoMapSearchUrl, formatRate } from "./crowdVisual";
@@ -62,7 +63,12 @@ const AlternativesCard = ({ payload } : AlternativesCardNeedProps) => {
                     return <li key={item.content_id ?? item.name} className={ItemRow}>
                         <div className={ItemMain}>
                             <div className={ItemTitleRow}>
-                                <p className={ItemName}>{item.name}</p>
+                                {/* content_id 가 없는 항목은 상세로 이어줄 수 없어 이름만 표시한다 */}
+                                {item.content_id ? (
+                                    <Link to={`/attractions/${item.content_id}`} className={clsx(ItemName, ItemLink)}>{item.name}</Link>
+                                ) : (
+                                    <p className={ItemName}>{item.name}</p>
+                                )}
                                 <LevelChip level={item.level} rate={item.rate} />
                             </div>
                             {reasonText && <p className={Muted}>{reasonText}</p>}
@@ -133,6 +139,10 @@ const ItemTitleRow = clsx(
 
 const ItemName = clsx(
     "text-[14px] font-semibold"
+);
+
+const ItemLink = clsx(
+    "hover:underline"
 );
 
 const Muted = clsx(
