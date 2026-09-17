@@ -467,9 +467,6 @@ class _DateFilterMenuOverlay extends StatelessWidget {
   }
 }
 
-/// `chat_screen.dart`의 `_ProfileMenuCard`와 완전히 같은 배경/크기
-/// (`popup_slot.png`, 154×77)를 쓰되, 항목이 선택 여부에 따라 색이 달라지는
-/// 토글 메뉴다.
 class _DateFilterMenuCard extends StatelessWidget {
   const _DateFilterMenuCard({
     required this.selected,
@@ -481,8 +478,8 @@ class _DateFilterMenuCard extends StatelessWidget {
   final VoidCallback onSelectAll;
   final VoidCallback onSelectToday;
 
-  static const double _width = 154;
-  static const double _height = 77;
+  static const double _width = 160;
+  static const double _height = 90;
 
   @override
   Widget build(BuildContext context) {
@@ -499,21 +496,26 @@ class _DateFilterMenuCard extends StatelessWidget {
             children: [
               Image.asset('assets/images/popup_slot.png', fit: BoxFit.fill),
               Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // 사용자 요청으로 "오늘"이 "전체"보다 위(순서상 먼저) 오도록
                   // 배치함. 기본 선택값은 여전히 `_DateFilter.all`
                   // (`_HistoryScreenState._dateFilter` 초기값 참고, 표시
                   // 순서와 기본값은 별개).
-                  _DateFilterMenuItem(
-                    label: l10n.historyFilterToday,
-                    selected: selected == _DateFilter.today,
-                    onTap: onSelectToday,
+                  Expanded(
+                    child: _DateFilterMenuItem(
+                      label: l10n.historyFilterToday,
+                      selected: selected == _DateFilter.today,
+                      onTap: onSelectToday,
+                      isFirst: true,
+                    ),
                   ),
-                  _DateFilterMenuItem(
-                    label: l10n.historyFilterAll,
-                    selected: selected == _DateFilter.all,
-                    onTap: onSelectAll,
+                  Expanded(
+                    child: _DateFilterMenuItem(
+                      label: l10n.historyFilterAll,
+                      selected: selected == _DateFilter.all,
+                      onTap: onSelectAll,
+                    ),
                   ),
                 ],
               ),
@@ -530,26 +532,27 @@ class _DateFilterMenuItem extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.isFirst = false,
   });
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final bool isFirst;
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+        alignment: Alignment.centerLeft,
+        margin: EdgeInsets.only(left: 8, right: 8, top: isFirst ? 8 : 0, bottom: isFirst ? 0 : 8),
+        padding: const EdgeInsets.symmetric(horizontal: 11),
         decoration: BoxDecoration(
           color: selected ? colors.dateFilterActiveBackground : null,
           borderRadius: BorderRadius.circular(6),
         ),
-        alignment: Alignment.centerLeft,
         child: Text(label,
             textScaler: TextScaler.noScaling,
             style: AppTextStyles.body(fontSize: 15, color: colors.ink)

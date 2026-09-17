@@ -901,8 +901,8 @@ class _ProfileMenuCard extends StatelessWidget {
   final VoidCallback onSettingsTap;
   final VoidCallback onLogoutTap;
 
-  static const double _width = 154;
-  static const double _height = 77;
+  static const double _width = 160;
+  static const double _height = 90;
 
   @override
   Widget build(BuildContext context) {
@@ -919,17 +919,20 @@ class _ProfileMenuCard extends StatelessWidget {
             children: [
               Image.asset('assets/images/popup_slot.png', fit: BoxFit.fill),
               Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _ProfileMenuItem(
-                    label: l10n.commonSettings,
-                    onTap: onSettingsTap,
-                    isFirst: true,
+                  Expanded(
+                    child: _ProfileMenuItem(
+                      label: l10n.commonSettings,
+                      onTap: onSettingsTap,
+                      isFirst: true,
+                    ),
                   ),
-                  const SizedBox(height: 12),
-                  _ProfileMenuItem(
-                    label: l10n.settingsLogout,
-                    onTap: onLogoutTap,
+                  Expanded(
+                    child: _ProfileMenuItem(
+                      label: l10n.settingsLogout,
+                      onTap: onLogoutTap,
+                    ),
                   ),
                 ],
               ),
@@ -958,8 +961,18 @@ class _ProfileMenuItem extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Container(
-        alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.symmetric(horizontal: 18),
+        width: double.infinity,
+        // 터치 영역은 `Expanded`로 카드 절반씩 꽉 채우되(부모 `_ProfileMenuCard`
+        // 참고), 글자는 두 항목이 맞닿는 중앙 경계 쪽으로 붙여 예전처럼
+        // 가깝게 보이도록 한다(그대로 세로 중앙 정렬하면 각 절반의 중앙에
+        // 놓여 두 줄 사이가 너무 벌어져 보임).
+        alignment: isFirst ? Alignment.bottomLeft : Alignment.topLeft,
+        padding: EdgeInsets.only(
+          left: 18,
+          right: 18,
+          bottom: isFirst ? 8 : 0,
+          top: isFirst ? 0 : 8,
+        ),
         child: Text(label,
             textScaler: TextScaler.noScaling,
             style: AppTextStyles.body(fontSize: 15, color: colors.ink)
