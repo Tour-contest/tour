@@ -1,6 +1,7 @@
 import { startTransition, useActionState, useEffect, useRef } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router";
 import clsx from "clsx";
+import { LoadingIndicator } from "@/components/common";
 import { useAuth, INITIAL_ADMIN_LOGIN_STATE } from "@/hooks/api";
 
 const REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI;
@@ -46,7 +47,7 @@ function SocialCallback() {
                     </Link>
                 </>
             ) : (
-                <p className={clsx("text-[13px]", "text-[#6b6375]")}>로그인 처리 중…</p>
+                <LoadingIndicator label="로그인 처리 중…" />
             )}
         </div>
     );

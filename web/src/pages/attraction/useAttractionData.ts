@@ -54,12 +54,16 @@ const useAttractionData = (contentId: string | undefined): AttractionData => {
 
     useEffect(() => {
         if (!contentId) return;
+        // 다른 관광지로 옮겨간 뒤 늦게 도착한 상세 응답이 새 화면을 덮어쓰지 않게 한다.
+        // 부가 정보는 patch 가 id 를 비교하지만 상세는 통째로 세팅하므로 이 플래그가 필요하다
+        let isCurrent = true;
 
         const patch = (update: Partial<AttractionData>) => {
             setOwned((prev) => (prev.contentId === contentId ? { ...prev, ...update } : prev));
         };
 
         fetchTouristDetail(contentId).then((detail) => {
+            if (!isCurrent) return;
             setOwned({ contentId, ...INITIAL_DATA, detail });
             if (!detail) return;
 
@@ -71,6 +75,8 @@ const useAttractionData = (contentId: string | undefined): AttractionData => {
             fetchPetAttraction(contentId).then((pet) => patch({ pet }));
             fetchSearchInterest(contentId, INTEREST_WEEKS).then((interest) => patch({ interest }));
         });
+
+        return () => { isCurrent = false; };
     }, [contentId]);
 
     return owned.contentId === contentId ? owned : INITIAL_DATA;

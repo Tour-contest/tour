@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import clsx from "clsx";
+import { LoadingIndicator } from "@/components/common";
 import { useAdmin } from "@/hooks/api";
 
 type AdminDashboardState = {
@@ -84,7 +85,7 @@ function Admin() {
     if (dashboard.isLoading) {
         return (
             <div className={clsx("flex", "h-full", "items-center", "justify-center")}>
-                <p className={mutedStyle}>지표를 불러오는 중…</p>
+                <LoadingIndicator label="지표를 불러오는 중…" />
             </div>
         );
     }
@@ -112,7 +113,7 @@ function Admin() {
     const maxDailyCalls = Math.max(...daily.map((day) => day.real + day.cached), 1);
 
     return (
-        <div className={clsx("flex", "h-full", "flex-col", "gap-[16px]", "overflow-y-auto", "p-[24px]")}>
+        <div className={clsx("flex", "h-full", "flex-col", "gap-[16px]", "overflow-y-auto", "p-[24px]", "animate-fade-in", "motion-reduce:animate-none")}>
             {quotaLevel !== "normal" && (
                 <p className={BannerStyle[quotaLevel]}>
                     TourAPI 할당량 {Math.round(usedRate * 100)}% 사용

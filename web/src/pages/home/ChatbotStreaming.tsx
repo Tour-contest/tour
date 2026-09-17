@@ -1,4 +1,5 @@
 import { ChatCardView } from "@/components/chat";
+import { LoadingIndicator } from "@/components/common";
 import clsx from "clsx";
 import ChatBubble from "./ChatBubble";
 
@@ -16,7 +17,7 @@ const ChatbotStreaming = ({ streamingCards, statusLabel, streamingText } : Chatb
                 return <ChatCardView key={`streaming-${index}`} card={card} />
             })
         }
-        {statusLabel && <p className={StatusLabel}>{statusLabel}…</p>}
+        {statusLabel && <LoadingIndicator label={`${statusLabel}…`} />}
         {streamingText && <ChatBubble role="assistant">{streamingText}</ChatBubble>}
     </div>
 }
@@ -24,8 +25,4 @@ export default ChatbotStreaming;
 //style configuration
 const StreamingNote = clsx(
     "flex flex-col gap-2"
-);
-
-const StatusLabel = clsx(
-    "text-[13px] text-[#6b6375]"
 );

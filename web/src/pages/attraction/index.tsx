@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import clsx from "clsx";
 import { AlternativesCard, CrowdAttractionCard } from "@/components/chat";
+import { LoadingIndicator } from "@/components/common";
 import { buildKakaoMapPointUrl, buildKakaoMapSearchUrl } from "@/components/chat/cards/crowdVisual";
 import { decodeHtmlText } from "@/utils";
 import AttractionGallery from "./AttractionGallery";
@@ -85,7 +86,7 @@ function Attraction() {
 
     if (detail === undefined) {
         return <div className={CenterNote}>
-            <p className={Muted}>관광지 정보를 불러오는 중…</p>
+            <LoadingIndicator label="관광지 정보를 불러오는 중…" />
         </div>
     }
 
@@ -152,9 +153,11 @@ function Attraction() {
                 </section>
             )}
 
-            {congestion === undefined && <p className={Muted}>혼잡도를 확인하는 중…</p>}
+            {congestion === undefined && <LoadingIndicator label="혼잡도를 확인하는 중…" />}
             {congestion && congestion.has_data && (
-                <CrowdAttractionCard payload={toCrowdPayload(title, congestion)} isTitleLink={false} />
+                <div className={FadeIn}>
+                    <CrowdAttractionCard payload={toCrowdPayload(title, congestion)} isTitleLink={false} />
+                </div>
             )}
             {congestion && !congestion.has_data && (
                 <section className={Section}>
@@ -163,7 +166,11 @@ function Attraction() {
                 </section>
             )}
 
-            {hasAlternatives && <AlternativesCard payload={alternatives} />}
+            {hasAlternatives && (
+                <div className={FadeIn}>
+                    <AlternativesCard payload={alternatives} />
+                </div>
+            )}
 
             {/* 명세: info 가 비어 있으면 카드를 표시하지 않는다 */}
             {detail.info.length > 0 && (
@@ -232,7 +239,13 @@ const PageLayout = clsx(
     "flex flex-col gap-4 flex-1",
     "w-180 max-w-full",
     "overflow-y-auto",
-    "p-6 box-border"
+    "p-6 box-border",
+    "animate-fade-in motion-reduce:animate-none"
+);
+
+// 늦게 도착하는 부가 정보(혼잡도·대안·이용안내 등)는 각자 도착하는 순간 서서히 나타난다
+const FadeIn = clsx(
+    "animate-fade-in motion-reduce:animate-none"
 );
 
 const CenterNote = clsx(
@@ -275,7 +288,8 @@ const Section = clsx(
     "border border-[#e5e4e7] rounded-[12px]",
     "bg-white",
     "p-4 box-border",
-    "text-[13px]"
+    "text-[13px]",
+    "animate-fade-in motion-reduce:animate-none"
 );
 
 const SectionTitle = clsx(

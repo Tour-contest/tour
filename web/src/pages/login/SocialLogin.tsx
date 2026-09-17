@@ -1,6 +1,7 @@
 import { startTransition, useActionState } from "react";
 import { Navigate } from "react-router";
 import clsx from "clsx";
+import { LoadingIndicator } from "@/components/common";
 import { useAuth, INITIAL_ADMIN_LOGIN_STATE } from "@/hooks/api";
 
 const DEV_LOGIN_NICKNAME = "테스터";
@@ -41,7 +42,7 @@ const SocialLogin = ({ providerData } : SocialLoginNeedProps) => {
     if (devLoginState.isSuccess) return <Navigate to="/" replace />;
 
     return <div className={SocialSection}>
-        {providerData === null && <p className={MutedMessage}>로그인 수단 조회 중…</p>}
+        {providerData === null && <LoadingIndicator label="로그인 수단 조회 중…" />}
         {providerData?.social.length === 0 && <p className={MutedMessage}>설정된 로그인 수단이 없습니다</p>}
         {
             providerData?.social.map((item) => {

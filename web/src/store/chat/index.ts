@@ -6,6 +6,13 @@ import { useChatSessionStore } from "@/store/chatSession";
 // 서버 id 를 받기 전 새 대화가 머무는 임시 칸. meta 로 id 가 오면 그 id 칸으로 옮겨진다
 export const NEW_CONVERSATION_KEY = "new";
 
+// 이력은 최신 묶음부터 받고, 위로 스크롤할 때 before 커서로 그 이전 묶음을 이어 붙인다 (명세 1~200, 기본 100)
+export const HISTORY_PAGE_SIZE = 50;
+// 서버가 빨라도 스피너가 잠깐은 보이게 해서 이전 묶음이 갑자기 튀어나오지 않게 한다
+export const MIN_OLDER_LOADING_MS = 600;
+
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
 export type ChatViewMessage = {
     key: string;
     role: "user" | "assistant";
@@ -27,6 +34,10 @@ export type Conversation = {
     statusLabel: string | null;
     isStreaming: boolean;
     isHistoryLoaded: boolean;
+    // 더 오래된 묶음을 받을 때 넘길 커서. 서버가 next_before 로 알려주며 더 없으면 null (명세)
+    nextBefore: number | null;
+    hasMoreHistory: boolean;
+    isLoadingOlder: boolean;
     errorMessage: string | null;
 };
 
@@ -36,8 +47,19 @@ export const EMPTY_CONVERSATION: Conversation = {
     statusLabel: null,
     isStreaming: false,
     isHistoryLoaded: false,
+    nextBefore: null,
+    hasMoreHistory: false,
+    isLoadingOlder: false,
     errorMessage: null,
 };
+
+const toViewMessage = (message: ChatMessage): ChatViewMessage => ({
+    key: String(message.id),
+    role: message.role,
+    content: message.content,
+    cards: message.tool_trace,
+    sourceNote: null,
+});
 
 const EMPTY_DRAFT: StreamingDraft = {
     text: "",
@@ -111,6 +133,7 @@ type ChatState = {
     promotedSessionId: string | null;
     sendMessage: (key: string, message: string) => Promise<void>;
     openConversation: (sessionId: string) => Promise<void>;
+    loadOlderMessages: (sessionId: string) => Promise<void>;
     prepareNewConversation: () => void;
     clearPromotedSession: () => void;
     removeConversation: (sessionId: string) => void;
@@ -246,7 +269,7 @@ export const useChatStore = create<ChatState>((set, get) => {
             loadingHistory.add(sessionId);
 
             try {
-                const res = await getChatMessages(sessionId);
+                const res = await getChatMessages(sessionId, { limit: HISTORY_PAGE_SIZE });
                 if (epoch !== sessionEpoch) return;
 
                 set((state) => ({
@@ -255,13 +278,9 @@ export const useChatStore = create<ChatState>((set, get) => {
                         [sessionId]: {
                             ...EMPTY_CONVERSATION,
                             isHistoryLoaded: true,
-                            messages: res.data.items.map((message) => ({
-                                key: String(message.id),
-                                role: message.role,
-                                content: message.content,
-                                cards: message.tool_trace,
-                                sourceNote: null,
-                            })),
+                            messages: res.data.items.map(toViewMessage),
+                            nextBefore: res.data.page.next_before,
+                            hasMoreHistory: res.data.page.has_more,
                         },
                     },
                 }));
@@ -283,6 +302,43 @@ export const useChatStore = create<ChatState>((set, get) => {
                 (signal, onEvent) => resumeChatStream(sessionId, { onEvent, signal }),
                 false,
             );
+        },
+
+        // 위로 스크롤했을 때 더 오래된 묶음을 앞에 이어 붙인다. 커서 방식이라 그 사이 메시지가 늘어도 페이지가 밀리지 않는다
+        loadOlderMessages: async (sessionId) => {
+            const current = get().conversations[sessionId];
+            if (!current?.hasMoreHistory || current.isLoadingOlder || current.nextBefore === null) return;
+
+            const epoch = sessionEpoch;
+            const before = current.nextBefore;
+            patchConversation(sessionId, (conversation) => ({ ...conversation, isLoadingOlder: true }));
+
+            try {
+                const [res] = await Promise.all([
+                    getChatMessages(sessionId, { limit: HISTORY_PAGE_SIZE, before }),
+                    sleep(MIN_OLDER_LOADING_MS),
+                ]);
+                if (epoch !== sessionEpoch) return;
+
+                patchConversation(sessionId, (conversation) => {
+                    // 같은 메시지가 두 번 오더라도(경계 중복) 한 번만 남긴다
+                    const knownKeys = new Set(conversation.messages.map((message) => message.key));
+                    const older = res.data.items.map(toViewMessage).filter((message) => !knownKeys.has(message.key));
+
+                    return {
+                        ...conversation,
+                        messages: [...older, ...conversation.messages],
+                        nextBefore: res.data.page.next_before,
+                        hasMoreHistory: res.data.page.has_more,
+                        isLoadingOlder: false,
+                    };
+                });
+            } catch (e) {
+                console.error(e);
+                if (epoch !== sessionEpoch) return;
+                // 커서는 그대로 둬서 다시 스크롤하면 재시도된다
+                patchConversation(sessionId, (conversation) => ({ ...conversation, isLoadingOlder: false }));
+            }
         },
 
         prepareNewConversation: () => {

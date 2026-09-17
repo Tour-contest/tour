@@ -1,5 +1,6 @@
 import { useState } from "react";
 import clsx from "clsx";
+import { LoadingIndicator } from "@/components/common";
 import { useAreaStore } from "@/store/area";
 import { replaceQuestionRegion } from "@/utils";
 
@@ -64,7 +65,7 @@ const ChatbotRegionRetry = ({ originalMessage, isDisabled, onResend } : ChatbotR
 
     return <div className={PickerGroup}>
         {sidoGroups.length === 0 ? (
-            <p className={MutedMessage}>지역 목록을 불러오는 중이에요</p>
+            <LoadingIndicator label="지역 목록을 불러오는 중…" />
         ) : (
             <>
                 <select aria-label="시도 선택" value={regionPicker.sidoName} onChange={handleSidoChange} className={RegionSelect}>
@@ -116,10 +117,6 @@ const RetryToggle = clsx(
 const PickerGroup = clsx(
     "flex flex-wrap items-center gap-2",
     "self-start"
-);
-
-const MutedMessage = clsx(
-    "text-[12px] text-[#6b6375]"
 );
 
 const RegionSelect = clsx(

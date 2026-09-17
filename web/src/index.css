@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+@theme {
+    /* 새로 그려지는 메시지가 튀어나오지 않게 서서히 나타난다. 투명도만 바꾸므로 높이는 그대로라 스크롤 보정과 충돌하지 않는다 */
+    --animate-fade-in: fade-in 0.4s ease-out both;
+
+    @keyframes fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+}
