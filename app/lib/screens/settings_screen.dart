@@ -19,6 +19,7 @@ import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_locale_controller.dart';
 import 'package:nullnull/theme/app_text_scale_controller.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
+import 'package:nullnull/widgets/app_toast.dart';
 import 'package:nullnull/widgets/confirm_dialog.dart';
 import 'package:nullnull/widgets/nullnull/plain_header.dart';
 import 'package:nullnull/widgets/nullnull/profile_avatar.dart';
@@ -99,9 +100,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _contactByEmail(BuildContext context) async {
     await Clipboard.setData(ClipboardData(text: AppInfo.developerEmail));
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content: Text(AppLocalizations.of(context)!.settingsContactCopied)),
+    AppToast.show(
+      AppLocalizations.of(context)!.settingsContactCopied,
+      type: AppToastType.info,
     );
   }
 
@@ -157,10 +158,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (!context.mounted) return false;
       if (!await ConnectivityService().isOnline()) return false;
       if (!context.mounted) return false;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content:
-                Text(AppLocalizations.of(context)!.settingsDisconnectError)),
+      AppToast.show(
+        AppLocalizations.of(context)!.settingsDisconnectError,
+        type: AppToastType.info,
       );
       return false;
     }

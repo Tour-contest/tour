@@ -16,6 +16,7 @@ import 'package:nullnull/data/user_profile_storage.dart';
 import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
+import 'package:nullnull/widgets/app_toast.dart';
 import 'package:nullnull/widgets/confirm_dialog.dart';
 import 'package:nullnull/widgets/nullnull/mascot.dart';
 
@@ -73,12 +74,13 @@ class _LoginScreenState extends State<LoginScreen> {
       AppLog.logger.e('카카오 로그인 실패', error: error);
       if (!mounted) return;
       // 오프라인 상태면 전역 오프라인 다이얼로그(NetworkStatusListener)가 이미 화면
-      // 전체를 덮고 안내 중이라, 이 화면의 스낵바는 다이얼로그 뒤에 가려 안 보인 채로
+      // 전체를 덮고 안내 중이라, 이 토스트는 다이얼로그 뒤에 가려 안 보인 채로
       // 사라진다. 그런 경우는 중복 안내를 띄우지 않는다.
       if (!await ConnectivityService().isOnline()) return;
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.loginKakaoError)),
+      AppToast.show(
+        AppLocalizations.of(context)!.loginKakaoError,
+        type: AppToastType.info,
       );
     } finally {
       if (mounted) setState(() => _isLoggingIn = false);

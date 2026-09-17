@@ -39,6 +39,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.crowdChartBackground,
     required this.mapSheetGradientEnd,
     required this.dateFilterActiveBackground,
+    required this.toastBorder,
   });
 
   final Color paper;
@@ -111,7 +112,8 @@ class AppColors extends ThemeExtension<AppColors> {
   /// 음성 입력 배지(`VoiceListeningToast`) 둘째 줄("탭해서 종료") 보조 텍스트 색(#737B87).
   final Color voiceListeningHint;
 
-  /// #292C36. 용도 미정 — 값만 우선 등록, 사용처가 정해지면 이름·용도를 갱신할 것.
+  /// 어두운 카드/시트 배경색(#292C36). `MapAppSheet`, `history_screen.dart`의
+  /// `_HistoryTile`, `AppToast` 등이 공유한다.
   final Color graphite;
 
   /// `CrowdBarChart`(혼잡도 막대 그래프) 배경색(#333743).
@@ -123,6 +125,9 @@ class AppColors extends ThemeExtension<AppColors> {
   /// `history_screen.dart`의 `_DateFilterMenuItem`에서 현재 선택된(active)
   /// 필터 항목 배경색(#343843).
   final Color dateFilterActiveBackground;
+
+  /// `AppToast` 배경 테두리색(#E4E4E4).
+  final Color toastBorder;
 
   Color get ink800 => ink.withAlpha(230);
 
@@ -136,6 +141,9 @@ class AppColors extends ThemeExtension<AppColors> {
   Color get accentTint14 => accent.withAlpha(36);
 
   Color get scrim => const Color(0xFF0A0D0F).withAlpha(153);
+
+  /// `AppToast`의 box-shadow 색(#000000, 18% 알파).
+  Color get toastShadow => const Color(0x2E000000);
 
   /// 로그인 화면 최하단 장식 바 그라디언트 배경(헤드라인과 같은 3색, 13% 알파).
   Color get loginBottomBarGradientStart =>
@@ -186,6 +194,7 @@ class AppColors extends ThemeExtension<AppColors> {
     crowdChartBackground: Color(0xFF333743),
     mapSheetGradientEnd: Color(0xFF17191F),
     dateFilterActiveBackground: Color(0xFF343843),
+    toastBorder: Color(0xFFE4E4E4),
   );
 
   static AppColors of(BuildContext context) {
@@ -230,6 +239,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? crowdChartBackground,
     Color? mapSheetGradientEnd,
     Color? dateFilterActiveBackground,
+    Color? toastBorder,
   }) {
     return AppColors(
       paper: paper ?? this.paper,
@@ -272,6 +282,7 @@ class AppColors extends ThemeExtension<AppColors> {
       mapSheetGradientEnd: mapSheetGradientEnd ?? this.mapSheetGradientEnd,
       dateFilterActiveBackground:
           dateFilterActiveBackground ?? this.dateFilterActiveBackground,
+      toastBorder: toastBorder ?? this.toastBorder,
     );
   }
 
@@ -327,6 +338,7 @@ class AppColors extends ThemeExtension<AppColors> {
           Color.lerp(mapSheetGradientEnd, other.mapSheetGradientEnd, t)!,
       dateFilterActiveBackground: Color.lerp(
           dateFilterActiveBackground, other.dateFilterActiveBackground, t)!,
+      toastBorder: Color.lerp(toastBorder, other.toastBorder, t)!,
     );
   }
 }

@@ -64,13 +64,18 @@ class _AppToastView extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
               decoration: BoxDecoration(
-                color: colors.ink,
-                borderRadius: BorderRadius.circular(8),
+                color: colors.graphite,
+                border: Border.all(color: colors.toastBorder, width: 0.5),
+                borderRadius: BorderRadius.circular(64),
+                boxShadow: [
+                  BoxShadow(color: colors.toastShadow, blurRadius: 5.3),
+                ],
               ),
               child: Text(
                 message,
                 textAlign: TextAlign.center,
-                style: AppTextStyles.body(fontSize: 13, color: colors.paper),
+                style: AppTextStyles.heading(
+                    fontSize: 12, color: colors.ink, height: 1.5),
               ),
             ),
           ),
