@@ -43,7 +43,7 @@ class PlainHeader extends StatelessWidget {
           children: [
             IconButton(
               icon: AppIcon(AppIconShape.chevronLeft,
-                  size: 18, color: colors.ink),
+                  size: 22, color: colors.ink),
               onPressed: () => context.pop(),
               tooltip: l10n.commonBack,
             ),

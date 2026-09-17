@@ -755,5 +755,9 @@
   "serverUnavailableDialogExitButton": "앱 종료",
   "@serverUnavailableDialogExitButton": {
     "description": "앱 실행 시 헬스 체크 실패 팝업의 앱 종료 버튼"
+  },
+  "webViewLoadError": "페이지를 불러오지 못했어요.",
+  "@webViewLoadError": {
+    "description": "웹뷰 화면(개인정보처리방침/이용약관 등) 로딩 실패 시 안내(재시도 버튼과 함께, `l10n.historyRetryButton` 재사용)"
   }
 }

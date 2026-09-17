@@ -156,5 +156,6 @@
   "networkOfflineDialogMessage": "Please check your network connection.\nWe'll continue automatically once you're back online.",
   "serverUnavailableDialogTitle": "Server unavailable",
   "serverUnavailableDialogMessage": "The service is temporarily unavailable due to a server error.\nPlease try again later.",
-  "serverUnavailableDialogExitButton": "Exit app"
+  "serverUnavailableDialogExitButton": "Exit app",
+  "webViewLoadError": "Couldn't load the page."
 }
