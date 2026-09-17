@@ -7,20 +7,21 @@ class AppTheme {
   AppTheme._();
 
   static ThemeData get theme {
-    final colors = AppColors.light;
+    final colors = AppColors.dark;
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.light,
+      brightness: Brightness.dark,
       scaffoldBackgroundColor: colors.paper,
       fontFamily: AppTextStyles.body(color: colors.ink).fontFamily,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: colors.gold,
+        seedColor: colors.accent,
+        brightness: Brightness.dark,
         surface: colors.paper,
       ),
       textSelectionTheme: TextSelectionThemeData(
-        cursorColor: colors.gold,
-        selectionColor: colors.goldTint14,
-        selectionHandleColor: colors.gold,
+        cursorColor: colors.accent,
+        selectionColor: colors.accentTint14,
+        selectionHandleColor: colors.accent,
       ),
       splashFactory: NoSplash.splashFactory,
       highlightColor: Colors.transparent,

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
 
-/// docs/DESIGN.md: "사용자 메시지: 우측 정렬, 이탤릭, 오른쪽 2px 골드 세로 괘선".
 class UserMessageBubble extends StatelessWidget {
   const UserMessageBubble({super.key, required this.text});
 
@@ -18,18 +17,21 @@ class UserMessageBubble extends StatelessWidget {
         constraints:
             BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
         child: Container(
-          padding: const EdgeInsets.only(right: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
           decoration: BoxDecoration(
-            border: Border(right: BorderSide(color: colors.gold, width: 2)),
+            color: colors.graphite,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(21),
+              topRight: Radius.circular(21),
+              bottomRight: Radius.circular(8),
+              bottomLeft: Radius.circular(21),
+            ),
           ),
           child: Text(
             text,
-            textAlign: TextAlign.right,
-            style: AppTextStyles.body(
-              color: colors.ink800,
-              height: 1.6,
-              fontStyle: FontStyle.italic,
-            ),
+            style:
+                AppTextStyles.body(color: colors.ink, height: 1.5, fontSize: 14)
+                    .copyWith(fontWeight: FontWeight.w500),
           ),
         ),
       ),

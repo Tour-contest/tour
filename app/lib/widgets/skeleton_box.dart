@@ -42,11 +42,15 @@ class _SkeletonBoxState extends State<SkeletonBox>
         final t = _controller.value;
         return Container(
           decoration: BoxDecoration(
-            color: colors.goldTint08,
+            color: colors.accentTint08,
             gradient: LinearGradient(
               begin: Alignment(-1.6 + t * 3.2, 0),
               end: Alignment(-0.6 + t * 3.2, 0),
-              colors: [colors.goldTint08, colors.goldTint14, colors.goldTint08],
+              colors: [
+                colors.accentTint08,
+                colors.accentTint14,
+                colors.accentTint08
+              ],
             ),
           ),
           alignment: Alignment.center,

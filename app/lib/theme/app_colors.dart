@@ -1,55 +1,288 @@
 import 'package:flutter/material.dart';
 
-/// Classical(에디토리얼/북 스타일) 팔레트. docs/DESIGN.md 참고. 라이트 테마만 지원한다.
-///
-/// [ThemeExtension]로 등록해둔다. 위젯에서는 `AppColors.of(context)`로 조회한다.
 @immutable
 class AppColors extends ThemeExtension<AppColors> {
   const AppColors({
     required this.paper,
+    required this.loginBackground,
+    required this.loginBackgroundGlow,
+    required this.drawerBackground,
     required this.ink,
-    required this.gold,
-    required this.gold700,
+    required this.accent,
+    required this.accentBright,
+    required this.card,
+    required this.cardBorder,
+    required this.surfaceMuted,
+    required this.surfaceMutedBorder,
+    required this.inputBar,
+    required this.inputBarBorder,
+    required this.userBubble,
+    required this.userBubbleBorder,
+    required this.chatSendButton,
+    required this.quietText,
+    required this.quietBorder,
+    required this.quietChart,
+    required this.normalText,
+    required this.normalBorder,
+    required this.normalChart,
+    required this.busyText,
+    required this.busyBorder,
+    required this.busyChart,
+    required this.kakaoContainer,
+    required this.kakaoSymbol,
+    required this.loginHeadlineGradientStart,
+    required this.loginHeadlineGradientMid,
+    required this.loginHeadlineGradientEnd,
+    required this.loginSubheadline,
+    required this.voiceListeningHint,
+    required this.graphite,
+    required this.crowdChartBackground,
+    required this.mapSheetGradientEnd,
+    required this.dateFilterActiveBackground,
+    required this.toastBorder,
   });
 
-  /// 배경(종이) 색.
   final Color paper;
 
-  /// 본문/아이콘 등 전경(잉크) 색.
+  /// 로그인 화면 전용 배경색. 앱 전역 배경(`paper`)과 별도로 지정한다.
+  final Color loginBackground;
+
+  /// 로그인 화면 상단(헤드라인·마스코트 영역) 배경 그라디언트 시작색. 화면
+  /// 55% 지점에서 `loginBackground`로 이어진다.
+  final Color loginBackgroundGlow;
+
+  final Color drawerBackground;
+
   final Color ink;
 
-  /// 단일 액센트. 항상 스트로크(테두리·밑줄·괘선)로만 사용.
-  final Color gold;
+  final Color accent;
 
-  /// 텍스트로 쓰는 골드 — 배경 대비 확보용 변형.
-  final Color gold700;
+  final Color accentBright;
 
-  Color get ink800 => ink.withAlpha(219);
-  Color get ink700 => ink.withAlpha(179);
-  Color get ink600 => ink.withAlpha(148);
-  Color get divider => ink.withAlpha(36);
+  final Color card;
 
-  Color get goldTint08 => gold.withAlpha(20);
-  Color get goldTint14 => gold.withAlpha(36);
+  final Color cardBorder;
 
-  static const light = AppColors(
-    paper: Color(0xFFF3F2F2),
-    ink: Color(0xFF201F1D),
-    gold: Color(0xFFB68235),
-    gold700: Color(0xFF7A5620),
+  final Color surfaceMuted;
+
+  final Color surfaceMutedBorder;
+
+  final Color inputBar;
+
+  final Color inputBarBorder;
+
+  final Color userBubble;
+
+  /// 사용자 채팅 말풍선 테두리색(#D8D8D8).
+  final Color userBubbleBorder;
+
+  /// 채팅 입력바 전송 버튼 배경색(#309AE6).
+  final Color chatSendButton;
+
+  final Color quietText;
+  final Color quietBorder;
+  final Color quietChart;
+
+  final Color normalText;
+  final Color normalBorder;
+  final Color normalChart;
+
+  final Color busyText;
+  final Color busyBorder;
+  final Color busyChart;
+
+  /// 카카오 로그인 버튼 컨테이너 색(#FEE500). 카카오 브랜드 가이드 준수용 예외 — 다른 곳에서는 사용하지 않는다.
+  final Color kakaoContainer;
+
+  /// 카카오 로그인 버튼 심볼 색(#000000). 카카오 브랜드 가이드 준수용 예외.
+  final Color kakaoSymbol;
+
+  /// 로그인 화면 그라디언트 헤드라인 상단 색(#A3F1F9, 0%).
+  final Color loginHeadlineGradientStart;
+
+  /// 로그인 화면 그라디언트 헤드라인 중간 색(#6FC1FC, 39.9%).
+  final Color loginHeadlineGradientMid;
+
+  /// 로그인 화면 그라디언트 헤드라인 하단 색(#309AE6, 100%).
+  final Color loginHeadlineGradientEnd;
+
+  /// 로그인 화면 그라디언트 헤드라인 아래 보조 설명 색(#7D8899).
+  final Color loginSubheadline;
+
+  /// 음성 입력 배지(`VoiceListeningToast`) 둘째 줄("탭해서 종료") 보조 텍스트 색(#737B87).
+  final Color voiceListeningHint;
+
+  /// 어두운 카드/시트 배경색(#292C36). `MapAppSheet`, `history_screen.dart`의
+  /// `_HistoryTile`, `AppToast` 등이 공유한다.
+  final Color graphite;
+
+  /// `CrowdBarChart`(혼잡도 막대 그래프) 배경색(#333743).
+  final Color crowdChartBackground;
+
+  /// `MapAppSheet` 배경 그라디언트 하단 색(#17191F, 100% — 상단은 `graphite`).
+  final Color mapSheetGradientEnd;
+
+  /// `history_screen.dart`의 `_DateFilterMenuItem`에서 현재 선택된(active)
+  /// 필터 항목 배경색(#343843).
+  final Color dateFilterActiveBackground;
+
+  /// `AppToast` 배경 테두리색(#E4E4E4).
+  final Color toastBorder;
+
+  Color get ink800 => ink.withAlpha(230);
+
+  Color get ink700 => const Color(0xFFA9B6BF);
+
+  Color get ink600 => const Color(0xFF77848D);
+
+  Color get divider => cardBorder;
+
+  Color get accentTint08 => accent.withAlpha(20);
+  Color get accentTint14 => accent.withAlpha(36);
+
+  Color get scrim => const Color(0xFF0A0D0F).withAlpha(153);
+
+  /// `AppToast`의 box-shadow 색(#000000, 18% 알파).
+  Color get toastShadow => const Color(0x2E000000);
+
+  /// 로그인 화면 최하단 장식 바 그라디언트 배경(헤드라인과 같은 3색, 13% 알파).
+  Color get loginBottomBarGradientStart =>
+      loginHeadlineGradientStart.withAlpha(33);
+  Color get loginBottomBarGradientMid => loginHeadlineGradientMid.withAlpha(33);
+  Color get loginBottomBarGradientEnd => loginHeadlineGradientEnd.withAlpha(33);
+
+  /// 로그인 화면 최하단 장식 바의 inset 하이라이트 색(#FFFFFF, 12% 알파).
+  Color get loginBottomBarGlow => const Color(0xFFFFFFFF).withAlpha(31);
+
+  /// 카카오 로그인 버튼 레이블 색(#000000 85%).
+  Color get kakaoLabel => kakaoSymbol.withAlpha(217);
+
+  static const dark = AppColors(
+    paper: Color(0xFF1C2023),
+    loginBackground: Color(0xFF20232C),
+    loginBackgroundGlow: Color(0xFF375C78),
+    drawerBackground: Color(0xFF191C1F),
+    ink: Color(0xFFF2F6F9),
+    accent: Color(0xFF68BDF9),
+    accentBright: Color(0xFFA9EDFD),
+    card: Color(0xFF272D32),
+    cardBorder: Color(0xFF343D44),
+    surfaceMuted: Color(0xFF2F373D),
+    surfaceMutedBorder: Color(0xFF3D474E),
+    inputBar: Color(0xFF252A31),
+    inputBarBorder: Color(0xFF4E5963),
+    userBubble: Color(0xFF1A1C22),
+    userBubbleBorder: Color(0xFFD8D8D8),
+    chatSendButton: Color(0xFF309AE6),
+    quietText: Color(0xFF4CD980),
+    quietBorder: Color(0xFF2F9E5B),
+    quietChart: Color(0xFF25B34B),
+    normalText: Color(0xFFF2C94C),
+    normalBorder: Color(0xFFB08417),
+    normalChart: Color(0xFFD9A318),
+    busyText: Color(0xFFEF8D5A),
+    busyBorder: Color(0xFFB0562A),
+    busyChart: Color(0xFFC8561D),
+    kakaoContainer: Color(0xFFFEE500),
+    kakaoSymbol: Color(0xFF000000),
+    loginHeadlineGradientStart: Color(0xFFA3F1F9),
+    loginHeadlineGradientMid: Color(0xFF6FC1FC),
+    loginHeadlineGradientEnd: Color(0xFF309AE6),
+    loginSubheadline: Color(0xFF7D8899),
+    voiceListeningHint: Color(0xFF737B87),
+    graphite: Color(0xFF292C36),
+    crowdChartBackground: Color(0xFF333743),
+    mapSheetGradientEnd: Color(0xFF17191F),
+    dateFilterActiveBackground: Color(0xFF343843),
+    toastBorder: Color(0xFFE4E4E4),
   );
 
   static AppColors of(BuildContext context) {
-    return Theme.of(context).extension<AppColors>() ?? light;
+    return Theme.of(context).extension<AppColors>() ?? dark;
   }
 
   @override
-  AppColors copyWith({Color? paper, Color? ink, Color? gold, Color? gold700}) {
+  AppColors copyWith({
+    Color? paper,
+    Color? loginBackground,
+    Color? loginBackgroundGlow,
+    Color? drawerBackground,
+    Color? ink,
+    Color? accent,
+    Color? accentBright,
+    Color? card,
+    Color? cardBorder,
+    Color? surfaceMuted,
+    Color? surfaceMutedBorder,
+    Color? inputBar,
+    Color? inputBarBorder,
+    Color? userBubble,
+    Color? userBubbleBorder,
+    Color? chatSendButton,
+    Color? quietText,
+    Color? quietBorder,
+    Color? quietChart,
+    Color? normalText,
+    Color? normalBorder,
+    Color? normalChart,
+    Color? busyText,
+    Color? busyBorder,
+    Color? busyChart,
+    Color? kakaoContainer,
+    Color? kakaoSymbol,
+    Color? loginHeadlineGradientStart,
+    Color? loginHeadlineGradientMid,
+    Color? loginHeadlineGradientEnd,
+    Color? loginSubheadline,
+    Color? voiceListeningHint,
+    Color? graphite,
+    Color? crowdChartBackground,
+    Color? mapSheetGradientEnd,
+    Color? dateFilterActiveBackground,
+    Color? toastBorder,
+  }) {
     return AppColors(
       paper: paper ?? this.paper,
+      loginBackground: loginBackground ?? this.loginBackground,
+      loginBackgroundGlow: loginBackgroundGlow ?? this.loginBackgroundGlow,
+      drawerBackground: drawerBackground ?? this.drawerBackground,
       ink: ink ?? this.ink,
-      gold: gold ?? this.gold,
-      gold700: gold700 ?? this.gold700,
+      accent: accent ?? this.accent,
+      accentBright: accentBright ?? this.accentBright,
+      card: card ?? this.card,
+      cardBorder: cardBorder ?? this.cardBorder,
+      surfaceMuted: surfaceMuted ?? this.surfaceMuted,
+      surfaceMutedBorder: surfaceMutedBorder ?? this.surfaceMutedBorder,
+      inputBar: inputBar ?? this.inputBar,
+      inputBarBorder: inputBarBorder ?? this.inputBarBorder,
+      userBubble: userBubble ?? this.userBubble,
+      userBubbleBorder: userBubbleBorder ?? this.userBubbleBorder,
+      chatSendButton: chatSendButton ?? this.chatSendButton,
+      quietText: quietText ?? this.quietText,
+      quietBorder: quietBorder ?? this.quietBorder,
+      quietChart: quietChart ?? this.quietChart,
+      normalText: normalText ?? this.normalText,
+      normalBorder: normalBorder ?? this.normalBorder,
+      normalChart: normalChart ?? this.normalChart,
+      busyText: busyText ?? this.busyText,
+      busyBorder: busyBorder ?? this.busyBorder,
+      busyChart: busyChart ?? this.busyChart,
+      kakaoContainer: kakaoContainer ?? this.kakaoContainer,
+      kakaoSymbol: kakaoSymbol ?? this.kakaoSymbol,
+      loginHeadlineGradientStart:
+          loginHeadlineGradientStart ?? this.loginHeadlineGradientStart,
+      loginHeadlineGradientMid:
+          loginHeadlineGradientMid ?? this.loginHeadlineGradientMid,
+      loginHeadlineGradientEnd:
+          loginHeadlineGradientEnd ?? this.loginHeadlineGradientEnd,
+      loginSubheadline: loginSubheadline ?? this.loginSubheadline,
+      voiceListeningHint: voiceListeningHint ?? this.voiceListeningHint,
+      graphite: graphite ?? this.graphite,
+      crowdChartBackground: crowdChartBackground ?? this.crowdChartBackground,
+      mapSheetGradientEnd: mapSheetGradientEnd ?? this.mapSheetGradientEnd,
+      dateFilterActiveBackground:
+          dateFilterActiveBackground ?? this.dateFilterActiveBackground,
+      toastBorder: toastBorder ?? this.toastBorder,
     );
   }
 
@@ -58,9 +291,54 @@ class AppColors extends ThemeExtension<AppColors> {
     if (other is! AppColors) return this;
     return AppColors(
       paper: Color.lerp(paper, other.paper, t)!,
+      loginBackground: Color.lerp(loginBackground, other.loginBackground, t)!,
+      loginBackgroundGlow:
+          Color.lerp(loginBackgroundGlow, other.loginBackgroundGlow, t)!,
+      drawerBackground:
+          Color.lerp(drawerBackground, other.drawerBackground, t)!,
       ink: Color.lerp(ink, other.ink, t)!,
-      gold: Color.lerp(gold, other.gold, t)!,
-      gold700: Color.lerp(gold700, other.gold700, t)!,
+      accent: Color.lerp(accent, other.accent, t)!,
+      accentBright: Color.lerp(accentBright, other.accentBright, t)!,
+      card: Color.lerp(card, other.card, t)!,
+      cardBorder: Color.lerp(cardBorder, other.cardBorder, t)!,
+      surfaceMuted: Color.lerp(surfaceMuted, other.surfaceMuted, t)!,
+      surfaceMutedBorder:
+          Color.lerp(surfaceMutedBorder, other.surfaceMutedBorder, t)!,
+      inputBar: Color.lerp(inputBar, other.inputBar, t)!,
+      inputBarBorder: Color.lerp(inputBarBorder, other.inputBarBorder, t)!,
+      userBubble: Color.lerp(userBubble, other.userBubble, t)!,
+      userBubbleBorder:
+          Color.lerp(userBubbleBorder, other.userBubbleBorder, t)!,
+      chatSendButton: Color.lerp(chatSendButton, other.chatSendButton, t)!,
+      quietText: Color.lerp(quietText, other.quietText, t)!,
+      quietBorder: Color.lerp(quietBorder, other.quietBorder, t)!,
+      quietChart: Color.lerp(quietChart, other.quietChart, t)!,
+      normalText: Color.lerp(normalText, other.normalText, t)!,
+      normalBorder: Color.lerp(normalBorder, other.normalBorder, t)!,
+      normalChart: Color.lerp(normalChart, other.normalChart, t)!,
+      busyText: Color.lerp(busyText, other.busyText, t)!,
+      busyBorder: Color.lerp(busyBorder, other.busyBorder, t)!,
+      busyChart: Color.lerp(busyChart, other.busyChart, t)!,
+      kakaoContainer: Color.lerp(kakaoContainer, other.kakaoContainer, t)!,
+      kakaoSymbol: Color.lerp(kakaoSymbol, other.kakaoSymbol, t)!,
+      loginHeadlineGradientStart: Color.lerp(
+          loginHeadlineGradientStart, other.loginHeadlineGradientStart, t)!,
+      loginHeadlineGradientMid: Color.lerp(
+          loginHeadlineGradientMid, other.loginHeadlineGradientMid, t)!,
+      loginHeadlineGradientEnd: Color.lerp(
+          loginHeadlineGradientEnd, other.loginHeadlineGradientEnd, t)!,
+      loginSubheadline:
+          Color.lerp(loginSubheadline, other.loginSubheadline, t)!,
+      voiceListeningHint:
+          Color.lerp(voiceListeningHint, other.voiceListeningHint, t)!,
+      graphite: Color.lerp(graphite, other.graphite, t)!,
+      crowdChartBackground:
+          Color.lerp(crowdChartBackground, other.crowdChartBackground, t)!,
+      mapSheetGradientEnd:
+          Color.lerp(mapSheetGradientEnd, other.mapSheetGradientEnd, t)!,
+      dateFilterActiveBackground: Color.lerp(
+          dateFilterActiveBackground, other.dateFilterActiveBackground, t)!,
+      toastBorder: Color.lerp(toastBorder, other.toastBorder, t)!,
     );
   }
 }
