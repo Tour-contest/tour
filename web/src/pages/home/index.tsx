@@ -3,10 +3,12 @@ import { useNavigate, useParams } from "react-router";
 import clsx from "clsx";
 import { LoadingIndicator } from "@/components/common";
 import { useChatStore, EMPTY_CONVERSATION, NEW_CONVERSATION_KEY } from "@/store/chat";
+import { useSystemStore } from "@/store/system";
 import ChatbotAgenda from "./ChatbotAgenda";
 import ChatbotError from "./ChatbotError";
 import ChatbotHistoryLoader from "./ChatbotHistoryLoader";
 import ChatbotMessages from "./ChatbotMessages";
+import ChatbotServiceNotice from "./ChatbotServiceNotice";
 import ChatbotStreaming from "./ChatbotStreaming";
 import ChatbotInput from "./ChatbotInput";
 
@@ -28,6 +30,12 @@ function Home() {
     const loadOlderMessages = useChatStore((state) => state.loadOlderMessages);
     const prepareNewConversation = useChatStore((state) => state.prepareNewConversation);
     const clearPromotedSession = useChatStore((state) => state.clearPromotedSession);
+    const loadReady = useSystemStore((state) => state.loadReady);
+
+    // 첫 화면의 기능 활성 안내용. 페이지 로드당 한 번만 실제 요청이 나간다
+    useEffect(() => {
+        loadReady();
+    }, [loadReady]);
 
     // 새 대화가 방금 서버 id 를 받았다면 URL 이 바뀌기 전 한 프레임도 옮겨간 칸을 읽는다 (빈 화면 깜빡임 방지)
     const activeKey = sessionId ?? promotedSessionId ?? NEW_CONVERSATION_KEY;
@@ -105,6 +113,7 @@ function Home() {
 
     return (
         <div className={ChatbotContainer}>
+            <ChatbotServiceNotice />
             <div ref={scrollContainerRef} onScroll={handleScroll} className={ChatbotLayout}>
                 <ChatbotHistoryLoader
                     hasMore={conversation.hasMoreHistory}
