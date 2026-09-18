@@ -1,19 +1,30 @@
+//react
 import { useEffect, useState } from "react";
+//router
 import { NavLink, useLocation, useNavigate } from "react-router";
-import clsx from "clsx";
+//api
 import { clearSession } from "@/api/tokenManager";
-import { ConfirmModal, LoadingIndicator } from "@/components/common";
-import { useAuth, useChat } from "@/hooks/api";
-import SidebarUserMenu from "./SidebarUserMenu";
+//store
 import { useAuthenticateStore } from "@/store/authenticate";
 import { useAuthorityStore } from "@/store/authority";
 import { useChatStore } from "@/store/chat";
 import { useChatSessionStore } from "@/store/chatSession";
+//hooks
+import { useAuth, useChat } from "@/hooks/api";
+//components
+import { Menu } from "@/components";
+import { ConfirmModal, LoadingIndicator } from "@/components/common";
+import SidebarUserMenu from "./SidebarUserMenu";
+import RecentlyChatList from "./RecentlyChatList";
+//style
+import clsx from "clsx";
+//icon
+// import NewChatIcon from "@/assets/icons/new_chat.svg?react";
 
-const ADMIN_MENUS = [
-    { to: "/admin", label: "관제 대시보드" },
-    { to: "/admin/users", label: "회원 관리" },
-] as const;
+// const ADMIN_MENUS = [
+//     { to: "/admin", label: "관제 대시보드" },
+//     { to: "/admin/users", label: "회원 관리" },
+// ] as const;
 
 // 회원 탈퇴는 소셜 로그인 유저에게만 있다. 관리자(local) · 개발 로그인(dev) 계정은 서버가 관리한다
 const SOCIAL_PROVIDERS: ReadonlyArray<UserInfo["provider"]> = ["kakao"];
@@ -24,57 +35,16 @@ const WITHDRAW_DESCRIPTIONS = [
     "카카오 계정 연결도 함께 해제됩니다.",
 ];
 
-const asideStyle = clsx(
-    "flex",
-    "h-full",
-    "w-[240px]",
-    "shrink-0",
-    "flex-col",
-    "gap-[16px]",
-    "border-r-[1px]",
-    "border-[#e5e4e7]",
-    "bg-[#faf9f5]",
-    "p-[16px]",
-    "box-border",
-);
-
-const menuBaseStyle = clsx("rounded-[8px]", "px-[12px]", "py-[8px]", "text-[14px]", "select-none");
-
-const MenuStyle = {
-    active: clsx(menuBaseStyle, "bg-[#e9e7df]", "font-bold"),
-    normal: clsx(menuBaseStyle, "hover:bg-[#f0eee7]"),
-} as const;
-
-const sectionLabelStyle = clsx("px-[12px]", "text-[12px]", "text-[#6b6375]");
-
-// 평소엔 숨기고 행에 마우스를 올리거나 키보드 포커스가 오면 보인다
-const deleteButtonStyle = clsx(
-    "shrink-0",
-    "rounded-[6px]",
-    "px-[8px]",
-    "py-[4px]",
-    "text-[12px]",
-    "text-[#6b6375]",
-    "opacity-0",
-    "group-hover:opacity-100",
-    "focus:opacity-100",
-    "hover:bg-[#e9e7df]",
-    "hover:text-[#ff3b30]",
-);
-
-// 목록 마지막 줄. 메뉴 항목과 같은 높이라 목록에 자연스럽게 이어진다
-const loadMoreButtonStyle = clsx(
-    menuBaseStyle,
-    "text-left text-[#6b6375]",
-    "hover:bg-[#f0eee7]",
-    "disabled:opacity-60",
-);
-
 const Sidebar = () => {
+    const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState<boolean>(false);
+    const [isWithdrawing, setIsWithdrawing] = useState<boolean>(false);
+    const [withdrawErrorMessage, setWithdrawErrorMessage] = useState<string | null>(null);
+
     const navigate = useNavigate();
     const { pathname } = useLocation();
     const { handleLogout, handleWithdrawMembership } = useAuth();
     const { handleDeleteChatSession } = useChat();
+
     const user = useAuthenticateStore((state) => state.user);
     const role = useAuthorityStore((state) => state.role);
     const sessions = useChatSessionStore((state) => state.sessions);
@@ -83,10 +53,6 @@ const Sidebar = () => {
     const refreshSessions = useChatSessionStore((state) => state.refreshSessions);
     const loadMoreSessions = useChatSessionStore((state) => state.loadMoreSessions);
     const removeConversation = useChatStore((state) => state.removeConversation);
-
-    const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState<boolean>(false);
-    const [isWithdrawing, setIsWithdrawing] = useState<boolean>(false);
-    const [withdrawErrorMessage, setWithdrawErrorMessage] = useState<string | null>(null);
 
     const isAdmin = role === "admin";
     const canWithdraw = !isAdmin && user !== null && SOCIAL_PROVIDERS.includes(user.provider);
@@ -151,64 +117,14 @@ const Sidebar = () => {
     };
 
     return (
-        <aside className={asideStyle}>
+        <aside className={SideBarLayout}>
             <p className={clsx("px-[12px]", "text-[16px]", "font-black")}>
                 널널{isAdmin && <span className={clsx("text-[12px]", "font-normal")}> admin</span>}
             </p>
-
-            <nav className={clsx("flex", "flex-col", "gap-[4px]")}>
-                {isAdmin ? (
-                    ADMIN_MENUS.map((menu) => (
-                        <NavLink
-                            key={menu.to}
-                            to={menu.to}
-                            end
-                            draggable={false}
-                            onDragStart={(e) => e.preventDefault()}
-                            className={({ isActive }) => (isActive ? MenuStyle.active : MenuStyle.normal)}
-                        >
-                            {menu.label}
-                        </NavLink>
-                    ))
-                ) : (
-                    <NavLink
-                        to="/"
-                        end
-                        draggable={false}
-                        onDragStart={(e) => e.preventDefault()}
-                        className={({ isActive }) => (isActive ? MenuStyle.active : MenuStyle.normal)}
-                    >
-                        새 대화
-                    </NavLink>
-                )}
-            </nav>
-
+            <Menu />
             {!isAdmin && (
                 <div className={clsx("flex", "min-h-0", "flex-1", "flex-col", "gap-[4px]", "overflow-y-auto")}>
-                    <p className={sectionLabelStyle}>Recently</p>
-                    {sessions.length === 0 && <p className={sectionLabelStyle}>아직 대화가 없어요</p>}
-                    {sessions.map((session) => (
-                        <div key={session.id} className={clsx("group", "flex", "items-center", "gap-[4px]")}>
-                            <NavLink
-                                to={`/c/${session.id}`}
-                                draggable={false}
-                                onDragStart={(e) => e.preventDefault()}
-                                className={({ isActive }) =>
-                                    clsx(isActive ? MenuStyle.active : MenuStyle.normal, "min-w-0", "flex-1", "truncate")
-                                }
-                            >
-                                {session.title ?? "새 대화"}
-                            </NavLink>
-                            <button
-                                type="button"
-                                onClick={() => handleDeleteSessionClick(session.id)}
-                                aria-label={`${session.title ?? "새 대화"} 삭제`}
-                                className={deleteButtonStyle}
-                            >
-                                삭제
-                            </button>
-                        </div>
-                    ))}
+                    <RecentlyChatList />
                     {hasMoreSessions && (
                         <button
                             type="button"
@@ -248,3 +164,48 @@ const Sidebar = () => {
     );
 };
 export default Sidebar;
+//style configuration
+const SideBarLayout = clsx(
+    "w-60 h-full bg-[#1A1C22]",
+    "flex flex-col gap-4",
+    "shrink-0",
+    "border-r border-[#e5e4e7]",
+    "p-4 box-border",
+);
+
+const menuBaseStyle = clsx(
+    "px-3 py-2 box-border",
+    "text-[16px] text-[#909090] font-normal",
+    "rounded-[8px]", 
+    "select-none"
+);
+
+const MenuStyle = {
+    active: clsx(menuBaseStyle, "bg-[#20232C]", "font-bold", "text-[#FFFFFF]"),
+    normal: clsx(menuBaseStyle, "hover:bg-[#20232C]"),
+} as const;
+
+const sectionLabelStyle = clsx("px-[12px]", "text-[12px]", "text-[#6b6375]");
+
+// 평소엔 숨기고 행에 마우스를 올리거나 키보드 포커스가 오면 보인다
+const deleteButtonStyle = clsx(
+    "shrink-0",
+    "rounded-[6px]",
+    "px-[8px]",
+    "py-[4px]",
+    "text-[12px]",
+    "text-[#6b6375]",
+    "opacity-0",
+    "group-hover:opacity-100",
+    "focus:opacity-100",
+    "hover:bg-[#e9e7df]",
+    "hover:text-[#ff3b30]",
+);
+
+// 목록 마지막 줄. 메뉴 항목과 같은 높이라 목록에 자연스럽게 이어진다
+const loadMoreButtonStyle = clsx(
+    menuBaseStyle,
+    "text-left text-[#6b6375]",
+    "hover:bg-[#f0eee7]",
+    "disabled:opacity-60",
+);
