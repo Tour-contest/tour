@@ -1,9 +1,12 @@
+//react
 import { useActionState } from "react";
+//router
 import { Navigate } from "react-router";
-import clsx from "clsx";
+//hooks
 import { useAuth, INITIAL_ADMIN_LOGIN_STATE } from "@/hooks/api";
+//style
+import clsx from "clsx";
 
-// form action 으로 넘기면 React 가 트랜지션으로 감싸주므로 startTransition 이 필요 없다
 const AdminLoginForm = () => {
     const { handleAdminLogin } = useAuth();
 
@@ -12,7 +15,6 @@ const AdminLoginForm = () => {
         INITIAL_ADMIN_LOGIN_STATE,
     );
 
-    // 권한별 최종 목적지는 라우터 가드가 다시 정리한다
     if (adminLoginState.isSuccess) return <Navigate to="/" replace />;
 
     return <form action={formAction} className={AdminForm}>
@@ -38,7 +40,9 @@ const AdminLoginForm = () => {
             />
         </div>
 
-        {adminLoginState.errorMessage && <p className={ErrorMessage}>{adminLoginState.errorMessage}</p>}
+        <div className="h-5 text-center">
+            {adminLoginState.errorMessage && <p className={ErrorMessage}>{adminLoginState.errorMessage}</p>}
+        </div>
 
         <button type="submit" disabled={isPending} className={SubmitButton}>
             {isPending ? "로그인 중…" : "로그인"}
@@ -56,7 +60,7 @@ const FieldGroup = clsx(
 );
 
 const FieldLabel = clsx(
-    "text-[14px]"
+    "text-[14px] text-[#b1bdc8] font-medium tracking-[1.4px]"
 );
 
 const FieldInput = clsx(
@@ -70,7 +74,8 @@ const ErrorMessage = clsx(
 
 const SubmitButton = clsx(
     "rounded-[8px]",
-    "bg-[#222] text-white",
-    "p-2",
-    "disabled:opacity-50"
+    "bg-[#309AE6]",
+    "text-[#20232C] text-[18px] font-medium tracking-[2px]",
+    "p-2 box-border",
+    "disabled:opacity-50",
 );

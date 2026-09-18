@@ -3,11 +3,11 @@ import { useState } from "react";
 
 const useUser = () => {
     const [myInfo, setMyInfo] = useState<MyInfo>();
-    const fetchUsers = async (params?: GetUserParams) => {
+    // 관리자 회원 목록. 다른 fetch* 와 같이 응답 본문(data)만 돌려준다
+    const fetchUsers = async (params?: GetUserParams): Promise<AdminUserListData | null> => {
         try {
             const res = await getUser(params);
-            console.log({ res });
-            return res;
+            return res.data;
         } catch (e) {
             console.error(e);
             return null;

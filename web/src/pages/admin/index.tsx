@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import clsx from "clsx";
 import { LoadingIndicator } from "@/components/common";
 import { useAdmin } from "@/hooks/api";
+import DailyCallsChart from "./DailyCallsChart";
 
 type AdminDashboardState = {
     apiCalls: ApiCallsData | null;
@@ -110,7 +111,6 @@ function Admin() {
         : null;
 
     const operations = Object.entries(by_operation).sort((a, b) => b[1] - a[1]);
-    const maxDailyCalls = Math.max(...daily.map((day) => day.real + day.cached), 1);
 
     return (
         <div className={clsx("flex", "h-full", "flex-col", "gap-[16px]", "overflow-y-auto", "p-[24px]", "animate-fade-in", "motion-reduce:animate-none")}>
@@ -179,17 +179,7 @@ function Admin() {
 
             <div className={sectionStyle}>
                 <p className={sectionTitleStyle}>일자별 호출 추이</p>
-                <div className={clsx("flex", "items-end", "gap-[8px]", "h-[100px]")}>
-                    {daily.map((day) => (
-                        <div key={day.date} className={clsx("flex", "flex-1", "flex-col", "items-center", "gap-[4px]")}>
-                            <div
-                                style={{ height: `${((day.real + day.cached) / maxDailyCalls) * 80}px` }}
-                                className={clsx("w-full", "rounded-t-[4px]", "bg-[#1a8c4a]")}
-                            />
-                            <span className={mutedStyle}>{day.date.slice(5)}</span>
-                        </div>
-                    ))}
-                </div>
+                <DailyCallsChart daily={daily} />
             </div>
 
             <div className={sectionStyle}>

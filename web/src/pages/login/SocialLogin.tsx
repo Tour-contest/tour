@@ -3,6 +3,7 @@ import { Navigate } from "react-router";
 import clsx from "clsx";
 import { LoadingIndicator } from "@/components/common";
 import { useAuth, INITIAL_ADMIN_LOGIN_STATE } from "@/hooks/api";
+import KakaoSocialIcon from "@/assets/icons/kakao_social_login_logo.svg?react";
 
 const DEV_LOGIN_NICKNAME = "테스터";
 const KAKAO_AUTHORIZE_URL = "https://kauth.kakao.com/oauth/authorize";
@@ -52,7 +53,7 @@ const SocialLogin = ({ providerData } : SocialLoginNeedProps) => {
                     onClick={() => handleKakaoLoginClick(item.client_id)}
                     className={KakaoButton}
                 >
-                    카카오로 시작하기
+                    <KakaoSocialIcon className="w-7 h-7 fill-[#3A2818]"  /> 카카오 로그인
                 </button>
             })
         }
@@ -87,9 +88,11 @@ const ErrorMessage = clsx(
 );
 
 const KakaoButton = clsx(
-    "rounded-[8px]",
-    "bg-[#fee500]",
-    "p-2"
+    "w-50 h-13.75 bg-[#fee500]",
+    "flex gap-4 justify-center items-center",
+    "rounded-full",
+    "text-[18px] text-[#3A2818] font-medium",
+    "cursor-pointer",
 );
 
 const DevLoginButton = clsx(

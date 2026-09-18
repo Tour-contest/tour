@@ -1,6 +1,64 @@
 @import "tailwindcss";
 
+/* Wanted Sans (src/assets/font). 굵기별 정적 파일이라 쓰는 굵기의 파일만 내려받는다.
+   font-display: swap — 폰트가 늦어도 글자를 먼저 보이고 도착하면 바꿔 끼운다 */
+@font-face {
+    font-family: "Wanted Sans";
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+    src: url("./assets/font/WantedSans-Regular.woff2") format("woff2");
+}
+@font-face {
+    font-family: "Wanted Sans";
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+    src: url("./assets/font/WantedSans-Medium.woff2") format("woff2");
+}
+@font-face {
+    font-family: "Wanted Sans";
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+    src: url("./assets/font/WantedSans-SemiBold.woff2") format("woff2");
+}
+@font-face {
+    font-family: "Wanted Sans";
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+    src: url("./assets/font/WantedSans-Bold.woff2") format("woff2");
+}
+@font-face {
+    font-family: "Wanted Sans";
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+    src: url("./assets/font/WantedSans-ExtraBold.woff2") format("woff2");
+}
+@font-face {
+    font-family: "Wanted Sans";
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+    src: url("./assets/font/WantedSans-Black.woff2") format("woff2");
+}
+@font-face {
+    font-family: "Wanted Sans";
+    font-weight: 950;
+    font-style: normal;
+    font-display: swap;
+    src: url("./assets/font/WantedSans-ExtraBlack.woff2") format("woff2");
+}
+
 @theme {
+    /* 앱 기본 글꼴. Tailwind 의 기본 font-family 가 --font-sans 를 따르므로 body 부터 전부 바뀐다.
+       폰트가 아직 안 왔거나 없는 글자는 시스템 한글 글꼴로 대체된다 */
+    --font-sans: "Wanted Sans", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", ui-sans-serif, system-ui, sans-serif;
+    /* ExtraBlack(950)은 Tailwind 기본 굵기 유틸에 없어 font-extrablack 으로 연다 */
+    --font-weight-extrablack: 950;
+
     /* 새로 그려지는 메시지가 튀어나오지 않게 서서히 나타난다. 투명도만 바꾸므로 높이는 그대로라 스크롤 보정과 충돌하지 않는다 */
     --animate-fade-in: fade-in 0.4s ease-out both;
 
