@@ -59,8 +59,8 @@ class ChatCardEvent extends ChatStreamEvent {
 
   /// `payload.status`가 `no_data`이거나 `payload.has_data`가 `false`면 카드 대신
   /// 후속 질문 버튼("지역 전체 현황 보기" 등)을 그려야 한다(`docs/API_SPEC.md`).
-  bool get hasData =>
-      payload['status'] != 'no_data' && payload['has_data'] != false;
+  /// `ChatCardBlock.hasData`(`data/demo_script.dart`)와 같은 기준을 공유한다.
+  bool get hasData => chatCardPayloadHasData(payload);
 
   /// [MockChatApi] 전용 지름길. 실제 카드 JSON 스키마가 아직 없어, 데모 목업은
   /// 화면이 바로 렌더링할 수 있는 원본 [AiBlock](`ForecastBlock` 등)을 이 키에
@@ -283,7 +283,7 @@ class LoggingChatApi implements ChatApi {
     String? sessionId,
   }) async* {
     AppLog.logger.i(
-        '[ChatApi] sendMessage → text: "$text", sessionId: ${sessionId ?? "(new)"}');
+        '[ChatApi] sendMessage → text: "$text", sessionId: $sessionId');
     try {
       await for (final event
           in _inner.sendMessage(text: text, sessionId: sessionId)) {
@@ -485,7 +485,15 @@ class DioChatApi implements ChatApi {
     return _streamEvents(
       _dio.post<ResponseBody>(
         AppConfig.chatStreamEndpoint,
-        data: {'session_id': sessionId ?? '', 'message': text},
+        // [실서버로 확인함] 새 대화를 `session_id: ''`(빈 문자열)로 보내면
+        // 422(`INVALID_INPUT`, "session_id 값을 확인해주세요")로 거부된다 —
+        // 서버는 필드 자체가 없는 것을 원한다. `docs/API_SPEC.md`의 "새
+        // 대화는 session_id를 비워 보내고"는 "필드를 생략"으로 읽어야 한다.
+        data: {
+          if (sessionId != null && sessionId.isNotEmpty)
+            'session_id': sessionId,
+          'message': text,
+        },
         options: Options(responseType: ResponseType.stream),
       ),
     );
@@ -581,7 +589,26 @@ class DioChatApi implements ChatApi {
   Stream<ChatStreamEvent> _streamEvents(
     Future<Response<ResponseBody>> request,
   ) async* {
-    final response = await request;
+    final Response<ResponseBody> response;
+    try {
+      response = await request;
+    } on DioException catch (e) {
+      // `responseType: ResponseType.stream`이라 에러 응답(4xx/5xx)도 디코딩되지
+      // 않은 `ResponseBody`(원본 바이트 스트림)로 온다 — Dio의 기본 예외
+      // 메시지는 상태 코드만 알려줄 뿐 서버가 실제로 왜 거부했는지(검증 오류
+      // 상세 등)는 알려주지 않으므로, 그 바이트를 직접 읽어 로그에 남긴다
+      // (재시도는 하지 않고 원래 예외를 그대로 다시 던짐).
+      final body = e.response?.data;
+      if (body is ResponseBody) {
+        final bytes = await body.stream
+            .fold<List<int>>(<int>[], (acc, chunk) => acc..addAll(chunk));
+        AppLog.logger.e(
+          '[SSE] 요청 실패 (status: ${e.response?.statusCode}): '
+          '${utf8.decode(bytes, allowMalformed: true)}',
+        );
+      }
+      rethrow;
+    }
     var buffer = '';
     await for (final chunk in response.data!.stream) {
       buffer += utf8.decode(chunk, allowMalformed: true);

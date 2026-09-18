@@ -277,8 +277,9 @@ class _ChatScreenState extends State<ChatScreen>
                       ChatCardBlock(type: type, payload: payload));
                 case ChatSourcesEvent(:final sources):
                   capturedSources.addAll(sources);
-                case ChatErrorEvent(:final message):
-                  completeWithError(ChatApiException(message));
+                case ChatErrorEvent(:final message, :final retriable):
+                  completeWithError(
+                      ChatApiException(message, retriable: retriable));
                 case ChatFinalEvent():
                 case ChatToolEvent():
                 case ChatDoneEvent():
@@ -327,8 +328,13 @@ class _ChatScreenState extends State<ChatScreen>
       // 문장/카드를 하나도 못 받은 채(=아직 사용자에게 보여줄 게 없는 채) 끝났고,
       // 분당 10회 제한(429)처럼 다시 눌러야 하는 상황이 아니면 대체 흐름을
       // 제안한다 — 이미 부분 답변이 떠 있으면 지금처럼 그냥 실패로 끝낸다.
+      // HTTP 429뿐 아니라, SSE `error` 이벤트 자체가 `retriable: true`로 온
+      // 경우(서버가 "그냥 다시 보내보라"는 뜻으로 표시하는 일시적 실패)도
+      // 같은 취급 — 관련 없는 REST 대체 조회를 제안하는 대신 다시 보내보라는
+      // 토스트로 끝낸다.
       final isRateLimited = e is DioException && e.response?.statusCode == 429;
-      if (buffer.isEmpty && !isRateLimited) {
+      final isRetriableSseError = e is ChatApiException && e.retriable;
+      if (buffer.isEmpty && !isRateLimited && !isRetriableSseError) {
         setState(() {
           aiEntry.fallbackQuery = text;
           aiEntry.fallbackState = ChatFallbackState.offered;

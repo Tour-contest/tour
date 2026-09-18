@@ -429,13 +429,21 @@ class AttractionImages {
     final rawItems = (json['items'] as List<dynamic>?) ?? const [];
     return AttractionImages(
       items: rawItems
-          .map((item) => item is String
-              ? AttractionImage(url: item)
-              : AttractionImage.fromJson(item as Map<String, dynamic>))
+          .map(_parseItem)
+          .whereType<AttractionImage>()
           .where((image) => image.url.isNotEmpty)
           .toList(),
       source: json['source'] as String?,
     );
+  }
+
+  /// 다른 모델들처럼 nullable 캐스트로 방어적으로 파싱한다 — 항목이 문자열도
+  /// `Map`도 아니면(예: `null`이 섞여 옴) 예전엔 `as Map<String, dynamic>` 강제
+  /// 캐스트가 `TypeError`를 던졌는데, 이제는 그 항목만 조용히 건너뛴다.
+  static AttractionImage? _parseItem(dynamic item) {
+    if (item is String) return AttractionImage(url: item);
+    if (item is Map<String, dynamic>) return AttractionImage.fromJson(item);
+    return null;
   }
 
   final List<AttractionImage> items;

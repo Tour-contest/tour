@@ -114,6 +114,15 @@ class NoDataBlock extends AiBlock {
   final List<String> actions;
 }
 
+/// `payload.status`가 `no_data`이거나 `payload.has_data`가 `false`면 카드에
+/// 보여줄 데이터가 없다는 뜻이다(`docs/API_SPEC.md`). `ChatCardBlock.hasData`와
+/// `lib/api/chat_api.dart`의 `ChatCardEvent.hasData`가 같은 판단 기준을 쓰도록
+/// 한 곳에 모아둔다 — 예전엔 두 클래스가 각자 같은 식을 따로 들고 있어(그리고
+/// `widgets/nullnull/chat_card_view.dart`도 세 번째로 또 복제해 들고 있어) 기준이
+/// 바뀔 때 한쪽만 고치고 잊어버릴 위험이 있었다.
+bool chatCardPayloadHasData(Map<String, dynamic> payload) =>
+    payload['status'] != 'no_data' && payload['has_data'] != false;
+
 /// 실제 백엔드 `ChatCardEvent`(`docs/API_SPEC.md`의 `card` 이벤트)를 그대로 담아두는
 /// 블록. 카드 종류마다 스키마가 달라 파싱은 렌더링 시점(`widgets/nullnull/chat_card_view.dart`)에
 /// `type`을 보고 한다 — 위의 `ForecastBlock` 등은 `MockChatApi`의 캔드 데이터 전용이고,
@@ -122,6 +131,8 @@ class ChatCardBlock extends AiBlock {
   const ChatCardBlock({required this.type, required this.payload});
   final String type;
   final Map<String, dynamic> payload;
+
+  bool get hasData => chatCardPayloadHasData(payload);
 }
 
 class AiTurn {

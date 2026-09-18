@@ -33,16 +33,13 @@ class ChatCardView extends StatelessWidget {
 
   final ChatCardBlock block;
 
-  bool get _hasData =>
-      block.payload['status'] != 'no_data' &&
-      block.payload['has_data'] != false;
-
   @override
   Widget build(BuildContext context) {
     // `payload.status`가 `no_data`이거나 `has_data:false`면 보여줄 정보가
     // 없다는 뜻이라, 안내 문구조차 없이 카드를 완전히 숨긴다(사용자 요청 —
-    // 이전엔 `_NoDataMessage`로 안내 카드를 대신 그렸음).
-    if (!_hasData) {
+    // 이전엔 `_NoDataMessage`로 안내 카드를 대신 그렸음). 판단 기준은
+    // `ChatCardBlock.hasData`(`data/demo_script.dart`) 하나로 통일돼 있다.
+    if (!block.hasData) {
       return const SizedBox.shrink();
     }
     return switch (block.type) {
@@ -140,9 +137,15 @@ class _AttractionListCardState extends State<_AttractionListCard> {
 
   @override
   Widget build(BuildContext context) {
+    // `_CrowdCard`/`_CrowdMatchCard`/`_AlternativesCard`와 동일한 이유로
+    // 빈 목록이면 카드 자체를 그리지 않는다 — `hasData`(status/has_data)가
+    // `true`(또는 필드 자체가 없어 기본 `true`)이면서 `items`만 빈 배열인
+    // 경우, 이 가드가 없으면 제목만 있거나(제목도 없으면 완전히 빈) 배경
+    // 박스만 뜬 카드가 그려졌다.
+    final items = widget.data.items;
+    if (items.isEmpty) return const SizedBox.shrink();
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final items = widget.data.items;
     final hiddenCount = items.length - _collapsedCount;
     final visibleItems =
         (_expanded || hiddenCount <= 0 ? items : items.take(_collapsedCount))
