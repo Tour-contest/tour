@@ -20,13 +20,10 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.userBubbleBorder,
     required this.chatSendButton,
     required this.quietText,
-    required this.quietBorder,
     required this.quietChart,
     required this.normalText,
-    required this.normalBorder,
     required this.normalChart,
     required this.busyText,
-    required this.busyBorder,
     required this.busyChart,
     required this.kakaoContainer,
     required this.kakaoSymbol,
@@ -40,6 +37,10 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.mapSheetGradientEnd,
     required this.dateFilterActiveBackground,
     required this.toastBorder,
+    required this.alternativeReasonText,
+    required this.congestionQuiet,
+    required this.congestionNormal,
+    required this.congestionBusy,
   });
 
   final Color paper;
@@ -80,15 +81,12 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color chatSendButton;
 
   final Color quietText;
-  final Color quietBorder;
   final Color quietChart;
 
   final Color normalText;
-  final Color normalBorder;
   final Color normalChart;
 
   final Color busyText;
-  final Color busyBorder;
   final Color busyChart;
 
   /// 카카오 로그인 버튼 컨테이너 색(#FEE500). 카카오 브랜드 가이드 준수용 예외 — 다른 곳에서는 사용하지 않는다.
@@ -128,6 +126,20 @@ class AppColors extends ThemeExtension<AppColors> {
 
   /// `AppToast` 배경 테두리색(#E4E4E4).
   final Color toastBorder;
+
+  /// `AlternativeCard`의 점수 차이·거리 텍스트 색(#698EA8).
+  final Color alternativeReasonText;
+
+  /// `CongestionBadge`의 "한적" 텍스트·테두리 색(#15B836). 앱 전역에서 재사용하는
+  /// `quietText`(로그인 화면·`attraction_detail_screen.dart`의 검색 관심도
+  /// 등에서도 쓰임)와 별개로, 이 배지 전용으로 뺐다.
+  final Color congestionQuiet;
+
+  /// `CongestionBadge`의 "보통" 텍스트·테두리 색(#D3A418).
+  final Color congestionNormal;
+
+  /// `CongestionBadge`의 "혼잡"/"매우 혼잡" 텍스트·테두리 색(#B84B15).
+  final Color congestionBusy;
 
   Color get ink800 => ink.withAlpha(230);
 
@@ -175,13 +187,10 @@ class AppColors extends ThemeExtension<AppColors> {
     userBubbleBorder: Color(0xFFD8D8D8),
     chatSendButton: Color(0xFF309AE6),
     quietText: Color(0xFF4CD980),
-    quietBorder: Color(0xFF2F9E5B),
     quietChart: Color(0xFF25B34B),
     normalText: Color(0xFFF2C94C),
-    normalBorder: Color(0xFFB08417),
     normalChart: Color(0xFFD9A318),
     busyText: Color(0xFFEF8D5A),
-    busyBorder: Color(0xFFB0562A),
     busyChart: Color(0xFFC8561D),
     kakaoContainer: Color(0xFFFEE500),
     kakaoSymbol: Color(0xFF000000),
@@ -195,6 +204,10 @@ class AppColors extends ThemeExtension<AppColors> {
     mapSheetGradientEnd: Color(0xFF17191F),
     dateFilterActiveBackground: Color(0xFF343843),
     toastBorder: Color(0xFFE4E4E4),
+    alternativeReasonText: Color(0xFF698EA8),
+    congestionQuiet: Color(0xFF15B836),
+    congestionNormal: Color(0xFFD3A418),
+    congestionBusy: Color(0xFFB84B15),
   );
 
   static AppColors of(BuildContext context) {
@@ -220,13 +233,10 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? userBubbleBorder,
     Color? chatSendButton,
     Color? quietText,
-    Color? quietBorder,
     Color? quietChart,
     Color? normalText,
-    Color? normalBorder,
     Color? normalChart,
     Color? busyText,
-    Color? busyBorder,
     Color? busyChart,
     Color? kakaoContainer,
     Color? kakaoSymbol,
@@ -240,6 +250,10 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? mapSheetGradientEnd,
     Color? dateFilterActiveBackground,
     Color? toastBorder,
+    Color? alternativeReasonText,
+    Color? congestionQuiet,
+    Color? congestionNormal,
+    Color? congestionBusy,
   }) {
     return AppColors(
       paper: paper ?? this.paper,
@@ -259,13 +273,10 @@ class AppColors extends ThemeExtension<AppColors> {
       userBubbleBorder: userBubbleBorder ?? this.userBubbleBorder,
       chatSendButton: chatSendButton ?? this.chatSendButton,
       quietText: quietText ?? this.quietText,
-      quietBorder: quietBorder ?? this.quietBorder,
       quietChart: quietChart ?? this.quietChart,
       normalText: normalText ?? this.normalText,
-      normalBorder: normalBorder ?? this.normalBorder,
       normalChart: normalChart ?? this.normalChart,
       busyText: busyText ?? this.busyText,
-      busyBorder: busyBorder ?? this.busyBorder,
       busyChart: busyChart ?? this.busyChart,
       kakaoContainer: kakaoContainer ?? this.kakaoContainer,
       kakaoSymbol: kakaoSymbol ?? this.kakaoSymbol,
@@ -283,6 +294,10 @@ class AppColors extends ThemeExtension<AppColors> {
       dateFilterActiveBackground:
           dateFilterActiveBackground ?? this.dateFilterActiveBackground,
       toastBorder: toastBorder ?? this.toastBorder,
+      alternativeReasonText: alternativeReasonText ?? this.alternativeReasonText,
+      congestionQuiet: congestionQuiet ?? this.congestionQuiet,
+      congestionNormal: congestionNormal ?? this.congestionNormal,
+      congestionBusy: congestionBusy ?? this.congestionBusy,
     );
   }
 
@@ -311,13 +326,10 @@ class AppColors extends ThemeExtension<AppColors> {
           Color.lerp(userBubbleBorder, other.userBubbleBorder, t)!,
       chatSendButton: Color.lerp(chatSendButton, other.chatSendButton, t)!,
       quietText: Color.lerp(quietText, other.quietText, t)!,
-      quietBorder: Color.lerp(quietBorder, other.quietBorder, t)!,
       quietChart: Color.lerp(quietChart, other.quietChart, t)!,
       normalText: Color.lerp(normalText, other.normalText, t)!,
-      normalBorder: Color.lerp(normalBorder, other.normalBorder, t)!,
       normalChart: Color.lerp(normalChart, other.normalChart, t)!,
       busyText: Color.lerp(busyText, other.busyText, t)!,
-      busyBorder: Color.lerp(busyBorder, other.busyBorder, t)!,
       busyChart: Color.lerp(busyChart, other.busyChart, t)!,
       kakaoContainer: Color.lerp(kakaoContainer, other.kakaoContainer, t)!,
       kakaoSymbol: Color.lerp(kakaoSymbol, other.kakaoSymbol, t)!,
@@ -339,6 +351,12 @@ class AppColors extends ThemeExtension<AppColors> {
       dateFilterActiveBackground: Color.lerp(
           dateFilterActiveBackground, other.dateFilterActiveBackground, t)!,
       toastBorder: Color.lerp(toastBorder, other.toastBorder, t)!,
+      alternativeReasonText: Color.lerp(
+          alternativeReasonText, other.alternativeReasonText, t)!,
+      congestionQuiet: Color.lerp(congestionQuiet, other.congestionQuiet, t)!,
+      congestionNormal:
+          Color.lerp(congestionNormal, other.congestionNormal, t)!,
+      congestionBusy: Color.lerp(congestionBusy, other.congestionBusy, t)!,
     );
   }
 }

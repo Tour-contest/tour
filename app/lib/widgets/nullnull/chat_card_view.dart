@@ -147,6 +147,13 @@ class _AttractionListCardState extends State<_AttractionListCard> {
     final visibleItems =
         (_expanded || hiddenCount <= 0 ? items : items.take(_collapsedCount))
             .toList();
+    // `signgu_nm`/`category`가 둘 다 비어있으면(예: 관광지명 단건 조회처럼
+    // 제목이 아예 없는 카드) 제목 자체를 그리지 않는데, 이때도 첫 항목 앞에
+    // 무조건 12px 여백을 넣으면 위에 아무것도 없는데 빈 공간만 뜬 채로
+    // 시작해 항목이 카드 상단에서 붕 떠 보였다 — 제목이 있을 때만(위에서
+    // 떨어뜨릴 대상이 있을 때만) 그 여백을 넣는다.
+    final hasTitle =
+        widget.data.signguNm.isNotEmpty || widget.data.category.isNotEmpty;
     return CardContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,23 +161,23 @@ class _AttractionListCardState extends State<_AttractionListCard> {
           // `signgu_nm`/`category`가 둘 다 비어있으면 "{signguNm} {category}
           // 목록"이 앞뒤 공백만 남은 " 목록"으로 어색하게 보이므로, 그럴 땐
           // 제목 자체를 아예 그리지 않는다(사용자 요청).
-          if (widget.data.signguNm.isNotEmpty ||
-              widget.data.category.isNotEmpty)
+          if (hasTitle)
             Text(
               l10n.chatCardAttractionListTitle(
                   widget.data.signguNm, widget.data.category),
               style: AppTextStyles.heading(fontSize: 16, color: colors.ink),
             ),
           for (var i = 0; i < visibleItems.length; i++) ...[
-            // 첫 항목 앞은 항상 12px 여백만, 두 번째 항목부터는 사용자
-            // 요청으로 항목 사이에 구분선(`Divider`)을 추가함 — "더보기"
-            // 버튼 위 구분선(아래 `hiddenCount > 0` 분기)과는 별개로, 접혀서
-            // 안 보이는 항목이 있어도 지금 보이는 항목들 사이에는 항상 그림.
+            // 첫 항목 앞은 제목이 있을 때만 12px 여백, 두 번째 항목부터는
+            // 사용자 요청으로 항목 사이에 구분선(`Divider`)을 추가함 —
+            // "더보기" 버튼 위 구분선(아래 `hiddenCount > 0` 분기)과는
+            // 별개로, 접혀서 안 보이는 항목이 있어도 지금 보이는 항목들
+            // 사이에는 항상 그림.
             if (i > 0) ...[
               const SizedBox(height: 12),
               Divider(height: 1, color: colors.divider),
             ],
-            const SizedBox(height: 12),
+            if (i > 0 || hasTitle) const SizedBox(height: 12),
             _AttractionRow(item: visibleItems[i]),
           ],
           if (hiddenCount > 0) ...[
@@ -702,13 +709,6 @@ class _AlternativesCard extends StatelessWidget {
             items: data.items,
             onTap: (contentId, title) => _open(context, contentId, title),
           ),
-          if (data.source != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              data.source!,
-              style: AppTextStyles.body(fontSize: 11, color: colors.ink600),
-            ),
-          ],
         ],
       ),
     );

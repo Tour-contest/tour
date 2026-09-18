@@ -109,44 +109,66 @@ class AlternativeCard extends StatelessWidget {
         width: width,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: colors.surfaceMuted,
-          border: Border.all(color: colors.surfaceMutedBorder),
-          borderRadius: BorderRadius.circular(10),
+          color: colors.graphite,
+          border: Border.all(color: colors.inputBarBorder, width: 1.5),
+          borderRadius: BorderRadius.circular(9),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              l10n.alternativeRankLabel(rank),
-              style: AppTextStyles.body(fontSize: 10.5, color: colors.ink600),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    l10n.alternativeRankLabel(rank),
+                    style: AppTextStyles.heading(
+                      fontSize: 13,
+                      color: colors.voiceListeningHint,
+                      height: 1.0,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                CongestionBadge(level: item.level, score: item.rate),
+              ],
             ),
-            const SizedBox(height: 3),
+            const SizedBox(height: 4),
             Text(
               item.name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.heading(fontSize: 14, color: colors.ink),
+              style: AppTextStyles.heading(
+                fontSize: 16,
+                color: colors.ink,
+                height: 1.5,
+              ),
             ),
             if (reason != null) ...[
-              const SizedBox(height: 3),
-              Text(
-                l10n.alternativeReasonLabel(
-                  _formatOneDecimal(reason.lowerBy),
-                  _formatOneDecimal(reason.distanceKm),
+              const SizedBox(height: 5),
+              SizedBox(
+                width: double.infinity,
+                child: Text(
+                  l10n.alternativeReasonLabel(
+                    _formatOneDecimal(reason.lowerBy),
+                    _formatOneDecimal(reason.distanceKm),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.heading(
+                    fontSize: 11,
+                    color: colors.voiceListeningHint,
+                    height: 1.0,
+                  ),
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.body(fontSize: 11, color: colors.ink600),
               ),
             ],
-            const SizedBox(height: 8),
-            CongestionBadge(level: item.level, score: item.rate),
-            const SizedBox(height: 8),
+            const SizedBox(height: 30),
             Text(
               l10n.alternativeDetailLinkLabel,
               style:
-                  AppTextStyles.body(fontSize: 11, color: colors.accentBright),
+                  AppTextStyles.body(fontSize: 11, color: colors.alternativeReasonText),
             ),
           ],
         ),
