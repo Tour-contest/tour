@@ -51,5 +51,5 @@ const MessageNote = clsx(
 );
 
 const SourceNote = clsx(
-    "text-[12px] text-[#6b6375]"
+    "text-[12px] text-[#909090]"
 );

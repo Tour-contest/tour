@@ -39,11 +39,14 @@ const FollowUpGroup = clsx(
     "self-start"
 );
 
+// 어두운 칩. 올리면 강조색 테두리와 흰 글자로 "누를 수 있는 것" 임을 드러낸다
 const FollowUpButton = clsx(
-    "border border-[#b1bdc8] rounded-[12px]",
-    "bg-white",
+    "border border-[#63717A] rounded-[12px]",
+    "bg-[#333743]",
     "px-3 py-2",
-    "text-[13px]",
-    "hover:bg-[#f4f3ec]",
-    "disabled:opacity-50"
+    "text-[13px] text-[#D8D8D8]",
+    "cursor-pointer",
+    "transition-colors duration-150",
+    "hover:border-[#6FC1FC] hover:text-[#FFFFFF]",
+    "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-[#63717A] disabled:hover:text-[#D8D8D8]"
 );

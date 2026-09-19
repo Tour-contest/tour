@@ -124,9 +124,10 @@ const SettingsButton = clsx(
     "flex items-center justify-center shrink-0",
     "size-9",
     "rounded-[8px]",
-    "text-[#6b6375]",
-    "hover:bg-[#20232C]",
-    "aria-expanded:bg-[#20232C]"
+    "text-[#909090]",
+    "cursor-pointer",
+    "hover:bg-[#20232C] hover:text-[#FFFFFF]",
+    "aria-expanded:bg-[#20232C] aria-expanded:text-[#FFFFFF]"
 );
 
 // 아이콘 쪽(오른쪽)에 맞춰 행 위로 떠오른다. 레이아웃 흐름에 없어서 열려도 위 내용을 밀지 않는다

@@ -69,11 +69,11 @@ const SocialSection = clsx(
 );
 
 const MutedMessage = clsx(
-    "text-[13px] text-[#6b6375]"
+    "text-[13px] text-[#909090]"
 );
 
 const ErrorMessage = clsx(
-    "text-[13px] text-[#ff3b30]"
+    "text-[13px] text-[#FF7A7A]"
 );
 
 const KakaoButton = clsx(

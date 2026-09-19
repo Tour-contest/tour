@@ -28,10 +28,12 @@ const LoaderRow = clsx(
     "py-1"
 );
 
+// 대화 사이에 떠 있는 알약 버튼 — 카드색 바탕에 보조 글자, 올리면 흰 글자
 const LoadButton = clsx(
-    "border border-[#b1bdc8] rounded-full",
-    "bg-white",
+    "border border-[#63717A] rounded-full",
+    "bg-[#333743]",
     "px-3 py-1",
-    "text-[12px] text-[#6b6375]",
-    "hover:bg-[#f4f3ec]"
+    "text-[12px] text-[#909090]",
+    "cursor-pointer",
+    "hover:text-[#FFFFFF] hover:border-[#FFFFFF]"
 );

@@ -16,13 +16,13 @@ export default LoadingIndicator;
 //style configuration
 const Indicator = clsx(
     "inline-flex items-center gap-2",
-    "text-[12px] text-[#6b6375]"
+    "text-[12px] text-[#909090]"
 );
 
 // 위쪽 한 칸만 진하게 남긴 원이 돌아간다. 동작 줄이기 설정에서는 멈춘 원만 보인다
 const Spinner = clsx(
     "size-4 shrink-0",
     "rounded-full",
-    "border-2 border-[#e1e0d9] border-t-[#6b6375]",
+    "border-2 border-[#3A3D47] border-t-[#6FC1FC]",
     "animate-spin motion-reduce:animate-none"
 );

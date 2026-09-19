@@ -152,7 +152,8 @@ const menuBaseStyle = clsx(
 // 목록 마지막 줄. 메뉴 항목과 같은 높이라 목록에 자연스럽게 이어진다
 const loadMoreButtonStyle = clsx(
     menuBaseStyle,
-    "text-left text-[#6b6375]",
-    "hover:bg-[#f0eee7]",
+    "text-left text-[#909090]",
+    "cursor-pointer",
+    "hover:bg-[#20232C] hover:text-[#FFFFFF]",
     "disabled:opacity-60",
 );

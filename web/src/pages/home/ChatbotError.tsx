@@ -25,14 +25,14 @@ const ErrorGroup = clsx(
 );
 
 const ErrorMessage = clsx(
-    "text-[13px] text-[#ff3b30]"
+    "text-[13px] text-[#FF7A7A]"
 );
 
+// 지역 다시 묻기의 취소 버튼과 같은 외곽선 버튼
 const RetryButton = clsx(
-    "rounded-[8px]",
-    "border border-[#b1bdc8]",
-    "px-3 py-1",
-    "text-[13px]",
-    "hover:bg-[#f0eee7]",
-    "select-none"
+    "border border-[#63717A] rounded-[8px]",
+    "px-3 py-1.5",
+    "text-[13px] text-[#FFFFFF]",
+    "cursor-pointer select-none",
+    "hover:bg-[#1A1C22] hover:border-[#FFFFFF]"
 );

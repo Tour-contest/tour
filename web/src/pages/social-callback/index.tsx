@@ -11,11 +11,11 @@ function SocialCallback() {
     if (socialLoginState.isSuccess) return <Navigate to="/" replace />;
 
     return (
-        <div className={clsx("flex", "h-[100vh]", "flex-col", "items-center", "justify-center", "gap-[12px]")}>
+        <div className={clsx("flex", "h-[100vh]", "flex-col", "items-center", "justify-center", "gap-3", "bg-[#20232C]")}>
             {socialLoginState.errorMessage ? (
                 <>
-                    <p className={clsx("text-[13px]", "text-[#ff3b30]")}>{socialLoginState.errorMessage}</p>
-                    <Link to="/login" className={clsx("text-[13px]", "underline")}>
+                    <p className={clsx("text-[13px]", "text-[#FF7A7A]")}>{socialLoginState.errorMessage}</p>
+                    <Link to="/login" className={clsx("text-[13px]", "text-[#D8D8D8]", "underline", "hover:text-[#FFFFFF]")}>
                         로그인으로 돌아가기
                     </Link>
                 </>

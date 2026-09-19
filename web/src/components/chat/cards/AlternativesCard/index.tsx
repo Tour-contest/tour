@@ -134,7 +134,7 @@ const ItemLink = clsx(
 );
 
 const Muted = clsx(
-    "text-[12px] text-[#6b6375]"
+    "text-[12px] text-[#909090]"
 );
 
 const MapLink = clsx(

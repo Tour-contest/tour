@@ -92,7 +92,7 @@ const FieldInput = clsx(
 );
 
 const ErrorMessage = clsx(
-    "text-[13px] text-[#ff3b30]"
+    "text-[13px] text-[#FF7A7A]"
 );
 
 const SubmitButton = clsx(
