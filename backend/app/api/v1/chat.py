@@ -7,7 +7,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app.agent import compose, guard
 from app.core import response
@@ -47,6 +47,14 @@ class ChatIn(BaseModel):
                     "서버가 발급한 12자리 hex 만 받는다",
         examples=["a1b2c3d4e5f6"],
     )
+
+    @field_validator("session_id", mode="before")
+    @classmethod
+    def blank_is_new(cls, v):
+        """빈 문자열은 새 대화로 본다. 앱이 새 대화일 때 "" 를 보낸다."""
+        if isinstance(v, str) and not v.strip():
+            return None
+        return v
 
 
 _SSE_EXAMPLE = (
