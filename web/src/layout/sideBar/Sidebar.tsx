@@ -10,10 +10,12 @@ import { useAuthorityStore } from "@/store/authority";
 import { useChatSessionStore } from "@/store/chatSession";
 //hooks
 import { useAuth } from "@/hooks/api";
+import useResizableWidth from "@/hooks/useResizableWidth";
 //components
 import { Menu } from "@/components";
 import { ConfirmModal, LoadingIndicator } from "@/components/common";
 import SidebarUserMenu from "./SidebarUserMenu";
+import SidebarResizeHandle from "./SidebarResizeHandle";
 import RecentlyChatList from "./RecentlyChatList";
 //style
 import clsx from "clsx";
@@ -22,6 +24,10 @@ import MainLogoCharacter from '@/assets/logo/main_logo_character.svg?react';
 
 // 회원 탈퇴는 소셜 로그인 유저에게만 있다. 관리자(local) · 개발 로그인(dev) 계정은 서버가 관리한다
 const SOCIAL_PROVIDERS: ReadonlyArray<UserInfo["provider"]> = ["kakao"];
+
+// 오른쪽 가장자리를 끌어 너비를 바꿀 수 있다. 기본 240, 최대 400. 마지막 값은 브라우저에 기억
+const SIDEBAR_WIDTH = { min: 240, max: 400, initial: 240 } as const;
+const SIDEBAR_WIDTH_STORAGE_KEY = "sidebarWidth";
 
 // 서비스 이탈이라 한 번 더 묻는다 — 되돌릴 수 없는 것들을 모달에 명시
 const WITHDRAW_DESCRIPTIONS = [
@@ -36,7 +42,8 @@ const Sidebar = () => {
 
     const navigate = useNavigate();
     const { handleLogout, handleWithdrawMembership } = useAuth();
-   
+    const { width, isResizing, handleProps } = useResizableWidth({ ...SIDEBAR_WIDTH, storageKey: SIDEBAR_WIDTH_STORAGE_KEY });
+
     const user = useAuthenticateStore((state) => state.user);
     const role = useAuthorityStore((state) => state.role);
     const hasMoreSessions = useChatSessionStore((state) => state.hasMore);
@@ -91,7 +98,8 @@ const Sidebar = () => {
     };
 
     return (
-        <aside className={SideBarLayout}>
+        <aside style={{ width }} className={SideBarLayout}>
+            <SidebarResizeHandle handleProps={handleProps} isResizing={isResizing} />
             <a className="p-[32px_28px_0px_28px]" href="/"><MainLogoCharacter className="w-10 h-10" /></a>
             <Menu />
             {!isAdmin && (
@@ -137,8 +145,9 @@ const Sidebar = () => {
 };
 export default Sidebar;
 //style configuration
+// 너비는 inline style (드래그 값). relative 는 오른쪽 손잡이의 기준
 const SideBarLayout = clsx(
-    "w-60 h-full bg-[#1A1C22]",
+    "relative h-full bg-[#1A1C22]",
     "flex flex-col gap-4",
     "shrink-0",
 );

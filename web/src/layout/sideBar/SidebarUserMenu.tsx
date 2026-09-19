@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+//style
 import clsx from "clsx";
+//icon
+import UserIcon from "@/assets/icons/user_icon.svg?react";
+import SystemIcon from "@/assets/logo/system.svg?react";
 
 type SidebarUserMenuNeedProps = {
     user: UserInfo | null;
@@ -68,10 +72,7 @@ const SidebarUserMenu = ({ user, canWithdraw, onLogout, onWithdraw } : SidebarUs
 
             <div className={UserCard}>
                 <span aria-hidden="true" className={Avatar}>
-                    <svg viewBox="0 0 24 24" className={Icon}>
-                        <circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" strokeWidth="1.8" />
-                        <path d="M4 20c0-3.6 3.6-6 8-6s8 2.4 8 6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                    </svg>
+                    <UserIcon className="w-5 h-5 text-[#FFFFFF]" />
                 </span>
                 <span className={UserText}>
                     <span className={UserName}>{user?.nickname ?? "여행자"}</span>
@@ -87,16 +88,7 @@ const SidebarUserMenu = ({ user, canWithdraw, onLogout, onWithdraw } : SidebarUs
                 onClick={() => setIsOpen((prev) => !prev)}
                 className={SettingsButton}
             >
-                <svg viewBox="0 0 24 24" aria-hidden="true" className={Icon}>
-                    <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="1.8" />
-                    <path
-                        d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                        strokeLinejoin="round"
-                    />
-                </svg>
+                <SystemIcon className="w-6 h-6" />
             </button>
         </div>
     </div>
@@ -105,8 +97,8 @@ export default SidebarUserMenu;
 //style configuration
 // TODO: 스타일은 개발자 지시에 맞춰 교체 예정 — 지금은 배치만 잡아둔 최소 스타일
 const UserArea = clsx(
-    "border-t border-[#e5e4e7]",
-    "pt-4"
+    "border-t border-[#909090]",
+    "p-[16px_20px] box-border"
 );
 
 // 메뉴의 기준점 — 메뉴는 이 행 바로 위에 뜬다
@@ -118,20 +110,14 @@ const UserRow = clsx(
 const UserCard = clsx(
     "flex items-center gap-3",
     "min-w-0 flex-1",
-    "rounded-[8px]",
-    "px-3 py-2",
     "select-none"
 );
 
 const Avatar = clsx(
     "flex items-center justify-center shrink-0",
-    "size-9",
+    "size-10.5",
     "rounded-full",
-    "bg-[#e9e7df] text-[#6b6375]"
-);
-
-const Icon = clsx(
-    "size-5"
+    "bg-[#20232C]"
 );
 
 const UserText = clsx(
@@ -140,12 +126,12 @@ const UserText = clsx(
 
 const UserName = clsx(
     "truncate",
-    "text-[14px] font-semibold"
+    "text-[16px] text-[#FFFFFF] font-normal"
 );
 
 const UserSub = clsx(
     "truncate",
-    "text-[12px] text-[#6b6375]"
+    "text-[12px] text-[#FFFFFF] font-normal"
 );
 
 const SettingsButton = clsx(
@@ -153,8 +139,8 @@ const SettingsButton = clsx(
     "size-9",
     "rounded-[8px]",
     "text-[#6b6375]",
-    "hover:bg-[#f0eee7]",
-    "aria-expanded:bg-[#e9e7df]"
+    "hover:bg-[#20232C]",
+    "aria-expanded:bg-[#20232C]"
 );
 
 // 아이콘 쪽(오른쪽)에 맞춰 행 위로 떠오른다. 레이아웃 흐름에 없어서 열려도 위 내용을 밀지 않는다
@@ -163,19 +149,19 @@ const Menu = clsx(
     "mb-2",
     "flex flex-col gap-1",
     "min-w-[160px]",
-    "rounded-[8px]",
-    "border border-[#e5e4e7]",
-    "bg-white",
-    "p-1",
+    "rounded-[12px]",
+    "border border-[#63717A]",
+    "bg-[#1A1C22]",
+    "p-2 box-border",
     "shadow-md",
     "animate-fade-in"
 );
 
 const MenuItem = clsx(
     "rounded-[6px]",
-    "px-3 py-2",
-    "text-left text-[13px]",
-    "hover:bg-[#f0eee7]"
+    "px-[10px] py-[6px]",
+    "text-left text-[15px] text-[#E4E4E4]",
+    "hover:bg-[#20232C]"
 );
 
 const MenuItemDanger = clsx(
