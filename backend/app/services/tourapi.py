@@ -110,6 +110,44 @@ async def area_based_list(
     return [normalize(r) for r in items]
 
 
+async def location_based_list(
+    mapx: float,
+    mapy: float,
+    radius: int,
+    *,
+    rows: int = 30,
+    content_type_id: str | None = None,
+    lcls1: str | None = None,
+    lcls2: str | None = None,
+    lcls3: str | None = None,
+    session_id: str | None = None,
+) -> list[dict]:
+    """좌표에서 반경(m) 안의 장소를 가까운 순으로. 각 항목에 distance_km 가 붙는다."""
+    params: dict = {"mapX": mapx, "mapY": mapy, "radius": radius, "arrange": "E",
+                    "numOfRows": rows, "pageNo": 1}
+    if content_type_id:
+        params["contentTypeId"] = content_type_id
+    if lcls1:
+        params["lclsSystm1"] = lcls1
+    if lcls2:
+        params["lclsSystm2"] = lcls2
+    if lcls3:
+        params["lclsSystm3"] = lcls3
+    items, _ = await client.call(
+        "KorService2/locationBasedList2",
+        params,
+        ttl=settings.upstream_cache_ttl_detail,
+        session_id=session_id,
+    )
+    out = []
+    for r in items:
+        n = normalize(r)
+        dist = safe_float(r.get("dist"))
+        n["distance_km"] = round(dist / 1000, 1) if dist is not None else None
+        out.append(n)
+    return out
+
+
 async def area_based_count(tour_cd: str, session_id: str | None = None) -> int:
     _, total = await client.call(
         "KorService2/areaBasedList2",

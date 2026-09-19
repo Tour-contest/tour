@@ -158,11 +158,19 @@ def from_cards(cards: list[dict], message: str | None = None) -> str:
                 extra = i.get("period") or i.get("note")
                 if extra:
                     nm += f" ({extra})"
+                c = i.get("crowd")
+                if c:
+                    nm += f" ({c['rate']} {c['level']})"
                 names.append(nm)
             head = ("지금 하고 있거나 예정된 행사예요: "
                     if any(i.get("period") for i in items[:5])
                     else "이런 곳들이 있어요: ")
             parts.append(head + ", ".join(names) + ".")
+            cov = (lst or {}).get("crowd_coverage")
+            if cov and cov.get("with_crowd") and cov["with_crowd"] < cov.get("listed", 0):
+                parts.append("숫자가 붙은 곳만 혼잡도가 집계되고, 나머지는 집계되지 않습니다.")
+            elif cov and not cov.get("with_crowd"):
+                parts.append("이 목록의 혼잡도는 집계되지 않습니다.")
 
     if not parts:
         return "조회 결과가 없어요. 지역명이나 관광지명을 다시 알려주세요."

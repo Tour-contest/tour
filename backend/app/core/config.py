@@ -74,6 +74,8 @@ class Settings(BaseSettings):
     daily_upstream_quota: int = 1000
     max_sessions_per_user: int = 30
     context_raw_turns: int = 6
+    # 목록·대안 카드에 혼잡도·거리·반려동물 값을 같이 내려줄지. 끄면 카드 응답은 예전 모양 그대로다.
+    card_extras: bool = False
 
     rate_anon_per_min: int = 30
     rate_user_per_min: int = 60

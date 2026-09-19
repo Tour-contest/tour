@@ -36,6 +36,7 @@ _OP_NM = {
     "KorService2/detailCommon2": "관광지 상세",
     "KorService2/detailIntro2": "관광지 이용 안내",
     "KorService2/areaBasedList2": "지역별 관광지 목록",
+    "KorService2/locationBasedList2": "주변 장소 목록",
     "KorService2/detailInfo2": "관광지 상세 항목",
     "KorService2/ldongCode2": "법정동 코드",
     "TatsCnctrRateService/tatsCnctrRatedList": "관광지 집중률",
