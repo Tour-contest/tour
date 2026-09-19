@@ -80,17 +80,19 @@ export default Modal;
 const Backdrop = clsx(
     "fixed inset-0 z-50",
     "flex items-center justify-center",
-    "bg-[#00000066]",
+    "bg-[#00000099]",
     "p-4"
 );
 
+// 대화 카드와 같은 어두운 톤. 배경은 화면보다 살짝 밝게, 테두리로 경계를 준다
 const Dialog = clsx(
     "flex flex-col gap-4",
     "w-full",
     "rounded-[12px]",
-    "bg-white",
+    "border border-[#63717A] bg-[#333743]",
     "p-6",
-    "shadow-lg",
+    "shadow-[0_12px_40px_rgba(0,0,0,0.45)]",
+    "text-[#FFFFFF]",
     "outline-none",
     "animate-fade-in"
 );
@@ -105,14 +107,15 @@ const Header = clsx(
 );
 
 const Title = clsx(
-    "text-[16px] font-bold"
+    "text-[20px] text-[#FFFFFF] font-medium"
 );
 
 const CloseButton = clsx(
     "flex items-center justify-center shrink-0",
     "size-8",
     "rounded-[8px]",
-    "text-[20px] leading-none text-[#6b6375]",
-    "hover:bg-[#f0eee7]",
+    "text-[20px] leading-none text-[#909090]",
+    "hover:bg-[#1A1C22] hover:text-[#FFFFFF]",
+    "cursor-pointer",
     "disabled:opacity-50"
 );

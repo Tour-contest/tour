@@ -7,9 +7,13 @@ declare global {
     };
 
     // 공공데이터 호출 이력 — 심사용 API 활용 내역 화면을 겸한다
+    // 서버 문서(OpenAPI) 기준: limit 1~500 (기본 100) · day YYYY-MM-DD (기본 오늘 KST). offset 은 없다.
+    // provider 는 문서에 "tourapi, naver" 라 적혀 있지만 실제 비교는 로그에 저장된 값(data.go.kr · naver)으로 한다 — tourapi 를 보내면 0건
+    type ApiCallProvider = "data.go.kr" | "naver";
+
     type RequestApiCallsParams = {
         limit?: number;
-        provider?: "data.go.kr" | "naver";
+        provider?: ApiCallProvider;
         day?: string;
     };
 

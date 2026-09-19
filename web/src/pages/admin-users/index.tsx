@@ -1,6 +1,6 @@
 import { useState } from "react";
 import clsx from "clsx";
-import { ConfirmModal, LoadingIndicator } from "@/components/common";
+import { ConfirmModal, LogoLoading, Pagination } from "@/components/common";
 import { useAdmin, useUser } from "@/hooks/api";
 import useAsyncData from "@/hooks/useAsyncData";
 import useConfirmAction from "@/hooks/useConfirmAction";
@@ -54,8 +54,9 @@ function AdminUsers() {
 
     const pageStart = page ? page.offset + 1 : 0;
     const pageEnd = page ? page.offset + users.length : 0;
-    const canGoPrevious = offset > 0;
-    const canGoNext = page?.has_more ?? false;
+    // 서버가 total 을 주므로 번호 페이지네이션이 된다 (전체 대화 팝업 · 호출 이력과 같은 규칙)
+    const currentPage = Math.floor(offset / PAGE_SIZE);
+    const pageCount = page ? Math.max(1, Math.ceil(page.total / PAGE_SIZE)) : 1;
 
     return (
         <div className={Page}>
@@ -64,18 +65,19 @@ function AdminUsers() {
                 {page && <p className={Muted}>전체 {page.total.toLocaleString()}명</p>}
             </div>
 
-            <AdminUserFilters
-                query={query}
-                onSearch={handleSearch}
-                filters={filters}
-                onFiltersChange={setFilters}
-                isFilterActive={isFilterActive}
-            />
-
             <div className={Section}>
+                {/* 호출 이력처럼 필터를 카드 안 맨 위에 둔다 */}
+                <AdminUserFilters
+                    query={query}
+                    onSearch={handleSearch}
+                    filters={filters}
+                    onFiltersChange={setFilters}
+                    isFilterActive={isFilterActive}
+                />
+
                 {isLoading && (
                     <div className={CenterNote}>
-                        <LoadingIndicator label="회원 목록을 불러오는 중…" />
+                        <LogoLoading label="회원 목록을 불러오는 중…" />
                     </div>
                 )}
                 {hasError && (
@@ -99,19 +101,12 @@ function AdminUsers() {
                             />
                         )}
 
-                        <div className={Pagination}>
+                        <div className={Footer}>
                             <p className={Muted}>
                                 {pageStart.toLocaleString()}–{pageEnd.toLocaleString()} / {page?.total.toLocaleString()}
                                 {isFilterActive && ` (이 페이지에서 ${visibleUsers.length}명 표시)`}
                             </p>
-                            <div className={PaginationButtons}>
-                                <button type="button" disabled={!canGoPrevious} onClick={() => setOffset(Math.max(offset - PAGE_SIZE, 0))} className={Button}>
-                                    이전
-                                </button>
-                                <button type="button" disabled={!canGoNext} onClick={() => setOffset(offset + PAGE_SIZE)} className={Button}>
-                                    다음
-                                </button>
-                            </div>
+                            <Pagination page={currentPage} pageCount={pageCount} onChange={(next) => setOffset(next * PAGE_SIZE)} label="회원 목록 페이지" />
                         </div>
                     </>
                 )}
@@ -141,13 +136,19 @@ function AdminUsers() {
 }
 export default AdminUsers;
 //style configuration
-// TODO: 디테일 단계에서 개발자와 함께 스타일 작업 예정 — 지금은 구조만
+// 호출 이력과 같은 어두운 톤 · 얇은 호버 스크롤바
 const Page = clsx(
-    "flex flex-col gap-4",
-    "h-full",
+    "flex h-full flex-col gap-4",
     "overflow-y-auto",
+    "bg-[#20232C]",
     "p-6",
-    "animate-fade-in motion-reduce:animate-none"
+    "animate-fade-in motion-reduce:animate-none",
+    "[scrollbar-width:thin] [scrollbar-color:transparent_transparent]",
+    "hover:[scrollbar-color:#3A3D47_transparent]",
+    "[&::-webkit-scrollbar]:w-1.5",
+    "[&::-webkit-scrollbar-track]:bg-transparent",
+    "[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent",
+    "hover:[&::-webkit-scrollbar-thumb]:bg-[#3A3D47]"
 );
 
 const Header = clsx(
@@ -155,13 +156,14 @@ const Header = clsx(
 );
 
 const Title = clsx(
-    "text-[18px] font-bold"
+    "text-[20px] text-[#FFFFFF] font-medium"
 );
 
 const Section = clsx(
-    "flex flex-col gap-3",
-    "border border-[#e5e4e7] rounded-[12px]",
-    "p-4"
+    "flex flex-col gap-4",
+    "bg-[#333743]",
+    "rounded-[12px]",
+    "p-[22px_32px] box-border"
 );
 
 const CenterNote = clsx(
@@ -170,25 +172,21 @@ const CenterNote = clsx(
 );
 
 const Muted = clsx(
-    "text-[12px] text-[#6b6375]"
+    "text-[12px] text-[#909090]"
 );
 
 const ErrorText = clsx(
-    "text-[13px] text-[#ff3b30]"
+    "text-[13px] text-[#FF6B6B]"
 );
 
 const Button = clsx(
-    "border border-[#b1bdc8] rounded-[8px]",
-    "px-3 py-1.5",
-    "text-[12px]",
-    "hover:bg-[#f4f3ec]",
-    "disabled:opacity-50"
+    "border border-[#63717A] rounded-[8px]",
+    "px-2.5 py-1",
+    "text-[12px] text-[#FFFFFF]",
+    "cursor-pointer",
+    "hover:bg-[#1A1C22] hover:border-[#FFFFFF]"
 );
 
-const Pagination = clsx(
+const Footer = clsx(
     "flex items-center justify-between gap-3"
-);
-
-const PaginationButtons = clsx(
-    "flex gap-2"
 );

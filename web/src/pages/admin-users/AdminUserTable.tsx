@@ -73,24 +73,24 @@ const AdminUserTable = ({ users, pendingUserId, onRequestStatusChange } : AdminU
 }
 export default AdminUserTable;
 //style configuration
-// TODO: 디테일 단계에서 개발자와 함께 스타일 작업 예정 — 지금은 구조만
+// 호출 이력 표와 같은 규칙: 얇은 구분선 · 행 호버 · 보조 글자 12px 회색
 const Table = clsx(
     "w-full border-collapse",
-    "text-[13px]"
+    "text-[14px] text-[#D8D8D8]"
 );
 
 const HeadRow = clsx(
-    "border-b border-[#e1e0d9]",
-    "text-[12px] text-[#6b6375]"
+    "border-b border-[#63717A]",
+    "text-[12px] text-[#909090]"
 );
 
 const Row = clsx(
-    "border-b border-[#e1e0d9] last:border-b-0",
-    "hover:bg-[#faf9f5]"
+    "border-b border-[#3A3D47]",
+    "hover:bg-[#3A3D47]"
 );
 
 const Cell = clsx(
-    "py-2 pr-3 text-left font-normal align-middle"
+    "py-2.5 px-2 text-left font-normal align-middle"
 );
 
 const ActionCell = clsx(
@@ -98,13 +98,14 @@ const ActionCell = clsx(
 );
 
 const UserLabel = clsx(
-    "block truncate max-w-[200px] font-semibold"
+    "block truncate max-w-[200px] text-[#FFFFFF]"
 );
 
 const Muted = clsx(
-    "block text-[11px] text-[#6b6375]"
+    "block text-[12px] text-[#909090]"
 );
 
+// 상태 배지: 지역 현황과 같은 상태 팔레트를 옅은 바탕 + 같은 색 글자로
 const StatusBadge = clsx(
     "inline-flex items-center",
     "rounded-full",
@@ -114,25 +115,28 @@ const StatusBadge = clsx(
 );
 
 const StatusActive = clsx(
-    "bg-[#e9f7ec] text-[#1a6b3a]"
+    "bg-[#15B83626] text-[#4CD96A]"
 );
 
 const StatusSuspended = clsx(
-    "bg-[#fdeaea] text-[#a12b2b]"
+    "bg-[#B84B1526] text-[#FF8A5C]"
 );
 
 const StatusLocked = clsx(
-    "bg-[#fff4e0] text-[#8a5a00]"
+    "bg-[#D3A41826] text-[#F5C451]"
 );
 
 const ActionButton = clsx(
-    "border border-[#b1bdc8] rounded-[8px]",
-    "px-3 py-1",
-    "text-[12px]",
-    "hover:bg-[#f4f3ec]",
-    "disabled:opacity-60"
+    "border border-[#63717A] rounded-[8px]",
+    "px-2.5 py-1",
+    "text-[12px] text-[#FFFFFF]",
+    "cursor-pointer",
+    "hover:bg-[#1A1C22] hover:border-[#FFFFFF]",
+    "disabled:opacity-60 disabled:cursor-not-allowed"
 );
 
+// 차단은 위험색 글자, 호버 시 같은 색 테두리
 const ActionDanger = clsx(
-    "text-[#d03b3b]"
+    "text-[#FF8A5C]",
+    "hover:border-[#FF8A5C]"
 );

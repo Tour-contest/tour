@@ -14,7 +14,7 @@ const PLOT_WIDTH = CHART_WIDTH - MARGIN.left - MARGIN.right;
 const PLOT_HEIGHT = CHART_HEIGHT - MARGIN.top - MARGIN.bottom;
 const Y_TICK_COUNT = 5;
 
-const LINE_COLOR = "#2f6fed";
+const LINE_COLOR = "#6FC1FC";
 
 type DailyPoint = {
     date: string;
@@ -95,7 +95,7 @@ const DailyCallsChart = ({ daily } : DailyCallsChartNeedProps) => {
                 points.map((point) => {
                     return <g key={point.date} tabIndex={0} className={PointGroup}>
                         <title>{`${formatDateLabel(point.date)} · 총 ${point.total}건 (실제 ${point.real} · 절약 ${point.cached})`}</title>
-                        <circle cx={x(point.date)} cy={y(point.total)} r={4} fill="white" stroke={LINE_COLOR} strokeWidth={2} />
+                        <circle cx={x(point.date)} cy={y(point.total)} r={4} fill="#333743" stroke={LINE_COLOR} strokeWidth={2} />
                         <text x={x(point.date)} y={PLOT_HEIGHT + 18} textAnchor="middle" className={TickLabel}>
                             {formatDateLabel(point.date)}
                         </text>
@@ -107,17 +107,17 @@ const DailyCallsChart = ({ daily } : DailyCallsChartNeedProps) => {
 }
 export default DailyCallsChart;
 //style configuration
-// TODO: 디테일 단계에서 개발자와 함께 스타일 작업 예정 — 지금은 구조만
+// 어두운 카드(#333743) 위에 그린다: 격자 #3A3D47 · 눈금 #909090 · 선 #6FC1FC
 const Chart = clsx(
     "w-full h-auto"
 );
 
 const GridLine = clsx(
-    "stroke-[#d9d7cf] [stroke-dasharray:4_4]"
+    "stroke-[#3A3D47] [stroke-dasharray:4_4]"
 );
 
 const TickLabel = clsx(
-    "fill-[#6b6375] text-[11px] tabular-nums"
+    "fill-[#909090] text-[11px] tabular-nums"
 );
 
 const PointGroup = clsx(
@@ -126,5 +126,5 @@ const PointGroup = clsx(
 );
 
 const Muted = clsx(
-    "text-[12px] text-[#6b6375]"
+    "text-[12px] text-[#909090]"
 );

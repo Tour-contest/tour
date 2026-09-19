@@ -4,8 +4,8 @@ import { useState } from "react";
 import LoginCard from "@/pages/login/LoginCard";
 //style
 import clsx from "clsx";
-//icons
-import MainIcon from "@/assets/logo/main_logo.svg?react";
+//components
+import { AnimatedLogo } from "@/components/common";
 
 function Login() {
     const [isAdminMode, setIsAdminMode] = useState<boolean>(false);
@@ -31,7 +31,8 @@ function Login() {
                     </div>
                 }
             </div>
-            <MainIcon className="w-[115.259px] h-[104.901px]" aria-label="널널" />
+            {/* 새 채팅 · 로딩과 같은 살아 있는 로고 (떠오르기 · 빛 · 구름 숨쉬기 · 눈 깜빡임 · 입 웃음) */}
+            <AnimatedLogo size={115} />
             <LoginCard isAdminMode={isAdminMode} />
             <div className={BottomContext}>
                 <p className={Attribution}>출처: ⓒ한국관광공사</p>

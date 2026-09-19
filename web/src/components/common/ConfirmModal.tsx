@@ -83,11 +83,11 @@ const Body = clsx(
 );
 
 const Description = clsx(
-    "text-[13px] text-[#6b6375]"
+    "text-[14px] text-[#D8D8D8]"
 );
 
 const ErrorText = clsx(
-    "text-[12px] text-[#d03b3b]"
+    "text-[12px] text-[#FF6B6B]"
 );
 
 const Actions = clsx(
@@ -97,21 +97,23 @@ const Actions = clsx(
 const ActionButton = clsx(
     "rounded-[8px]",
     "px-4 py-2",
-    "text-[13px] font-semibold",
-    "disabled:opacity-60"
+    "text-[14px] font-medium",
+    "cursor-pointer",
+    "disabled:opacity-60 disabled:cursor-not-allowed"
 );
 
 const CancelButton = clsx(
-    "bg-[#f0eee7]",
-    "hover:bg-[#e9e7df]"
+    "border border-[#63717A] text-[#FFFFFF]",
+    "hover:bg-[#1A1C22] hover:border-[#FFFFFF]"
 );
 
+// 확인은 앱 강조색, 글자는 어두운 색
 const ConfirmButton = clsx(
-    "bg-[#1d1c1a] text-white",
-    "hover:bg-[#3a3835]"
+    "bg-[#6FC1FC] text-[#1A1C22]",
+    "hover:bg-[#A3F1F9]"
 );
 
 const DangerButton = clsx(
-    "bg-[#d03b3b] text-white",
+    "bg-[#d03b3b] text-[#FFFFFF]",
     "hover:bg-[#b23030]"
 );

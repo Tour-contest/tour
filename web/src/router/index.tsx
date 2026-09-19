@@ -7,6 +7,7 @@ import Home from "@/pages/home";
 import Attraction from "@/pages/attraction";
 import Admin from "@/pages/admin";
 import AdminUsers from "@/pages/admin-users";
+import Operation from "@/pages/operation";
 import NotFound from "@/pages/not-found";
 
 const Router = () => {
@@ -33,6 +34,7 @@ const Router = () => {
                             children: [
                                 { path: "admin", element: <Admin /> },
                                 { path: "admin/users", element: <AdminUsers /> },
+                                { path: "operation", element: <Operation /> },
                             ],
                         },
                         { path: "*", element: <NotFound /> },

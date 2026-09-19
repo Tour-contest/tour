@@ -76,7 +76,11 @@ const Sidebar = () => {
     return (
         <aside style={{ width }} className={SideBarLayout}>
             <SidebarResizeHandle handleProps={handleProps} isResizing={isResizing} />
-            <a className="p-[32px_28px_0px_28px]" href="/"><MainLogoCharacter className="w-10 h-10" /></a>
+            <a className={LogoLink} href="/">
+                <MainLogoCharacter className="w-10 h-10" />
+                {/* 관리자 화면임을 로고 옆에 작게 표시 */}
+                {isAdmin && <span className={AdminTag}>관리자</span>}
+            </a>
             <Menu />
             {!isAdmin && (
                 <div className={clsx("flex", "min-h-0", "flex-1", "flex-col", "gap-[4px]", "overflow-y-auto")}>
@@ -122,6 +126,16 @@ const Sidebar = () => {
 export default Sidebar;
 //style configuration
 // 너비는 inline style (드래그 값). relative 는 오른쪽 손잡이의 기준
+const LogoLink = clsx(
+    "flex items-center gap-2",
+    "p-[32px_28px_0px_28px]"
+);
+
+const AdminTag = clsx(
+    "text-[12px] text-[#909090] font-normal",
+    "select-none"
+);
+
 const SideBarLayout = clsx(
     "relative h-full bg-[#1A1C22]",
     "flex flex-col gap-4",

@@ -15,6 +15,7 @@ import CancelIcon from "@/assets/icons/cancel.svg?react";
 import DownIcon from '@/assets/icons/down_icon.svg?react';
 import UpIcon from '@/assets/icons/up_icon.svg?react';
 import LearnMoreIcon from "@/assets/icons/learn_more.svg?react";
+import MainLogoIcon from "@/assets/icons/main_logo_icon.svg?react";
 
 const RecentlyChatList = () => {
     const [isDrops, setIsDrops] = useState<boolean>(true);
@@ -70,7 +71,10 @@ const RecentlyChatList = () => {
                                         <CancelIcon className="w-2 h-2 fill-[#FFFFFF]" />
                                     </button>
                                 </div>
-                            )): <p>아직 대화가 없어요</p> 
+                            )): <div className="flex flex-col gap-2 h-full justify-center items-center">
+                                    <MainLogoIcon className="w-10 h-10 fill-[#909090]" />
+                                    <p className="text-[#909090] text-[14px] font-normal">아직 대화가 없어요</p>
+                                </div> 
                         }
                     </div>
                 ) : null
@@ -134,6 +138,7 @@ const ChatList = clsx(
 );
 
 const ChatGroup = clsx(
+    "h-full",
     "p-[0px_16px] box-border",
     "flex flex-col gap-1"
 );
