@@ -61,6 +61,7 @@ class Settings(BaseSettings):
     visitor_lag_days: int = 75
     visitor_weeks_max: int = 12
     trend_weeks: int = 8
+    weather_cache_ttl: int = 1800
 
     upstream_cache_enabled: bool = True
     upstream_cache_ttl_detail: int = 300
