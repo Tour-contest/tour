@@ -163,45 +163,69 @@ class _ChatInputBarState extends State<ChatInputBar> {
               ),
             ),
             const SizedBox(width: 6),
-            Tooltip(
-              message: l10n.chatInputVoiceTooltip,
-              child: GestureDetector(
-                onTap: _toggleVoiceInput,
-                behavior: HitTestBehavior.opaque,
-                // 듣는 중(`_isListening`)이면 활성 상태임을 accent 색
-                // 원(`mic_active.svg`)으로 보여준다(사용자 요청).
-                child: SvgPicture.asset(
-                    _isListening
-                        ? 'assets/images/mic_active.svg'
-                        : 'assets/images/mic.svg',
-                    width: 36,
-                    height: 36),
+            // `GestureDetector`+`Tooltip`만으로는 탭은 자동 연결돼도 버튼
+            // role이 없고 `Tooltip`의 시맨틱스도 `label`이 아닌 `tooltip`
+            // 속성이라, VoiceOver에서 듣는 중 상태(`toggled`)까지 명시적으로
+            // 감싼다(사용자 요청 — VoiceOver 지원, 채팅 화면).
+            Semantics(
+              button: true,
+              label: l10n.chatInputVoiceTooltip,
+              toggled: _isListening,
+              onTap: _toggleVoiceInput,
+              child: ExcludeSemantics(
+                child: Tooltip(
+                  message: l10n.chatInputVoiceTooltip,
+                  child: GestureDetector(
+                    onTap: _toggleVoiceInput,
+                    behavior: HitTestBehavior.opaque,
+                    // 듣는 중(`_isListening`)이면 활성 상태임을 accent 색
+                    // 원(`mic_active.svg`)으로 보여준다(사용자 요청).
+                    child: SvgPicture.asset(
+                        _isListening
+                            ? 'assets/images/mic_active.svg'
+                            : 'assets/images/mic.svg',
+                        width: 36,
+                        height: 36),
+                  ),
+                ),
               ),
             ),
             const SizedBox(width: 9),
-            Tooltip(
-              message: widget.isGenerating
+            Builder(builder: (context) {
+              // 음성 인식이 진행 중일 때는 전송 버튼을 비활성화한다(사용자
+              // 요청) — 듣는 도중엔 아직 최종 인식 결과가 안 나와 입력창
+              // 텍스트가 계속 바뀌는 중이라, 그 상태에서 전송하면 의도와
+              // 다른 문장이 나갈 수 있다.
+              final effectiveOnTap = widget.isGenerating
+                  ? widget.onStop
+                  : (_isListening ? null : _submit);
+              final label = widget.isGenerating
                   ? l10n.chatInputStopTooltip
-                  : l10n.chatInputSendTooltip,
-              child: GestureDetector(
-                // 음성 인식이 진행 중일 때는 전송 버튼을 비활성화한다(사용자
-                // 요청) — 듣는 도중엔 아직 최종 인식 결과가 안 나와 입력창
-                // 텍스트가 계속 바뀌는 중이라, 그 상태에서 전송하면 의도와
-                // 다른 문장이 나갈 수 있다.
-                onTap: widget.isGenerating
-                    ? widget.onStop
-                    : (_isListening ? null : _submit),
-                behavior: HitTestBehavior.opaque,
-                child: SvgPicture.asset(
-                    widget.isGenerating
-                        ? 'assets/images/chat_stop.svg'
-                        : (_isListening
-                            ? 'assets/images/chat_submit_disabled.svg'
-                            : 'assets/images/chat_submit.svg'),
-                    width: 36,
-                    height: 36),
-              ),
-            ),
+                  : l10n.chatInputSendTooltip;
+              return Semantics(
+                button: true,
+                label: label,
+                enabled: effectiveOnTap != null,
+                onTap: effectiveOnTap,
+                child: ExcludeSemantics(
+                  child: Tooltip(
+                    message: label,
+                    child: GestureDetector(
+                      onTap: effectiveOnTap,
+                      behavior: HitTestBehavior.opaque,
+                      child: SvgPicture.asset(
+                          widget.isGenerating
+                              ? 'assets/images/chat_stop.svg'
+                              : (_isListening
+                                  ? 'assets/images/chat_submit_disabled.svg'
+                                  : 'assets/images/chat_submit.svg'),
+                          width: 36,
+                          height: 36),
+                    ),
+                  ),
+                ),
+              );
+            }),
           ],
         ),
       ),

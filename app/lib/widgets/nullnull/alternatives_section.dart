@@ -102,75 +102,98 @@ class AlternativeCard extends StatelessWidget {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context)!;
     final reason = item.reason;
-    return InkWell(
+    final rankLabel = l10n.alternativeRankLabel(rank);
+    final reasonLabel = reason == null
+        ? null
+        : l10n.alternativeReasonLabel(_formatOneDecimal(reason.lowerBy),
+            _formatOneDecimal(reason.distanceKm));
+    // 랭킹 라벨/이름/추천 사유가 각자 별도 `Text`라 카드 하나를 다 들으려면
+    // 여러 번 스와이프해야 했다 — 이 셋과 하단 "자세히 보기" CTA 텍스트는
+    // 하나의 버튼 라벨로 묶어 `ExcludeSemantics`로 개별 노출을 막지만,
+    // `CongestionBadge`는 그 자체로 이미 완결된 문장("한적 23점")이라 별도
+    // 노드로 남겨 함께 announce되게 한다(사용자 요청 — VoiceOver 지원,
+    // 관광지 상세 화면 — `chat_card_view.dart`의 대안지 카드도 이 위젯을
+    // 공유해 함께 적용됨).
+    return Semantics(
+      button: true,
+      label: [rankLabel, item.name, if (reasonLabel != null) reasonLabel]
+          .join(', '),
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        width: width,
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: colors.graphite,
-          border: Border.all(color: colors.inputBarBorder, width: 1.5),
-          borderRadius: BorderRadius.circular(9),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    l10n.alternativeRankLabel(rank),
-                    style: AppTextStyles.heading(
-                      fontSize: 13,
-                      color: colors.voiceListeningHint,
-                      height: 1.0,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          width: width,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: colors.graphite,
+            border: Border.all(color: colors.inputBarBorder, width: 1.5),
+            borderRadius: BorderRadius.circular(9),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: ExcludeSemantics(
+                      child: Text(
+                        rankLabel,
+                        style: AppTextStyles.heading(
+                          fontSize: 13,
+                          color: colors.voiceListeningHint,
+                          height: 1.0,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                CongestionBadge(level: item.level, score: item.rate),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              item.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.heading(
-                fontSize: 16,
-                color: colors.ink,
-                height: 1.5,
+                  const SizedBox(width: 8),
+                  CongestionBadge(level: item.level, score: item.rate),
+                ],
               ),
-            ),
-            if (reason != null) ...[
-              const SizedBox(height: 5),
-              SizedBox(
-                width: double.infinity,
+              const SizedBox(height: 4),
+              ExcludeSemantics(
                 child: Text(
-                  l10n.alternativeReasonLabel(
-                    _formatOneDecimal(reason.lowerBy),
-                    _formatOneDecimal(reason.distanceKm),
-                  ),
+                  item.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.heading(
-                    fontSize: 11,
-                    color: colors.voiceListeningHint,
-                    height: 1.0,
+                    fontSize: 16,
+                    color: colors.ink,
+                    height: 1.5,
                   ),
                 ),
               ),
+              if (reasonLabel != null) ...[
+                const SizedBox(height: 5),
+                SizedBox(
+                  width: double.infinity,
+                  child: ExcludeSemantics(
+                    child: Text(
+                      reasonLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.heading(
+                        fontSize: 11,
+                        color: colors.voiceListeningHint,
+                        height: 1.0,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 30),
+              ExcludeSemantics(
+                child: Text(
+                  l10n.alternativeDetailLinkLabel,
+                  style: AppTextStyles.body(
+                      fontSize: 11, color: colors.alternativeReasonText),
+                ),
+              ),
             ],
-            const SizedBox(height: 30),
-            Text(
-              l10n.alternativeDetailLinkLabel,
-              style: AppTextStyles.body(
-                  fontSize: 11, color: colors.alternativeReasonText),
-            ),
-          ],
+          ),
         ),
       ),
     );

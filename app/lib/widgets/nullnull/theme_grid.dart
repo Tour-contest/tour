@@ -78,44 +78,56 @@ class _ThemeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return GestureDetector(
-        onTap: () => onTap(option.title),
-        child: SizedBox(
-          width: 116,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 116),
-            child: CardContainer(
-              padding: EdgeInsets.symmetric(vertical: 20, horizontal: 12),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                // 같은 행의 카드끼리 높이를 맞춘 뒤(`IntrinsicHeight`) 이
-                // 카드가 더 짧은 콘텐츠를 가진 쪽이면 남는 공간이 생기는데,
-                // 위쪽에 쏠리지 않고 세로로 가운데 놓이도록 한다.
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    option.title,
-                    textAlign: TextAlign.center,
-                    // 이 4개 테마 카드는 접근성 글자 크기 설정과 무관하게
-                    // 항상 기본 크기로 고정한다(사용자 요청).
-                    textScaler: TextScaler.noScaling,
-                    style: AppTextStyles.heading(
-                        fontSize: 16,
-                        color: colors.ink,
-                        weight: FontWeight.w600),
+    // 제목/부제가 각자 별도 `Text`라 기본값으로는 VoiceOver가 카드 하나를
+    // 다 들으려면 두 번 스와이프해야 했고, `GestureDetector`도 버튼 role이
+    // 없었다 — 카드 전체를 한 시맨틱 노드로 묶어 "제목, 부제"가 한 번에
+    // 읽히고 버튼으로 announce되게 한다(사용자 요청 — VoiceOver 지원, 채팅
+    // 화면).
+    return Semantics(
+      button: true,
+      label: '${option.title}. ${option.subtitle}',
+      onTap: () => onTap(option.title),
+      child: ExcludeSemantics(
+        child: GestureDetector(
+            onTap: () => onTap(option.title),
+            child: SizedBox(
+              width: 116,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 116),
+                child: CardContainer(
+                  padding: EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    // 같은 행의 카드끼리 높이를 맞춘 뒤(`IntrinsicHeight`) 이
+                    // 카드가 더 짧은 콘텐츠를 가진 쪽이면 남는 공간이 생기는데,
+                    // 위쪽에 쏠리지 않고 세로로 가운데 놓이도록 한다.
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        option.title,
+                        textAlign: TextAlign.center,
+                        // 이 4개 테마 카드는 접근성 글자 크기 설정과 무관하게
+                        // 항상 기본 크기로 고정한다(사용자 요청).
+                        textScaler: TextScaler.noScaling,
+                        style: AppTextStyles.heading(
+                            fontSize: 16,
+                            color: colors.ink,
+                            weight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        option.subtitle,
+                        textAlign: TextAlign.center,
+                        textScaler: TextScaler.noScaling,
+                        style: AppTextStyles.body(
+                            fontSize: 13, color: colors.ink600),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    option.subtitle,
-                    textAlign: TextAlign.center,
-                    textScaler: TextScaler.noScaling,
-                    style:
-                        AppTextStyles.body(fontSize: 13, color: colors.ink600),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
-        ));
+            )),
+      ),
+    );
   }
 }

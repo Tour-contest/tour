@@ -58,24 +58,32 @@ class _AppToastView extends StatelessWidget {
       bottom: 40,
       child: SafeArea(
         maintainBottomViewPadding: true,
-        child: FadeSlideIn(
-          child: Material(
-            color: Colors.transparent,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-              decoration: BoxDecoration(
-                color: colors.graphite,
-                border: Border.all(color: colors.toastBorder, width: 0.5),
-                borderRadius: BorderRadius.circular(64),
-                boxShadow: [
-                  BoxShadow(color: colors.toastShadow, blurRadius: 5.3),
-                ],
-              ),
-              child: Text(
-                message,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.heading(
-                    fontSize: 12, color: colors.ink, height: 1.5),
+        // 화면 아무 데나 잠깐 떴다 사라지는 오버레이라 VoiceOver 탐색 순서와
+        // 무관하게 등장하는 즉시 안내돼야 한다 — `liveRegion: true`로 감싸
+        // 나타나자마자 메시지를 바로 읽어주게 한다(사용자 요청 — VoiceOver
+        // 지원, 채팅 화면의 실패 토스트에서 시작해 앱 전역 토스트에 공통 적용).
+        child: Semantics(
+          liveRegion: true,
+          child: FadeSlideIn(
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                decoration: BoxDecoration(
+                  color: colors.graphite,
+                  border: Border.all(color: colors.toastBorder, width: 0.5),
+                  borderRadius: BorderRadius.circular(64),
+                  boxShadow: [
+                    BoxShadow(color: colors.toastShadow, blurRadius: 5.3),
+                  ],
+                ),
+                child: Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.heading(
+                      fontSize: 12, color: colors.ink, height: 1.5),
+                ),
               ),
             ),
           ),

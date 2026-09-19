@@ -189,47 +189,61 @@ class _HistoryScreenState extends State<HistoryScreen> {
           maintainBottomViewPadding: true,
           child: Stack(
             children: [
-              Column(
-                children: [
-                  PlainHeader(
-                    title: l10n.historyTitle,
-                    trailing: _DateFilterButton(
-                      selected: _dateFilter,
-                      onSelect: (filter) =>
-                          setState(() => _dateFilter = filter),
+              // 세션 이력 조회 중(`_isOpeningSession`)에는 화면 터치는 이미
+              // 스크림으로 막혀 있지만, VoiceOver의 스와이프 탐색은 z-order와
+              // 무관하게 시맨틱 트리를 그대로 훑기 때문에 목록의 모든
+              // 항목(검색창 포함)이 계속 활성 상태로 잡혔다 — 조회 중에는
+              // 이 콘텐츠 전체를 시맨틱 트리에서 제외한다(사용자 요청 —
+              // VoiceOver 지원, 지난 대화 화면. `settings_screen.dart`의
+              // `_isLoggingOut` 처리와 동일한 패턴).
+              ExcludeSemantics(
+                excluding: _isOpeningSession,
+                child: Column(
+                  children: [
+                    PlainHeader(
+                      title: l10n.historyTitle,
+                      trailing: _DateFilterButton(
+                        selected: _dateFilter,
+                        onSelect: (filter) =>
+                            setState(() => _dateFilter = filter),
+                      ),
                     ),
-                  ),
-                  // "새 채팅" 버튼은 목록 스크롤 영역(`Expanded`) 안에서만
-                  // `Positioned`로 우하단에 띄운다(사용자 요청 — 일반적인
-                  // `floatingActionButton`처럼 목록 위에 항상 떠 있고, 목록은
-                  // 그 아래로 자유롭게 스크롤됨). `Expanded`의 경계가 곧
-                  // 검색창 바로 위 지점이라, 좌표를 따로 계산하지 않아도
-                  // 검색창과 겹치지 않는다.
-                  Expanded(
-                    child: Stack(
-                      children: [
-                        _buildBody(colors, l10n),
-                        Positioned(
-                          right: 20,
-                          bottom: 16,
-                          child: _NewChatButton(onTap: _startNewChat),
-                        ),
-                      ],
+                    // "새 채팅" 버튼은 목록 스크롤 영역(`Expanded`) 안에서만
+                    // `Positioned`로 우하단에 띄운다(사용자 요청 — 일반적인
+                    // `floatingActionButton`처럼 목록 위에 항상 떠 있고, 목록은
+                    // 그 아래로 자유롭게 스크롤됨). `Expanded`의 경계가 곧
+                    // 검색창 바로 위 지점이라, 좌표를 따로 계산하지 않아도
+                    // 검색창과 겹치지 않는다.
+                    Expanded(
+                      child: Stack(
+                        children: [
+                          _buildBody(colors, l10n),
+                          Positioned(
+                            right: 20,
+                            bottom: 16,
+                            child: _NewChatButton(onTap: _startNewChat),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  // 검색창은 목록과 함께 스크롤되지 않고 화면 하단에 고정한다
-                  // (사용자 요청) — `Column`의 `Expanded` 형제로 둬서 목록만
-                  // 스크롤 영역을 갖고 이 검색창은 항상 같은 자리에 남는다.
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-                    child: _SearchField(controller: _searchController),
-                  ),
-                ],
+                    // 검색창은 목록과 함께 스크롤되지 않고 화면 하단에 고정한다
+                    // (사용자 요청) — `Column`의 `Expanded` 형제로 둬서 목록만
+                    // 스크롤 영역을 갖고 이 검색창은 항상 같은 자리에 남는다.
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                      child: _SearchField(controller: _searchController),
+                    ),
+                  ],
+                ),
               ),
               if (_isOpeningSession)
                 ColoredBox(
                   color: colors.scrim,
-                  child: const Center(child: CircularProgressIndicator()),
+                  child: Semantics(
+                    liveRegion: true,
+                    label: l10n.historyOpeningSessionLabel,
+                    child: const Center(child: CircularProgressIndicator()),
+                  ),
                 ),
             ],
           ),
@@ -240,7 +254,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   Widget _buildBody(AppColors colors, AppLocalizations l10n) {
     if (_isLoading) {
-      return Center(child: CircularProgressIndicator(color: colors.accent));
+      // `CircularProgressIndicator`엔 기본 라벨이 없어(사용자 요청 —
+      // VoiceOver 지원, 지난 대화 화면) 감싸는 `Semantics`로 announce한다.
+      return Center(
+        child: Semantics(
+          liveRegion: true,
+          label: l10n.historyLoadingLabel,
+          child: CircularProgressIndicator(color: colors.accent),
+        ),
+      );
     }
     if (_hasError) {
       return _HistoryMessage(
@@ -313,25 +335,35 @@ class _NewChatButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context)!;
-    return InkWell(
-      borderRadius: BorderRadius.circular(999),
+    // `InkWell`은 버튼 role이 없어 VoiceOver가 아이콘+텍스트를 각자 따로
+    // 읽던 것을 하나로 묶는다(사용자 요청 — VoiceOver 지원, 지난 대화
+    // 화면. `app_drawer.dart`의 같은 모양 버튼과 동일한 처리).
+    return Semantics(
+      button: true,
+      label: l10n.chatNewTooltip,
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: colors.chatSendButton,
+      child: ExcludeSemantics(
+        child: InkWell(
           borderRadius: BorderRadius.circular(999),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SvgPicture.asset('assets/images/plus.svg'),
-            const SizedBox(width: 10),
-            Text(l10n.chatNewTooltip,
-                style: AppTextStyles.body(
-                        fontSize: 15, color: colors.ink, height: 1.6)
-                    .copyWith(fontWeight: FontWeight.w500)),
-          ],
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: colors.chatSendButton,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SvgPicture.asset('assets/images/plus.svg'),
+                const SizedBox(width: 10),
+                Text(l10n.chatNewTooltip,
+                    style: AppTextStyles.body(
+                            fontSize: 15, color: colors.ink, height: 1.6)
+                        .copyWith(fontWeight: FontWeight.w500)),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -399,24 +431,40 @@ class _DateFilterButtonState extends State<_DateFilterButton> {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return CompositedTransformTarget(
-      link: _menuLink,
-      child: GestureDetector(
-        onTap: _toggleMenu,
-        behavior: HitTestBehavior.opaque,
-        child: SizedBox(
-          width: _slotSize,
-          height: _slotSize,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Image.asset('assets/images/slot.png', width: 33, height: 33),
-              SvgPicture.asset(
-                'assets/images/union.svg',
-                width: 14,
-                colorFilter: ColorFilter.mode(colors.ink, BlendMode.srcIn),
+    final l10n = AppLocalizations.of(context)!;
+    // `GestureDetector`는 탭 액션은 자동으로 시맨틱 트리에 연결하지만 버튼
+    // role이 없고, 별도 시각 툴팁도 없는 아이콘 전용 버튼이라 신규 l10n
+    // 키(`historyDateFilterTooltip`)로 라벨을 준다 — `value`로 현재 선택된
+    // 필터까지 함께 announce한다(사용자 요청 — VoiceOver 지원, 지난 대화
+    // 화면).
+    return Semantics(
+      button: true,
+      label: l10n.historyDateFilterTooltip,
+      value: widget.selected == _DateFilter.today
+          ? l10n.historyFilterToday
+          : l10n.historyFilterAll,
+      onTap: _toggleMenu,
+      child: ExcludeSemantics(
+        child: CompositedTransformTarget(
+          link: _menuLink,
+          child: GestureDetector(
+            onTap: _toggleMenu,
+            behavior: HitTestBehavior.opaque,
+            child: SizedBox(
+              width: _slotSize,
+              height: _slotSize,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Image.asset('assets/images/slot.png', width: 33, height: 33),
+                  SvgPicture.asset(
+                    'assets/images/union.svg',
+                    width: 14,
+                    colorFilter: ColorFilter.mode(colors.ink, BlendMode.srcIn),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -442,12 +490,24 @@ class _DateFilterMenuOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Stack(
       children: [
         Positioned.fill(
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
+          // 배리어 자체는 화면을 덮는 투명한 닫기 영역이라, VoiceOver가
+          // 라벨 없는 빈 영역으로 announce하지 않도록 "닫기" 버튼으로
+          // 명시한다(사용자 요청 — VoiceOver 지원, 지난 대화 화면.
+          // `chat_screen.dart`의 `_ProfileMenuOverlay`와 동일한 처리).
+          child: Semantics(
+            button: true,
+            label: l10n.commonClose,
             onTap: onDismiss,
+            child: ExcludeSemantics(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: onDismiss,
+              ),
+            ),
           ),
         ),
         CompositedTransformFollower(
@@ -543,21 +603,38 @@ class _DateFilterMenuItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return InkWell(
+    // `chat_screen.dart`의 `_ProfileMenuItem`/`settings_screen.dart`의
+    // `_RadioRow`와 동일한 이유(`InkWell`은 버튼 role이 없음) — "오늘"/"전체"
+    // 두 항목이 서로 배타적으로 선택되는 라디오 그룹이라 `selected`/
+    // `inMutuallyExclusiveGroup`까지 함께 announce한다(사용자 요청 —
+    // VoiceOver 지원, 지난 대화 화면).
+    return Semantics(
+      button: true,
+      selected: selected,
+      inMutuallyExclusiveGroup: true,
+      label: label,
       onTap: onTap,
-      child: Container(
-        alignment: Alignment.centerLeft,
-        margin: EdgeInsets.only(
-            left: 8, right: 8, top: isFirst ? 8 : 0, bottom: isFirst ? 0 : 8),
-        padding: const EdgeInsets.symmetric(horizontal: 11),
-        decoration: BoxDecoration(
-          color: selected ? colors.dateFilterActiveBackground : null,
-          borderRadius: BorderRadius.circular(6),
+      child: ExcludeSemantics(
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            alignment: Alignment.centerLeft,
+            margin: EdgeInsets.only(
+                left: 8,
+                right: 8,
+                top: isFirst ? 8 : 0,
+                bottom: isFirst ? 0 : 8),
+            padding: const EdgeInsets.symmetric(horizontal: 11),
+            decoration: BoxDecoration(
+              color: selected ? colors.dateFilterActiveBackground : null,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(label,
+                textScaler: TextScaler.noScaling,
+                style: AppTextStyles.body(fontSize: 15, color: colors.ink)
+                    .copyWith(fontWeight: FontWeight.w500)),
+          ),
         ),
-        child: Text(label,
-            textScaler: TextScaler.noScaling,
-            style: AppTextStyles.body(fontSize: 15, color: colors.ink)
-                .copyWith(fontWeight: FontWeight.w500)),
       ),
     );
   }
@@ -576,6 +653,7 @@ class _SearchField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
@@ -585,19 +663,29 @@ class _SearchField extends StatelessWidget {
       ),
       child: Row(
         children: [
-          SvgPicture.asset(
-            'assets/images/search.svg',
-            width: 16,
-            height: 16,
+          // 플레이스홀더 텍스트 대신 아이콘만으로 검색창임을 표시하는
+          // 디자인이라(사용자 지정 시안) VoiceOver에는 이 아이콘 대신 아래
+          // `TextField`를 감싸는 `Semantics.label`로 목적을 알린다 —
+          // 아이콘 자체는 순수 장식이라 제외한다(사용자 요청 — VoiceOver
+          // 지원, 지난 대화 화면).
+          ExcludeSemantics(
+            child: SvgPicture.asset(
+              'assets/images/search.svg',
+              width: 16,
+              height: 16,
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: TextField(
-              controller: controller,
-              style: AppTextStyles.body(fontSize: 15, color: colors.ink),
-              decoration: const InputDecoration(
-                isDense: true,
-                border: InputBorder.none,
+            child: Semantics(
+              label: l10n.historySearchFieldLabel,
+              child: TextField(
+                controller: controller,
+                style: AppTextStyles.body(fontSize: 15, color: colors.ink),
+                decoration: const InputDecoration(
+                  isDense: true,
+                  border: InputBorder.none,
+                ),
               ),
             ),
           ),
@@ -605,14 +693,24 @@ class _SearchField extends StatelessWidget {
             valueListenable: controller,
             builder: (context, value, _) {
               if (value.text.isEmpty) return const SizedBox.shrink();
-              return GestureDetector(
+              // `GestureDetector`만으로는 버튼 role이 없어 VoiceOver가 이
+              // 아이콘을 그냥 빈 영역으로 announce하던 것을 고친다(사용자
+              // 요청 — VoiceOver 지원, 지난 대화 화면).
+              return Semantics(
+                button: true,
+                label: l10n.historySearchClearTooltip,
                 onTap: controller.clear,
-                behavior: HitTestBehavior.opaque,
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-                  child: AppIcon(AppIconShape.close,
-                      size: 14, color: colors.ink600),
+                child: ExcludeSemantics(
+                  child: GestureDetector(
+                    onTap: controller.clear,
+                    behavior: HitTestBehavior.opaque,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 10, horizontal: 4),
+                      child: AppIcon(AppIconShape.close,
+                          size: 14, color: colors.ink600),
+                    ),
+                  ),
                 ),
               );
             },
@@ -657,37 +755,52 @@ class _HistoryTile extends StatelessWidget {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context)!;
     final lastActiveAt = session.lastActiveAt;
-    return InkWell(
+    final title = session.title ?? l10n.historyUntitledSession;
+    final relativeTime =
+        lastActiveAt == null ? null : _formatRelativeTime(lastActiveAt, l10n);
+    // `InkWell`만으로는 버튼 role이 없고, 제목/상대 시각이 각자 별도 `Text`라
+    // 카드 하나를 다 들으려면 두 번 스와이프해야 했다 — 하나로 묶어
+    // "제목, n분전"이 한 번에 읽히게 한다(사용자 요청 — VoiceOver 지원,
+    // 지난 대화 화면. `app_drawer.dart`의 세션 미리보기 항목과 동일한
+    // 패턴이나, 이 화면은 상대 시각까지 라벨에 포함함).
+    return Semantics(
+      button: true,
+      label: relativeTime == null ? title : '$title, $relativeTime',
       onTap: onTap,
-      borderRadius: BorderRadius.circular(9),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: colors.graphite,
-          border: Border.all(color: colors.inputBarBorder, width: 1.5),
+      child: ExcludeSemantics(
+        child: InkWell(
+          onTap: onTap,
           borderRadius: BorderRadius.circular(9),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              session.title ?? l10n.historyUntitledSession,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.body(
-                      fontSize: 14, height: 1.2, color: colors.ink)
-                  .copyWith(fontWeight: FontWeight.w500),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: colors.graphite,
+              border: Border.all(color: colors.inputBarBorder, width: 1.5),
+              borderRadius: BorderRadius.circular(9),
             ),
-            if (lastActiveAt != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                _formatRelativeTime(lastActiveAt, l10n),
-                style: AppTextStyles.body(
-                        fontSize: 13, color: colors.voiceListeningHint)
-                    .copyWith(fontWeight: FontWeight.w500),
-              ),
-            ],
-          ],
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.body(
+                          fontSize: 14, height: 1.2, color: colors.ink)
+                      .copyWith(fontWeight: FontWeight.w500),
+                ),
+                if (relativeTime != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    relativeTime,
+                    style: AppTextStyles.body(
+                            fontSize: 13, color: colors.voiceListeningHint)
+                        .copyWith(fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ],
+            ),
+          ),
         ),
       ),
     );

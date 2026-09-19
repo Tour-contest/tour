@@ -195,118 +195,135 @@ class _SettingsScreenState extends State<SettingsScreen> {
         body: SafeArea(
           child: Stack(
             children: [
-              Column(
-                children: [
-                  PlainHeader(title: l10n.commonSettings),
-                  Expanded(
-                    child: ListView(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 24),
-                      children: [
-                        _SectionLabel(l10n.settingsSectionMyInfo),
-                        _ProfileSummary(
-                          provider: _provider,
-                          nickname: _profile?.nickname,
-                          profileImageUrl: _profile?.profileImageUrl,
-                        ),
-                        const SizedBox(height: 8),
-                        _SettingsRow(
-                          label: l10n.settingsEmailLabel,
-                          trailingText: _profile?.email != null
-                              ? _maskEmail(_profile!.email!)
-                              : DemoUser.maskedEmailFor(_provider),
-                          isFirst: true,
-                        ),
-                        _ConnectedAccountRow(
-                          provider: _provider,
-                          enabled: !(_profile?.isAdmin ?? false),
-                          onDisconnect: () => _confirmDisconnect(context),
-                        ),
-                        const SizedBox(height: 28),
-                        _SectionLabel(l10n.settingsSectionFontSize),
-                        ValueListenableBuilder<AppFontScale>(
-                          valueListenable: appTextScaleController,
-                          builder: (context, scale, _) {
-                            return Column(
-                              children: [
-                                for (final option in AppFontScale.values)
-                                  _RadioRow(
-                                    label: _fontScaleLabel(l10n, option),
-                                    selected: scale == option,
-                                    onTap: () =>
-                                        appTextScaleController.setScale(option),
-                                    isFirst:
-                                        option == AppFontScale.values.first,
-                                  ),
-                              ],
-                            );
-                          },
-                        ),
-                        // const SizedBox(height: 28),
-                        // _SectionLabel(l10n.settingsSectionLanguage),
-                        // ValueListenableBuilder<AppLocaleOption>(
-                        //   valueListenable: appLocaleController,
-                        //   builder: (context, option, _) {
-                        //     return Column(
-                        //       children: [
-                        //         for (final value in AppLocaleOption.values)
-                        //           _RadioRow(
-                        //             label: _languageOptionLabel(l10n, value),
-                        //             selected: option == value,
-                        //             onTap: () => appLocaleController.setOption(value),
-                        //             isFirst: value == AppLocaleOption.values.first,
-                        //           ),
-                        //       ],
-                        //     );
-                        //   },
-                        // ),
-                        const SizedBox(height: 28),
-                        _SectionLabel(l10n.settingsSectionInfo),
-                        _SettingsRow(
-                          label: l10n.settingsAppVersion,
-                          trailingText:
-                              '${AppInfo.package.version} (${AppInfo.package.buildNumber})',
-                          isFirst: true,
-                        ),
-                        _SettingsRow(
-                          label: l10n.settingsPrivacyPolicy,
-                          onTap: () => _openWebView(
-                            context,
-                            title: l10n.settingsPrivacyPolicy,
-                            url: AppInfo.privacyPolicyUrl,
+              // 로그아웃 처리 중(`_isLoggingOut`)에는 화면 터치는 이미
+              // 스크림으로 막혀 있지만, VoiceOver의 스와이프 탐색은 z-order와
+              // 무관하게 시맨틱 트리를 그대로 훑기 때문에 목록의 모든
+              // 행(로그아웃 버튼 포함)이 계속 활성 상태로 잡혔다 — 로그아웃
+              // 중에는 이 콘텐츠 전체를 시맨틱 트리에서 제외한다(사용자
+              // 요청 — VoiceOver 지원, 설정 화면. `login_screen.dart`의
+              // `_isLoggingIn` 처리와 동일한 패턴).
+              ExcludeSemantics(
+                excluding: _isLoggingOut,
+                child: Column(
+                  children: [
+                    PlainHeader(title: l10n.commonSettings),
+                    Expanded(
+                      child: ListView(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 24),
+                        children: [
+                          _SectionLabel(l10n.settingsSectionMyInfo),
+                          _ProfileSummary(
+                            provider: _provider,
+                            nickname: _profile?.nickname,
+                            profileImageUrl: _profile?.profileImageUrl,
                           ),
-                        ),
-                        _SettingsRow(
-                          label: l10n.settingsTermsOfService,
-                          onTap: () => _openWebView(
-                            context,
-                            title: l10n.settingsTermsOfService,
-                            url: AppInfo.termsOfServiceUrl,
+                          const SizedBox(height: 8),
+                          _SettingsRow(
+                            label: l10n.settingsEmailLabel,
+                            trailingText: _profile?.email != null
+                                ? _maskEmail(_profile!.email!)
+                                : DemoUser.maskedEmailFor(_provider),
+                            isFirst: true,
                           ),
-                        ),
-                        _SettingsRow(
-                          label: l10n.settingsContact,
-                          trailingText: AppInfo.developerEmail,
-                          onTap: () => _contactByEmail(context),
-                        ),
-                        const SizedBox(height: 28),
-                        _SectionLabel(l10n.settingsSectionOpenSource),
-                        _SettingsRow(
-                          label: l10n.settingsOpenSourceLicense,
-                          onTap: () => _openLicenses(context),
-                          isFirst: true,
-                        ),
-                        const SizedBox(height: 28),
-                        _LogoutButton(onTap: () => _confirmLogout(context)),
-                      ],
+                          _ConnectedAccountRow(
+                            provider: _provider,
+                            enabled: !(_profile?.isAdmin ?? false),
+                            onDisconnect: () => _confirmDisconnect(context),
+                          ),
+                          const SizedBox(height: 28),
+                          _SectionLabel(l10n.settingsSectionFontSize),
+                          ValueListenableBuilder<AppFontScale>(
+                            valueListenable: appTextScaleController,
+                            builder: (context, scale, _) {
+                              return Column(
+                                children: [
+                                  for (final option in AppFontScale.values)
+                                    _RadioRow(
+                                      label: _fontScaleLabel(l10n, option),
+                                      selected: scale == option,
+                                      onTap: () => appTextScaleController
+                                          .setScale(option),
+                                      isFirst:
+                                          option == AppFontScale.values.first,
+                                    ),
+                                ],
+                              );
+                            },
+                          ),
+                          // const SizedBox(height: 28),
+                          // _SectionLabel(l10n.settingsSectionLanguage),
+                          // ValueListenableBuilder<AppLocaleOption>(
+                          //   valueListenable: appLocaleController,
+                          //   builder: (context, option, _) {
+                          //     return Column(
+                          //       children: [
+                          //         for (final value in AppLocaleOption.values)
+                          //           _RadioRow(
+                          //             label: _languageOptionLabel(l10n, value),
+                          //             selected: option == value,
+                          //             onTap: () => appLocaleController.setOption(value),
+                          //             isFirst: value == AppLocaleOption.values.first,
+                          //           ),
+                          //       ],
+                          //     );
+                          //   },
+                          // ),
+                          const SizedBox(height: 28),
+                          _SectionLabel(l10n.settingsSectionInfo),
+                          _SettingsRow(
+                            label: l10n.settingsAppVersion,
+                            trailingText:
+                                '${AppInfo.package.version} (${AppInfo.package.buildNumber})',
+                            isFirst: true,
+                          ),
+                          _SettingsRow(
+                            label: l10n.settingsPrivacyPolicy,
+                            onTap: () => _openWebView(
+                              context,
+                              title: l10n.settingsPrivacyPolicy,
+                              url: AppInfo.privacyPolicyUrl,
+                            ),
+                          ),
+                          _SettingsRow(
+                            label: l10n.settingsTermsOfService,
+                            onTap: () => _openWebView(
+                              context,
+                              title: l10n.settingsTermsOfService,
+                              url: AppInfo.termsOfServiceUrl,
+                            ),
+                          ),
+                          _SettingsRow(
+                            label: l10n.settingsContact,
+                            trailingText: AppInfo.developerEmail,
+                            onTap: () => _contactByEmail(context),
+                          ),
+                          const SizedBox(height: 28),
+                          _SectionLabel(l10n.settingsSectionOpenSource),
+                          _SettingsRow(
+                            label: l10n.settingsOpenSourceLicense,
+                            onTap: () => _openLicenses(context),
+                            isFirst: true,
+                          ),
+                          const SizedBox(height: 28),
+                          _LogoutButton(onTap: () => _confirmLogout(context)),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               if (_isLoggingOut)
                 ColoredBox(
                   color: colors.scrim,
-                  child: const Center(child: CircularProgressIndicator()),
+                  // VoiceOver가 로그아웃 진행 상태를 놓치지 않도록 실시간
+                  // 안내(liveRegion)로 새로 등장하는 즉시 읽어준다(사용자
+                  // 요청 — VoiceOver 지원, 설정 화면).
+                  child: Semantics(
+                    liveRegion: true,
+                    label: l10n.settingsLoggingOutLabel,
+                    child: const Center(child: CircularProgressIndicator()),
+                  ),
                 ),
             ],
           ),
@@ -324,12 +341,18 @@ class _SectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(2, 0, 0, 8),
-      child: Text(
-        text,
-        style: AppTextStyles.body(
-            fontSize: 11, color: colors.chatCardAccent, letterSpacing: 1.8),
+    // `header: true`로 VoiceOver의 "헤딩" 단위 탐색(로터)에서 이 화면의
+    // 섹션 사이를 바로 건너뛸 수 있게 한다(라벨은 지정하지 않아 안쪽
+    // `Text` 내용이 그대로 올라감. 사용자 요청 — VoiceOver 지원, 설정 화면).
+    return Semantics(
+      header: true,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(2, 0, 0, 8),
+        child: Text(
+          text,
+          style: AppTextStyles.body(
+              fontSize: 11, color: colors.chatCardAccent, letterSpacing: 1.8),
+        ),
       ),
     );
   }
@@ -351,42 +374,58 @@ class _RadioRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return InkWell(
+    // 선택 여부는 지금까지 원 안쪽 점(순수 시각 표시)으로만 전달돼 VoiceOver
+    // 사용자는 어떤 글자 크기가 적용 중인지 알 방법이 없었다 — 행 전체를
+    // 하나의 시맨틱 노드로 명시해 라벨과 "선택됨" 상태·라디오 그룹 소속을
+    // 함께 announce한다(사용자 요청 — VoiceOver 지원, 설정 화면).
+    return Semantics(
+      selected: selected,
+      inMutuallyExclusiveGroup: true,
+      button: true,
+      label: label,
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          border: Border(
-            top: isFirst ? BorderSide.none : BorderSide(color: colors.divider),
-          ),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(label,
-                  style: AppTextStyles.body(fontSize: 14, color: colors.ink)),
-            ),
-            Container(
-              width: 16,
-              height: 16,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                    color: selected ? colors.accent : colors.divider,
-                    width: 1.4),
+      child: ExcludeSemantics(
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            decoration: BoxDecoration(
+              border: Border(
+                top: isFirst
+                    ? BorderSide.none
+                    : BorderSide(color: colors.divider),
               ),
-              child: selected
-                  ? Center(
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                            shape: BoxShape.circle, color: colors.accent),
-                      ),
-                    )
-                  : null,
             ),
-          ],
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(label,
+                      style:
+                          AppTextStyles.body(fontSize: 14, color: colors.ink)),
+                ),
+                Container(
+                  width: 16,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                        color: selected ? colors.accent : colors.divider,
+                        width: 1.4),
+                  ),
+                  child: selected
+                      ? Center(
+                          child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                                shape: BoxShape.circle, color: colors.accent),
+                          ),
+                        )
+                      : null,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -409,29 +448,46 @@ class _SettingsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return InkWell(
+    // `label`/`trailingText`가 각자 별도 `Text`라 기본값으로는 VoiceOver가
+    // 한 행을 다 들으려면 두 번 스와이프해야 했다 — `value`로 함께 실어
+    // "라벨, 값" 한 번에 읽히게 하고, 탭 가능한 행(개인정보처리방침 등
+    // `onTap`이 있는 경우)만 "버튼" role을 준다(사용자 요청 — VoiceOver
+    // 지원, 설정 화면).
+    return Semantics(
+      label: label,
+      value: trailingText,
+      button: onTap != null,
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          border: Border(
-            top: isFirst ? BorderSide.none : BorderSide(color: colors.divider),
-          ),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(label,
-                  style: AppTextStyles.body(fontSize: 14, color: colors.ink)),
-            ),
-            if (trailingText != null) ...[
-              const SizedBox(width: 6),
-              Text(
-                trailingText!,
-                style: AppTextStyles.body(fontSize: 12.5, color: colors.ink600),
+      child: ExcludeSemantics(
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            decoration: BoxDecoration(
+              border: Border(
+                top: isFirst
+                    ? BorderSide.none
+                    : BorderSide(color: colors.divider),
               ),
-            ],
-          ],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(label,
+                      style:
+                          AppTextStyles.body(fontSize: 14, color: colors.ink)),
+                ),
+                if (trailingText != null) ...[
+                  const SizedBox(width: 6),
+                  Text(
+                    trailingText!,
+                    style: AppTextStyles.body(
+                        fontSize: 12.5, color: colors.ink600),
+                  ),
+                ],
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -522,16 +578,37 @@ class _ConnectedAccountRow extends StatelessWidget {
             style: AppTextStyles.body(fontSize: 12.5, color: colors.ink600),
           ),
           const SizedBox(width: 10),
+          // `InkWell`은 탭 액션은 자동으로 연결되지만 "버튼" role은 안
+          // 붙고, 비활성 상태(`Tooltip`만 있는 분기)는 이유(관리자 계정이라
+          // 막힘)가 시각적 텍스트로만 있어 VoiceOver로는 그냥 무반응
+          // 버튼처럼 보였다 — 두 분기 모두 명시적으로 버튼 role·활성 여부·
+          // 비활성 사유(hint)를 announce하게 한다(사용자 요청 — VoiceOver
+          // 지원, 설정 화면).
           if (enabled)
-            InkWell(
+            Semantics(
+              button: true,
+              label: l10n.settingsDisconnect,
               onTap: onDisconnect,
-              borderRadius: BorderRadius.circular(4),
-              child: buttonLabel,
+              child: ExcludeSemantics(
+                child: InkWell(
+                  onTap: onDisconnect,
+                  borderRadius: BorderRadius.circular(4),
+                  child: buttonLabel,
+                ),
+              ),
             )
           else
-            Tooltip(
-              message: l10n.settingsDisconnectAdminDisabledTooltip,
-              child: buttonLabel,
+            Semantics(
+              button: true,
+              enabled: false,
+              label: l10n.settingsDisconnect,
+              hint: l10n.settingsDisconnectAdminDisabledTooltip,
+              child: ExcludeSemantics(
+                child: Tooltip(
+                  message: l10n.settingsDisconnectAdminDisabledTooltip,
+                  child: buttonLabel,
+                ),
+              ),
             ),
         ],
       ),

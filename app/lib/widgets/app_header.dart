@@ -109,6 +109,21 @@ class _HeaderSlot extends StatelessWidget {
         ),
       ),
     );
-    return tooltip == null ? slot : Tooltip(message: tooltip, child: slot);
+    final decorated =
+        tooltip == null ? slot : Tooltip(message: tooltip, child: slot);
+    // `GestureDetector`는 탭 액션은 자동으로 시맨틱 트리에 연결하지만(Flutter
+    // 기본 동작) `button` role은 안 붙고, `Tooltip`이 주는 시맨틱스도 `label`이
+    // 아니라 `tooltip` 속성이라 VoiceOver가 안내 문구를 그대로 안 읽어줄 수
+    // 있다 — `onTap`/`tooltip`이 둘 다 있을 때만(=실제 아이콘 버튼일 때만)
+    // 명시적으로 버튼 role과 라벨을 준다(사용자 요청 — VoiceOver 지원, 채팅
+    // 화면. `_ProfileAvatarButton`처럼 자체 제스처를 갖고 이 슬롯의 `onTap`을
+    // 안 쓰는 경우엔 영향 없음).
+    if (onTap == null || tooltip == null) return decorated;
+    return Semantics(
+      button: true,
+      label: tooltip,
+      onTap: onTap,
+      child: ExcludeSemantics(child: decorated),
+    );
   }
 }

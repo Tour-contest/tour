@@ -33,107 +33,116 @@ class CrowdBarChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final resolvedBarColor = barColor ?? colors.accentBright;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          height: _barAreaHeight,
-          width: _axisWidth,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              for (final value in _gridValues)
-                Positioned(
-                  bottom: _barAreaHeight * (value / 100) - 6,
-                  left: 0,
-                  child: Text(
-                    value == 90 ? '90+' : '$value',
-                    style: AppTextStyles.tabularNums(AppTextStyles.body(
-                        fontSize: 9.5, color: colors.ink600)),
+    // 축 눈금·요일 라벨이 전부 `Text`라 그대로 두면 VoiceOver가 막대 값 없이
+    // "0 30 50 70 90+ 월 화 수 목..."만 순서대로 읽어 의미를 전달하지 못한다 —
+    // 이 차트를 쓰는 화면(`attraction_detail_screen.dart`의 `_CrowdSection`,
+    // `chat_card_view.dart`의 `_CrowdMatchItemCard`)이 항상 바로 아래/옆에
+    // 평균·최고·최저 같은 텍스트 요약을 함께 보여주므로, 차트 자체는 그
+    // 요약이 이미 전달하는 내용의 시각적 표현으로 보고 시맨틱 트리에서
+    // 제외한다(사용자 요청 — VoiceOver 지원, 관광지 상세 화면).
+    return ExcludeSemantics(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            height: _barAreaHeight,
+            width: _axisWidth,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                for (final value in _gridValues)
+                  Positioned(
+                    bottom: _barAreaHeight * (value / 100) - 6,
+                    left: 0,
+                    child: Text(
+                      value == 90 ? '90+' : '$value',
+                      style: AppTextStyles.tabularNums(AppTextStyles.body(
+                          fontSize: 9.5, color: colors.ink600)),
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
-        ),
-        Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final barSlotWidth = days.isEmpty
-                  ? _minBarSlotWidth
-                  : (constraints.maxWidth / days.length)
-                      .clamp(_minBarSlotWidth, double.infinity);
-              return SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                child: SizedBox(
-                  width: barSlotWidth * days.length,
-                  child: Column(
-                    children: [
-                      SizedBox(
-                        height: _barAreaHeight,
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            for (final value in _gridValues)
-                              Positioned(
-                                bottom: _barAreaHeight * (value / 100),
-                                left: 0,
-                                right: 0,
-                                child: Container(
-                                    height: 1, color: colors.inputBarBorder),
-                              ),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                for (final day in days)
-                                  SizedBox(
-                                    width: barSlotWidth,
-                                    child: Align(
-                                      alignment: Alignment.bottomCenter,
-                                      child: FractionallySizedBox(
-                                        heightFactor:
-                                            (day.rate.clamp(0, 100) / 100)
-                                                .clamp(0.02, 1.0),
-                                        child: Container(
-                                          width: _barWidth,
-                                          decoration: BoxDecoration(
-                                            color: resolvedBarColor,
-                                            borderRadius:
-                                                const BorderRadius.vertical(
-                                                    top: Radius.circular(3)),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final barSlotWidth = days.isEmpty
+                    ? _minBarSlotWidth
+                    : (constraints.maxWidth / days.length)
+                        .clamp(_minBarSlotWidth, double.infinity);
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  child: SizedBox(
+                    width: barSlotWidth * days.length,
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          height: _barAreaHeight,
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              for (final value in _gridValues)
+                                Positioned(
+                                  bottom: _barAreaHeight * (value / 100),
+                                  left: 0,
+                                  right: 0,
+                                  child: Container(
+                                      height: 1, color: colors.inputBarBorder),
+                                ),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  for (final day in days)
+                                    SizedBox(
+                                      width: barSlotWidth,
+                                      child: Align(
+                                        alignment: Alignment.bottomCenter,
+                                        child: FractionallySizedBox(
+                                          heightFactor:
+                                              (day.rate.clamp(0, 100) / 100)
+                                                  .clamp(0.02, 1.0),
+                                          child: Container(
+                                            width: _barWidth,
+                                            decoration: BoxDecoration(
+                                              color: resolvedBarColor,
+                                              borderRadius:
+                                                  const BorderRadius.vertical(
+                                                      top: Radius.circular(3)),
+                                            ),
                                           ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                              ],
-                            ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            for (final day in days)
+                              SizedBox(
+                                width: barSlotWidth,
+                                child: Text(
+                                  day.weekday,
+                                  textAlign: TextAlign.center,
+                                  style: AppTextStyles.body(
+                                      fontSize: 9.5, color: colors.ink600),
+                                ),
+                              ),
                           ],
                         ),
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          for (final day in days)
-                            SizedBox(
-                              width: barSlotWidth,
-                              child: Text(
-                                day.weekday,
-                                textAlign: TextAlign.center,
-                                style: AppTextStyles.body(
-                                    fontSize: 9.5, color: colors.ink600),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

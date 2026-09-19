@@ -22,7 +22,10 @@ class NoDataCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Mascot(size: 48),
+          // 순수 장식이라 VoiceOver 시맨틱 트리에서 제외한다(사용자 요청 —
+          // VoiceOver 지원, 채팅 화면. `chat_fallback_prompt.dart`와 동일한
+          // 처리).
+          const ExcludeSemantics(child: Mascot(size: 48)),
           const SizedBox(height: 12),
           for (var i = 0; i < actions.length; i++)
             Padding(

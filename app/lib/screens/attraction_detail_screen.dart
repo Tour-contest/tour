@@ -235,7 +235,15 @@ class _AttractionDetailScreenState extends State<AttractionDetailScreen> {
   Widget _buildBody(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     if (_loadingDetail) {
-      return const Center(child: CircularProgressIndicator());
+      // `CircularProgressIndicator`엔 기본 라벨이 없어(사용자 요청 —
+      // VoiceOver 지원, 관광지 상세 화면) 감싸는 `Semantics`로 announce한다.
+      return Center(
+        child: Semantics(
+          liveRegion: true,
+          label: l10n.attractionDetailLoadingLabel,
+          child: const CircularProgressIndicator(),
+        ),
+      );
     }
     if (_detailNotFound) {
       return _MessageState(message: l10n.attractionDetailNotFound);
@@ -446,12 +454,20 @@ class _SectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Text(
-        text,
-        style: AppTextStyles.body(
-            fontSize: 16, color: colors.chatCardAccent, letterSpacing: 1.8),
+    // `header: true`로 VoiceOver의 "헤딩" 단위 탐색(로터)에서 이 화면의
+    // 7개 섹션(혼잡도 예보/이용정보/상세 소개/함께 찾는 곳/반려동물 동반
+    // 정보/비슷한 관광지/검색 관심도) 사이를 바로 건너뛸 수 있게 한다
+    // (사용자 요청 — VoiceOver 지원, 관광지 상세 화면. `settings_screen.dart`의
+    // `_SectionLabel`과 동일한 처리).
+    return Semantics(
+      header: true,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Text(
+          text,
+          style: AppTextStyles.body(
+              fontSize: 16, color: colors.chatCardAccent, letterSpacing: 1.8),
+        ),
       ),
     );
   }
@@ -481,6 +497,7 @@ class _ImageCarouselState extends State<_ImageCarousel> {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final urls = widget.imageUrls;
     return AspectRatio(
       aspectRatio: 16 / 9,
@@ -500,26 +517,43 @@ class _ImageCarouselState extends State<_ImageCarousel> {
                       controller: _controller,
                       itemCount: urls.length,
                       onPageChanged: (index) => setState(() => _page = index),
-                      itemBuilder: (context, index) => GestureDetector(
-                        onTap: () => context.pushNamed(
-                          RouteNames.photoViewer,
-                          extra: PhotoViewerArgs(
-                              imageUrls: urls, initialIndex: index),
-                        ),
-                        child: CachedNetworkImage(
-                          imageUrl: urls[index],
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          placeholder: (_, __) => SkeletonBox(
-                            child: AppIcon(AppIconShape.image,
-                                size: 22, color: colors.ink600),
+                      itemBuilder: (context, index) {
+                        void openViewer() => context.pushNamed(
+                              RouteNames.photoViewer,
+                              extra: PhotoViewerArgs(
+                                  imageUrls: urls, initialIndex: index),
+                            );
+                        // 사진 자체엔 대체 텍스트가 없어(서버가 캡션을 안
+                        // 줌) 위치("사진 n/총n")만이라도 announce하고, 탭하면
+                        // 확대 보기로 이동한다는 걸 `hint`로 안내한다 —
+                        // `GestureDetector`만으로는 버튼 role이 없다(사용자
+                        // 요청 — VoiceOver 지원, 관광지 상세 화면).
+                        return Semantics(
+                          button: true,
+                          label: l10n.attractionDetailPhotoLabel(
+                              index + 1, urls.length),
+                          hint: l10n.attractionDetailPhotoZoomHint,
+                          onTap: openViewer,
+                          child: ExcludeSemantics(
+                            child: GestureDetector(
+                              onTap: openViewer,
+                              child: CachedNetworkImage(
+                                imageUrl: urls[index],
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                placeholder: (_, __) => SkeletonBox(
+                                  child: AppIcon(AppIconShape.image,
+                                      size: 22, color: colors.ink600),
+                                ),
+                                errorWidget: (_, __, ___) => SkeletonBox(
+                                  child: AppIcon(AppIconShape.image,
+                                      size: 22, color: colors.ink600),
+                                ),
+                              ),
+                            ),
                           ),
-                          errorWidget: (_, __, ___) => SkeletonBox(
-                            child: AppIcon(AppIconShape.image,
-                                size: 22, color: colors.ink600),
-                          ),
-                        ),
-                      ),
+                        );
+                      },
                     ),
             ),
           ),
@@ -596,9 +630,15 @@ class _CrowdSection extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         if (loading)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 24),
-            child: Center(child: CircularProgressIndicator()),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: Semantics(
+                liveRegion: true,
+                label: l10n.attractionDetailCrowdLoadingLabel,
+                child: const CircularProgressIndicator(),
+              ),
+            ),
           )
         else if (failed)
           _MessageState(
@@ -638,22 +678,35 @@ class _DayOptionPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return InkWell(
+    // `InkWell`은 버튼 role이 없고, 7/14/28일 세 pill이 서로 배타적으로
+    // 선택되는 라디오 그룹이라 `selected`/`inMutuallyExclusiveGroup`까지
+    // 함께 announce한다(사용자 요청 — VoiceOver 지원, 관광지 상세 화면.
+    // `history_screen.dart`의 `_DateFilterMenuItem`과 동일한 패턴).
+    return Semantics(
+      button: true,
+      selected: selected,
+      inMutuallyExclusiveGroup: true,
+      label: label,
       onTap: onTap,
-      borderRadius: BorderRadius.circular(99),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: selected ? colors.accentTint14 : colors.surfaceMuted,
-          border: Border.all(
-              color: selected ? colors.accent : colors.surfaceMutedBorder),
+      child: ExcludeSemantics(
+        child: InkWell(
+          onTap: onTap,
           borderRadius: BorderRadius.circular(99),
-        ),
-        child: Text(
-          label,
-          style: AppTextStyles.body(
-            fontSize: 12.5,
-            color: selected ? colors.chatCardAccent : colors.ink600,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: selected ? colors.accentTint14 : colors.surfaceMuted,
+              border: Border.all(
+                  color: selected ? colors.accent : colors.surfaceMutedBorder),
+              borderRadius: BorderRadius.circular(99),
+            ),
+            child: Text(
+              label,
+              style: AppTextStyles.body(
+                fontSize: 12.5,
+                color: selected ? colors.chatCardAccent : colors.ink600,
+              ),
+            ),
           ),
         ),
       ),
@@ -710,33 +763,44 @@ class _MapButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context)!;
-    return InkWell(
+    // `InkWell`은 버튼 role이 없어 VoiceOver가 아이콘+텍스트를 각자 따로
+    // 읽던 것을 하나로 묶는다(사용자 요청 — VoiceOver 지원, 관광지 상세
+    // 화면).
+    return Semantics(
+      button: true,
+      label: l10n.attractionDetailOpenMapButton,
       onTap: onTap,
-      borderRadius: BorderRadius.circular(11),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: colors.paper,
-          border: Border.all(color: colors.accent, width: 1.5),
+      child: ExcludeSemantics(
+        child: InkWell(
+          onTap: onTap,
           borderRadius: BorderRadius.circular(11),
-        ),
-        alignment: Alignment.center,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SvgPicture.asset(
-              'assets/images/map.svg',
-              height: 16,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              color: colors.paper,
+              border: Border.all(color: colors.accent, width: 1.5),
+              borderRadius: BorderRadius.circular(11),
             ),
-            const SizedBox(width: 10),
-            Text(
-              l10n.attractionDetailOpenMapButton,
-              style: AppTextStyles.heading(fontSize: 15, color: colors.accent)
-                  .copyWith(fontWeight: FontWeight.w600),
+            alignment: Alignment.center,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SvgPicture.asset(
+                  'assets/images/map.svg',
+                  height: 16,
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  l10n.attractionDetailOpenMapButton,
+                  style:
+                      AppTextStyles.heading(fontSize: 15, color: colors.accent)
+                          .copyWith(fontWeight: FontWeight.w600),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -793,41 +857,61 @@ class _SimilarSection extends StatelessWidget {
     return Column(
       children: [
         for (final item in items) ...[
-          InkWell(
-            onTap: () => onTap(item.summary.contentId, item.summary.title),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.summary.title,
-                        style: AppTextStyles.heading(
-                            fontSize: 14, color: colors.ink),
-                      ),
-                      if (item.summary.address.isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          item.summary.address,
-                          style: AppTextStyles.body(
-                              fontSize: 12, color: colors.ink600),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                Text(
-                  l10n.attractionDetailSimilarityLabel(
-                      (item.similarity.clamp(0, 1) * 100).round()),
-                  style: AppTextStyles.body(fontSize: 12, color: colors.ink600),
-                ),
-              ],
-            ),
-          ),
+          _buildRow(colors, l10n, item),
           const SizedBox(height: 12),
         ],
       ],
+    );
+  }
+
+  Widget _buildRow(
+      AppColors colors, AppLocalizations l10n, SimilarAttraction item) {
+    final similarityLabel = l10n.attractionDetailSimilarityLabel(
+        (item.similarity.clamp(0, 1) * 100).round());
+    // 이름/주소/유사도가 각자 별도 `Text`라 항목 하나를 다 들으려면 여러 번
+    // 스와이프해야 했고, `InkWell`도 버튼 role이 없었다 — 하나로 묶는다
+    // (사용자 요청 — VoiceOver 지원, 관광지 상세 화면).
+    return Semantics(
+      button: true,
+      label: [
+        item.summary.title,
+        if (item.summary.address.isNotEmpty) item.summary.address,
+        similarityLabel,
+      ].join(', '),
+      onTap: () => onTap(item.summary.contentId, item.summary.title),
+      child: ExcludeSemantics(
+        child: InkWell(
+          onTap: () => onTap(item.summary.contentId, item.summary.title),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.summary.title,
+                      style: AppTextStyles.heading(
+                          fontSize: 14, color: colors.ink),
+                    ),
+                    if (item.summary.address.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        item.summary.address,
+                        style: AppTextStyles.body(
+                            fontSize: 12, color: colors.ink600),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Text(
+                similarityLabel,
+                style: AppTextStyles.body(fontSize: 12, color: colors.ink600),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

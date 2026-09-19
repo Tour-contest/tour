@@ -8,6 +8,18 @@ class AppConfig {
 
   static const Duration apiTimeout = Duration(seconds: 30);
 
+  /// 채팅 SSE 스트림(`chatStreamEndpoint`/`chatSessionStreamEndpoint`) 전용
+  /// 수신 타임아웃. Dio의 `receiveTimeout`은 스트리밍 응답에서 "청크 사이
+  /// 무활동 시간"으로 동작해(청크가 올 때마다 리셋, `dio`의
+  /// `response_stream_handler.dart` 확인) 매 요청이 짧게 끝나는 다른 REST
+  /// 엔드포인트용 [apiTimeout](30초)을 그대로 쓰면, 복잡한 도구 호출·카드
+  /// 조합으로 `status` 이벤트 없이 30초 넘게 걸리는 구간에서 실제로는
+  /// 서버가 정상 생성 중인데도 `DioException.receiveTimeout`이 발생해
+  /// 클라이언트가 스트림 에러로 잘못 처리한다(`chat_screen.dart`의 `_send`가
+  /// 관련 없는 REST 대체 검색을 제안하거나 실패 토스트를 띄우게 됨) — 그래서
+  /// 이 값만 넉넉하게 따로 둔다.
+  static const Duration chatStreamTimeout = Duration(seconds: 120);
+
   static const String healthzEndpoint = '/api/v1/healthz';
 
   static const String attributionEndpoint = '/api/v1/meta/attribution';

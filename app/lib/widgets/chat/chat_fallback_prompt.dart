@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:nullnull/l10n/app_localizations.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
 import 'package:nullnull/widgets/nullnull/mascot.dart';
@@ -39,12 +40,16 @@ class ChatFallbackPrompt extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.only(top: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Mascot(size: 48),
+          // 문구가 이미 같은 내용을 텍스트로 전달하는 순수 장식이라
+          // VoiceOver 시맨틱 트리에서 제외한다(사용자 요청 — VoiceOver 지원,
+          // 채팅 화면. `login_screen.dart`의 마스코트 처리와 동일한 패턴).
+          const ExcludeSemantics(child: Mascot(size: 48)),
           const SizedBox(height: 12),
           Text(
             state == ChatFallbackState.exhausted
@@ -68,11 +73,21 @@ class ChatFallbackPrompt extends StatelessWidget {
                   overlayColor: colors.accentTint08,
                 ),
                 child: state == ChatFallbackState.searching
-                    ? SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: colors.accent),
+                    // 자식이 스피너로 통째로 바뀌면서 버튼 라벨(`actionLabel`)을
+                    // 잃던 것을, `login_screen.dart`의 `_AdminDialogButton`
+                    // 로딩 분기와 동일한 패턴으로 라벨/진행 상태를 유지한다
+                    // (사용자 요청 — VoiceOver 지원, 채팅 화면).
+                    ? Semantics(
+                        label: actionLabel,
+                        value: l10n.chatFallbackSearchingLabel,
+                        child: ExcludeSemantics(
+                          child: SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: colors.accent),
+                          ),
+                        ),
                       )
                     : Text(
                         actionLabel,

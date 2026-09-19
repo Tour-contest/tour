@@ -138,7 +138,10 @@ class _StreamingAiMessageState extends State<StreamingAiMessage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Mascot(size: 48),
+        // AI가 생성한 응답임을 아이콘으로만 표시하는 순수 장식이라(뒤이은
+        // 텍스트가 실제 내용을 전달) VoiceOver 시맨틱 트리에서 제외한다
+        // (사용자 요청 — VoiceOver 지원, 채팅 화면).
+        const ExcludeSemantics(child: Mascot(size: 48)),
         const SizedBox(height: 7),
         for (var i = 0; i < blocks.length; i++)
           _BlockView(

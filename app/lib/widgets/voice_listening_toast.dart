@@ -55,52 +55,67 @@ class _VoiceListeningToastView extends StatelessWidget {
         maintainBottomViewPadding: true,
         child: FadeSlideIn(
           child: Center(
-            child: GestureDetector(
+            // `GestureDetector`만으로는 탭 액션은 자동 연결되지만 버튼
+            // role이 없고, 두 줄 문구(제목/힌트)도 각자 따로 읽혀 VoiceOver가
+            // 지금이 듣는 중인 상태임을 바로 알기 어려웠다 — 제목을 라벨로,
+            // "탭하여 정지" 힌트 문구를 그대로 시맨틱 `hint`로 실어 등장하는
+            // 즉시(`liveRegion`) 안내하도록 함(사용자 요청 — VoiceOver 지원,
+            // 채팅 화면).
+            child: Semantics(
+              button: true,
+              liveRegion: true,
+              label: AppLocalizations.of(context)!.chatInputVoiceListeningTitle,
+              hint: AppLocalizations.of(context)!.chatInputVoiceListeningHint,
               onTap: onTap,
-              child: Material(
-                color: Colors.transparent,
-                child: SizedBox(
-                  width: 130,
-                  height: 65,
-                  child: AspectRatio(
-                    aspectRatio: 2,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Image.asset(
-                          'assets/images/toast_slot.png',
-                          fit: BoxFit.fill,
-                        ),
-                        Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                AppLocalizations.of(context)!
-                                    .chatInputVoiceListeningTitle,
-                                textAlign: TextAlign.center,
-                                textScaler: TextScaler.noScaling,
-                                style: AppTextStyles.heading(
-                                  fontSize: 14,
-                                  color: colors.ink,
-                                  height: 1.5,
-                                ),
+              child: ExcludeSemantics(
+                child: GestureDetector(
+                  onTap: onTap,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: SizedBox(
+                      width: 130,
+                      height: 65,
+                      child: AspectRatio(
+                        aspectRatio: 2,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            Image.asset(
+                              'assets/images/toast_slot.png',
+                              fit: BoxFit.fill,
+                            ),
+                            Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    AppLocalizations.of(context)!
+                                        .chatInputVoiceListeningTitle,
+                                    textAlign: TextAlign.center,
+                                    textScaler: TextScaler.noScaling,
+                                    style: AppTextStyles.heading(
+                                      fontSize: 14,
+                                      color: colors.ink,
+                                      height: 1.5,
+                                    ),
+                                  ),
+                                  Text(
+                                    AppLocalizations.of(context)!
+                                        .chatInputVoiceListeningHint,
+                                    textAlign: TextAlign.center,
+                                    textScaler: TextScaler.noScaling,
+                                    style: AppTextStyles.heading(
+                                      fontSize: 13,
+                                      color: colors.voiceListeningHint,
+                                      height: 1.5,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Text(
-                                AppLocalizations.of(context)!
-                                    .chatInputVoiceListeningHint,
-                                textAlign: TextAlign.center,
-                                textScaler: TextScaler.noScaling,
-                                style: AppTextStyles.heading(
-                                  fontSize: 13,
-                                  color: colors.voiceListeningHint,
-                                  height: 1.5,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),

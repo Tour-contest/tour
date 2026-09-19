@@ -25,10 +25,19 @@ class RegionDonutChart extends StatelessWidget {
           height: 92,
           child: CustomPaint(
             painter: _DonutPainter(counts: counts, colors: colors),
+            // 시각적으로는 숫자만 떠 있어(도넛 색으로 등급 구분) VoiceOver가
+            // "3"처럼 맥락 없는 숫자만 읽던 것을, 무엇의 합계인지 알려주는
+            // 라벨로 감싼다(사용자 요청 — VoiceOver 지원, chat_card_view.dart).
             child: Center(
-              child: Text(
-                '$total',
-                style: AppTextStyles.heading(fontSize: 22, color: colors.ink),
+              child: Semantics(
+                label: l10n.chatCardCrowdDonutTotalLabel(total),
+                child: ExcludeSemantics(
+                  child: Text(
+                    '$total',
+                    style:
+                        AppTextStyles.heading(fontSize: 22, color: colors.ink),
+                  ),
+                ),
               ),
             ),
           ),
@@ -119,24 +128,32 @@ class _LegendRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
+    // 라벨/숫자가 별도 `Text`라 항목 하나를 다 들으려면 두 번 스와이프해야
+    // 했다 — "한적, 3"처럼 한 번에 읽히게 묶는다(사용자 요청 — VoiceOver
+    // 지원, chat_card_view.dart). 상호작용은 없어 `button`은 안 줌.
+    return Semantics(
+      label: '$label, $count',
+      child: ExcludeSemantics(
+        child: Row(
+          children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(label,
+                  style: AppTextStyles.body(fontSize: 13, color: colors.ink)),
+            ),
+            Text(
+              '$count',
+              style: AppTextStyles.tabularNums(
+                  AppTextStyles.heading(fontSize: 14, color: colors.ink)),
+            ),
+          ],
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(label,
-              style: AppTextStyles.body(fontSize: 13, color: colors.ink)),
-        ),
-        Text(
-          '$count',
-          style: AppTextStyles.tabularNums(
-              AppTextStyles.heading(fontSize: 14, color: colors.ink)),
-        ),
-      ],
+      ),
     );
   }
 }

@@ -66,7 +66,13 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
                   child: CachedNetworkImage(
                     imageUrl: urls[index],
                     fit: BoxFit.contain,
-                    placeholder: (_, __) => const CircularProgressIndicator(),
+                    // `CircularProgressIndicator`엔 기본 라벨이 없어 놓치고
+                    // 있었다(VoiceOver 지원 재점검 중 발견).
+                    placeholder: (_, __) => Semantics(
+                      liveRegion: true,
+                      label: l10n.photoViewerLoadingLabel,
+                      child: const CircularProgressIndicator(),
+                    ),
                     errorWidget: (_, __, ___) => AppIcon(
                       AppIconShape.image,
                       size: 32,

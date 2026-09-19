@@ -506,7 +506,13 @@ class DioChatApi implements ChatApi {
             'session_id': sessionId,
           'message': text,
         },
-        options: Options(responseType: ResponseType.stream),
+        // 채팅 응답은 도구 호출·카드 조합으로 REST 호출보다 훨씬 오래 걸릴
+        // 수 있어(`AppConfig.chatStreamTimeout` 문서 참고) 공용 30초
+        // 타임아웃 대신 이 스트림 전용 값을 준다.
+        options: Options(
+          responseType: ResponseType.stream,
+          receiveTimeout: AppConfig.chatStreamTimeout,
+        ),
       ),
     );
   }
@@ -516,7 +522,10 @@ class DioChatApi implements ChatApi {
     return _streamEvents(
       _dio.get<ResponseBody>(
         AppConfig.chatSessionStreamEndpoint(sessionId),
-        options: Options(responseType: ResponseType.stream),
+        options: Options(
+          responseType: ResponseType.stream,
+          receiveTimeout: AppConfig.chatStreamTimeout,
+        ),
       ),
     );
   }

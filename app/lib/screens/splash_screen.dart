@@ -96,13 +96,19 @@ class _SplashScreenState extends State<SplashScreen>
           opacity: _fade,
           child: ScaleTransition(
             scale: _scale,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Mascot(size: 130),
-                const SizedBox(height: 36),
-                SvgPicture.asset('assets/images/typography.svg'),
-              ],
+            // 브랜드 등장 애니메이션만 보여주고 자동으로 넘어가는 화면이라
+            // 상호작용 요소가 없고, 마스코트/워드마크 둘 다 순수 장식이다 —
+            // VoiceOver 시맨틱 트리에서 제외한다(사용자 요청 — VoiceOver
+            // 지원 재점검 중 발견한 누락).
+            child: ExcludeSemantics(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Mascot(size: 130),
+                  const SizedBox(height: 36),
+                  SvgPicture.asset('assets/images/typography.svg'),
+                ],
+              ),
             ),
           ),
         ),

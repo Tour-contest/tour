@@ -360,25 +360,40 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   /// `ChatFallbackPrompt`의 "다른 방식으로 찾아보기" 버튼 탭 시 호출된다.
-  /// `entry.fallbackQuery`(원본 사용자 입력)를 `AttractionsApi.search`에 먼저
-  /// 시도하고, 결과가 없으면 `AreasApi.resolve`(+ 단일 지역이면 `fetchOverview`)를
-  /// 시도하는 best-effort 매칭이다 — 의도 파악 로직 없이 원문 그대로 넘긴다.
-  /// `resolve`가 `ambiguous`면(선택 UI가 아직 없어) 자동으로 후보를 고르지
-  /// 않고 그대로 실패로 처리한다(`docs/API_SPEC.md`의 "구현 주의").
+  /// `entry.fallbackQuery`(원본 사용자 입력)에 지역명이 들어있는지부터
+  /// `AreasApi.resolve`로 먼저 확인한다(사용자 요청) — 성공하면 그 지역
+  /// 코드(`signguCd`)를 `AttractionsApi.search`에 함께 실어 보내 검색
+  /// 범위를 좁히고, 검색 결과가 없어도 이미 확보한 지역 코드로 바로
+  /// `AreasApi.fetchOverview`를 시도할 수 있다(예전엔 검색이 실패한 뒤에야
+  /// `resolve`를 별도로 한 번 더 호출했음). `resolve`는 지역명이 아예 없는
+  /// 입력에도 호출되므로 그 자체가 실패해도(못 찾음/네트워크 오류 등)
+  /// 지역 없이 나머지 흐름을 계속 진행한다 — 실패를 전체 대체 흐름의
+  /// 실패로 취급하지 않는다. `resolve`가 `ambiguous`면(선택 UI가 아직
+  /// 없어) 자동으로 후보를 고르지 않고 지역 없이 취급한다(`docs/API_SPEC.md`의
+  /// "구현 주의").
   Future<void> _runFallbackSearch(_AiChatEntry entry) async {
     setState(() => entry.fallbackState = ChatFallbackState.searching);
     try {
-      final searchResult =
-          await _attractionsApi.search(keyword: entry.fallbackQuery);
+      AreaCode? area;
+      try {
+        final resolved = await _areasApi.resolve(query: entry.fallbackQuery);
+        if (resolved.status == 'ok') area = resolved.area;
+      } catch (e, stackTrace) {
+        AppLog.logger.w('대체 흐름 지역 코드 변환 실패(지역 없이 계속 진행)',
+            error: e, stackTrace: stackTrace);
+      }
+
+      final searchResult = await _attractionsApi.search(
+        keyword: entry.fallbackQuery,
+        signguCd: area?.signguCd,
+      );
       if (searchResult.items.isNotEmpty) {
         _applyFallbackResult(
             entry, _attractionListCard(entry.fallbackQuery, searchResult));
         return;
       }
 
-      final resolved = await _areasApi.resolve(query: entry.fallbackQuery);
-      final area = resolved.area;
-      if (resolved.status == 'ok' && area != null) {
+      if (area != null) {
         final overview = await _areasApi.fetchOverview(signguCd: area.signguCd);
         _applyFallbackResult(entry, _crowdCard(overview));
         return;
@@ -680,23 +695,36 @@ class _ThinkingIndicatorState extends State<_ThinkingIndicator>
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context)!;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AnimatedBuilder(
-          animation: _bob,
-          builder: (context, child) => Transform.translate(
-            offset: Offset(0, _bob.value),
-            child: child,
+    final label = widget.label ?? l10n.chatThinkingLabel;
+    // 응답을 기다리는 동안 진행 상태 라벨이 계속 갱신되는데, 화면 어디를
+    // 보고 있든 그 변화가 바로 안내돼야 해서 `liveRegion`으로 감싼다. 위아래로
+    // 움직이는 마스코트는 상태를 시각적으로 강조하는 장식이라 시맨틱
+    // 트리에서 제외한다(사용자 요청 — VoiceOver 지원, 채팅 화면).
+    return Semantics(
+      liveRegion: true,
+      label: label,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ExcludeSemantics(
+            child: AnimatedBuilder(
+              animation: _bob,
+              builder: (context, child) => Transform.translate(
+                offset: Offset(0, _bob.value),
+                child: child,
+              ),
+              child: const Mascot(size: 48),
+            ),
           ),
-          child: const Mascot(size: 48),
-        ),
-        const SizedBox(width: 12),
-        Text(
-          widget.label ?? l10n.chatThinkingLabel,
-          style: AppTextStyles.body(fontSize: 13, color: colors.ink),
-        ),
-      ],
+          const SizedBox(width: 12),
+          ExcludeSemantics(
+            child: Text(
+              label,
+              style: AppTextStyles.body(fontSize: 13, color: colors.ink),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -820,24 +848,36 @@ class _ProfileAvatarButtonState extends State<_ProfileAvatarButton> {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final languageCode = Localizations.localeOf(context).languageCode;
     final nickname =
         _profile?.nickname ?? DemoUser.nicknameFor(_provider, languageCode);
     return CompositedTransformTarget(
       link: _menuLink,
-      child: GestureDetector(
+      // `GestureDetector`는 탭 액션은 자동으로 시맨틱 트리에 연결하지만
+      // "버튼" role은 안 붙고, 아바타 이니셜/사진만으로는 VoiceOver가 이
+      // 자리가 프로필 메뉴로 이어진다는 걸 알려주지 못한다 — 명시적으로
+      // 감싼다(사용자 요청 — VoiceOver 지원, 채팅 화면).
+      child: Semantics(
+        button: true,
+        label: l10n.chatProfileMenuTooltip,
         onTap: _toggleMenu,
-        behavior: HitTestBehavior.opaque,
-        child: SizedBox(
-          width: _slotSize,
-          height: _slotSize,
-          child: ProfileAvatar(
-            size: _slotSize,
-            imageUrl: _profile?.profileImageUrl,
-            initial: nickname.substring(0, 1),
-            initialStyle: AppTextStyles.heading(
-                fontSize: 18, color: colors.ink, weight: FontWeight.w600),
-            pinTextScale: true,
+        child: ExcludeSemantics(
+          child: GestureDetector(
+            onTap: _toggleMenu,
+            behavior: HitTestBehavior.opaque,
+            child: SizedBox(
+              width: _slotSize,
+              height: _slotSize,
+              child: ProfileAvatar(
+                size: _slotSize,
+                imageUrl: _profile?.profileImageUrl,
+                initial: nickname.substring(0, 1),
+                initialStyle: AppTextStyles.heading(
+                    fontSize: 18, color: colors.ink, weight: FontWeight.w600),
+                pinTextScale: true,
+              ),
+            ),
           ),
         ),
       ),
@@ -855,10 +895,20 @@ class _FullScreenLoadingOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    // `CircularProgressIndicator`엔 기본 라벨이 없어 놓치고 있었다(VoiceOver
+    // 지원 재점검 중 발견 — `settings_screen.dart`의 "로그아웃"과 정확히
+    // 같은 동작이라 그 화면의 `settingsLoggingOutLabel`을 그대로 재사용).
     return Positioned.fill(
       child: ColoredBox(
         color: colors.scrim,
-        child: const Center(child: CircularProgressIndicator()),
+        child: Center(
+          child: Semantics(
+            liveRegion: true,
+            label: l10n.settingsLoggingOutLabel,
+            child: const CircularProgressIndicator(),
+          ),
+        ),
       ),
     );
   }
@@ -882,12 +932,23 @@ class _ProfileMenuOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Stack(
       children: [
         Positioned.fill(
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
+          // 배리어 자체는 화면을 덮는 투명한 닫기 영역이라, VoiceOver가
+          // 라벨 없는 빈 영역으로 announce하지 않도록 "닫기" 버튼으로 명시한다
+          // (사용자 요청 — VoiceOver 지원, 채팅 화면).
+          child: Semantics(
+            button: true,
+            label: l10n.commonClose,
             onTap: onDismiss,
+            child: ExcludeSemantics(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: onDismiss,
+              ),
+            ),
           ),
         ),
         CompositedTransformFollower(
@@ -974,25 +1035,36 @@ class _ProfileMenuItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return InkWell(
+    // `InkWell`은 탭 액션만 자동 연결될 뿐 "버튼" role은 안 붙어, VoiceOver가
+    // "설정"/"로그아웃"을 그냥 밋밋한 텍스트로만 읽던 것을 고친다(사용자
+    // 요청 — VoiceOver 지원, 채팅 화면. `settings_screen.dart`의
+    // `_ProfileMenuItem`격 위젯들과 동일한 패턴).
+    return Semantics(
+      button: true,
+      label: label,
       onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        // 터치 영역은 `Expanded`로 카드 절반씩 꽉 채우되(부모 `_ProfileMenuCard`
-        // 참고), 글자는 두 항목이 맞닿는 중앙 경계 쪽으로 붙여 예전처럼
-        // 가깝게 보이도록 한다(그대로 세로 중앙 정렬하면 각 절반의 중앙에
-        // 놓여 두 줄 사이가 너무 벌어져 보임).
-        alignment: isFirst ? Alignment.bottomLeft : Alignment.topLeft,
-        padding: EdgeInsets.only(
-          left: 18,
-          right: 18,
-          bottom: isFirst ? 8 : 0,
-          top: isFirst ? 0 : 8,
+      child: ExcludeSemantics(
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            width: double.infinity,
+            // 터치 영역은 `Expanded`로 카드 절반씩 꽉 채우되(부모
+            // `_ProfileMenuCard` 참고), 글자는 두 항목이 맞닿는 중앙 경계
+            // 쪽으로 붙여 예전처럼 가깝게 보이도록 한다(그대로 세로 중앙
+            // 정렬하면 각 절반의 중앙에 놓여 두 줄 사이가 너무 벌어져 보임).
+            alignment: isFirst ? Alignment.bottomLeft : Alignment.topLeft,
+            padding: EdgeInsets.only(
+              left: 18,
+              right: 18,
+              bottom: isFirst ? 8 : 0,
+              top: isFirst ? 0 : 8,
+            ),
+            child: Text(label,
+                textScaler: TextScaler.noScaling,
+                style: AppTextStyles.body(fontSize: 15, color: colors.ink)
+                    .copyWith(fontWeight: FontWeight.w500)),
+          ),
         ),
-        child: Text(label,
-            textScaler: TextScaler.noScaling,
-            style: AppTextStyles.body(fontSize: 15, color: colors.ink)
-                .copyWith(fontWeight: FontWeight.w500)),
       ),
     );
   }
@@ -1072,7 +1144,13 @@ class _EmptyStateState extends State<_EmptyState> {
                             ),
                           ],
                         ),
-                        child: const Mascot(size: 70),
+                        // 바로 아래 인사말이 이미 같은 내용을 텍스트로
+                        // 전달하는 순수 장식이라 VoiceOver 시맨틱 트리에서
+                        // 제외한다(사용자 요청 — VoiceOver 지원, 채팅 화면
+                        // 재점검 — `_ThinkingIndicator`/`StreamingAiMessage`
+                        // 등 다른 마스코트는 이미 처리했는데 이 빈 상태
+                        // 마스코트만 누락돼 있었음).
+                        child: const ExcludeSemantics(child: Mascot(size: 70)),
                       ),
                       const SizedBox(height: 28),
                       Text(

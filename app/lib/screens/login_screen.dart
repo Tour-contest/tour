@@ -154,153 +154,186 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           child: Stack(
             children: [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: SafeArea(
-                      bottom: false,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(26, 27, 26, 0),
-                            child: Column(
-                              children: [
-                                ShaderMask(
-                                  shaderCallback: (bounds) => LinearGradient(
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                    colors: [
-                                      colors.loginHeadlineGradientStart,
-                                      colors.loginHeadlineGradientMid,
-                                      colors.loginHeadlineGradientEnd,
-                                    ],
-                                    stops: const [0, 0.399, 1],
-                                  ).createShader(bounds),
-                                  child: Text(
-                                    l10n.loginGradientHeadline,
+              // 로그인 처리 중(`_isLoggingIn`)에는 화면 터치는 이미 스크림으로
+              // 막혀 있지만, VoiceOver의 스와이프 탐색은 z-order와 무관하게
+              // 시맨틱 트리를 그대로 훑기 때문에 카카오 버튼/관리자 로그인
+              // 진입점이 계속 활성 상태로 잡혔다 — 로딩 중에는 이 콘텐츠
+              // 전체를 시맨틱 트리에서 제외한다(사용자 요청 — VoiceOver 지원
+              // 추가).
+              ExcludeSemantics(
+                excluding: _isLoggingIn,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: SafeArea(
+                        bottom: false,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(26, 27, 26, 0),
+                              child: Column(
+                                children: [
+                                  // VoiceOver가 이 화면의 첫 헤딩으로 인식하도록
+                                  // `header: true`를 준다(라벨은 지정하지 않아 안쪽
+                                  // `Text`의 내용이 그대로 올라간다 — 사용자 요청으로
+                                  // 로그인 화면에 VoiceOver 지원 추가).
+                                  Semantics(
+                                    header: true,
+                                    child: ShaderMask(
+                                      shaderCallback: (bounds) =>
+                                          LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          colors.loginHeadlineGradientStart,
+                                          colors.loginHeadlineGradientMid,
+                                          colors.loginHeadlineGradientEnd,
+                                        ],
+                                        stops: const [0, 0.399, 1],
+                                      ).createShader(bounds),
+                                      child: Text(
+                                        l10n.loginGradientHeadline,
+                                        textAlign: TextAlign.center,
+                                        style: AppTextStyles.heading(
+                                          fontSize: 28,
+                                          weight: FontWeight.w700,
+                                          color: Colors.white,
+                                          height: 1.5,
+                                        ).copyWith(letterSpacing: 0.56),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 14),
+                                  Text(
+                                    l10n.loginSubheadline,
                                     textAlign: TextAlign.center,
                                     style: AppTextStyles.heading(
-                                      fontSize: 28,
-                                      weight: FontWeight.w700,
-                                      color: Colors.white,
+                                      fontSize: 15,
+                                      weight: FontWeight.w600,
+                                      color: colors.loginSubheadline,
                                       height: 1.5,
-                                    ).copyWith(letterSpacing: 0.56),
+                                    ).copyWith(letterSpacing: 0.3),
                                   ),
-                                ),
-                                const SizedBox(height: 14),
-                                Text(
-                                  l10n.loginSubheadline,
-                                  textAlign: TextAlign.center,
-                                  style: AppTextStyles.heading(
-                                    fontSize: 15,
-                                    weight: FontWeight.w600,
-                                    color: colors.loginSubheadline,
-                                    height: 1.5,
-                                  ).copyWith(letterSpacing: 0.3),
-                                ),
-                                Container(
-                                  margin: const EdgeInsets.only(top: 40),
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: colors.accent.withAlpha(115),
-                                        blurRadius: 44,
-                                        spreadRadius: 4,
+                                  // 마스코트는 헤드라인/서브헤드라인이 이미 전달하는
+                                  // 순수 장식 이미지라, VoiceOver가 별도로 읽거나
+                                  // 탐색 정지 지점으로 잡지 않도록 시맨틱 트리에서
+                                  // 제외한다(사용자 요청 — VoiceOver 지원 추가).
+                                  ExcludeSemantics(
+                                    child: Container(
+                                      margin: const EdgeInsets.only(top: 40),
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: colors.accent.withAlpha(115),
+                                            blurRadius: 44,
+                                            spreadRadius: 4,
+                                          ),
+                                        ],
                                       ),
-                                    ],
+                                      child: const Mascot(size: 130),
+                                    ),
                                   ),
-                                  child: const Mascot(size: 130),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: EdgeInsets.fromLTRB(
+                        20,
+                        37,
+                        20,
+                        bottomCardPadding,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(40),
+                          topRight: Radius.circular(40),
+                        ),
+                        border: Border(
+                          top: BorderSide(
+                              color: colors.loginHeadlineGradientMid,
+                              width: 1.5),
+                          left: BorderSide(
+                              color: colors.loginHeadlineGradientMid,
+                              width: 1.5),
+                          right: BorderSide(
+                              color: colors.loginHeadlineGradientMid,
+                              width: 1.5),
+                        ),
+                        color: colors.loginBackground.withValues(alpha: 0.1),
+                        // color: Color(0x21A3F1F9),
+                        // gradient: LinearGradient(
+                        //   begin: Alignment.topCenter,
+                        //   end: Alignment.bottomCenter,
+                        //   colors: [
+                        //     colors.loginBottomBarGradientStart,
+                        //     colors.loginBottomBarGradientMid,
+                        //     colors.loginBottomBarGradientEnd,
+                        //   ],
+                        //   stops: const [0, 0.399, 1],
+                        // ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: colors.loginBottomBarGradientMid,
+                            // offset: const Offset(5, 4),
+                            blurRadius: 4,
+                            blurStyle: BlurStyle.inner,
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            l10n.loginInviteCaption,
+                            textAlign: TextAlign.center,
+                            style: AppTextStyles.heading(
+                                weight: FontWeight.w600,
+                                fontSize: 15,
+                                color: Colors.white),
+                          ),
+                          const SizedBox(height: 36),
+                          _SnsLoginButton(
+                            icon: SvgPicture.asset(
+                              'assets/images/icon_kakao_login.svg',
+                              colorFilter: ColorFilter.mode(
+                                  colors.kakaoSymbol, BlendMode.srcIn),
+                            ),
+                            label: l10n.loginKakaoButton,
+                            onTap: _isLoggingIn ? null : _loginWithKakao,
+                            backgroundColor: colors.kakaoContainer,
+                            labelColor: colors.kakaoLabel,
+                          ),
+                          const SizedBox(height: 14),
+                          _AdminLoginEntry(
+                            enabled: !_isLoggingIn,
+                            onSuccess: () => _completeLogin(null),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                  Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.symmetric(horizontal: 16),
-                    padding: EdgeInsets.fromLTRB(
-                      20,
-                      37,
-                      20,
-                      bottomCardPadding,
-                    ),
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(40),
-                        topRight: Radius.circular(40),
-                      ),
-                      border: Border(
-                        top: BorderSide(
-                            color: colors.loginHeadlineGradientMid, width: 1.5),
-                        left: BorderSide(
-                            color: colors.loginHeadlineGradientMid, width: 1.5),
-                        right: BorderSide(
-                            color: colors.loginHeadlineGradientMid, width: 1.5),
-                      ),
-                      color: colors.loginBackground.withValues(alpha: 0.1),
-                      // color: Color(0x21A3F1F9),
-                      // gradient: LinearGradient(
-                      //   begin: Alignment.topCenter,
-                      //   end: Alignment.bottomCenter,
-                      //   colors: [
-                      //     colors.loginBottomBarGradientStart,
-                      //     colors.loginBottomBarGradientMid,
-                      //     colors.loginBottomBarGradientEnd,
-                      //   ],
-                      //   stops: const [0, 0.399, 1],
-                      // ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: colors.loginBottomBarGradientMid,
-                          // offset: const Offset(5, 4),
-                          blurRadius: 4,
-                          blurStyle: BlurStyle.inner,
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          l10n.loginInviteCaption,
-                          textAlign: TextAlign.center,
-                          style: AppTextStyles.heading(
-                              weight: FontWeight.w600,
-                              fontSize: 15,
-                              color: Colors.white),
-                        ),
-                        const SizedBox(height: 36),
-                        _SnsLoginButton(
-                          icon: SvgPicture.asset(
-                            'assets/images/icon_kakao_login.svg',
-                            colorFilter: ColorFilter.mode(
-                                colors.kakaoSymbol, BlendMode.srcIn),
-                          ),
-                          label: l10n.loginKakaoButton,
-                          onTap: _isLoggingIn ? null : _loginWithKakao,
-                          backgroundColor: colors.kakaoContainer,
-                          labelColor: colors.kakaoLabel,
-                        ),
-                        const SizedBox(height: 14),
-                        _AdminLoginEntry(
-                          enabled: !_isLoggingIn,
-                          onSuccess: () => _completeLogin(null),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               if (_isLoggingIn)
                 ColoredBox(
                   color: colors.scrim,
-                  child: const Center(child: CircularProgressIndicator()),
+                  // VoiceOver가 로딩 상태를 놓치지 않도록 실시간 안내
+                  // (liveRegion)로 새로 등장하는 즉시 읽어준다(사용자 요청 —
+                  // VoiceOver 지원 추가).
+                  child: Semantics(
+                    liveRegion: true,
+                    label: l10n.loginInProgressLabel,
+                    child: const Center(child: CircularProgressIndicator()),
+                  ),
                 ),
             ],
           ),
@@ -398,14 +431,23 @@ class _AdminLoginEntry extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: enabled ? () => _open(context) : null,
-        child: Text(
-          l10n.loginAdminEntryLabel,
-          style: AppTextStyles.body(
-            fontSize: 14,
-            color: colors.loginSubheadline,
+      // `GestureDetector`는 탭 자체는 자동으로 시맨틱 액션에 연결되지만
+      // "버튼" 역할(role)까지는 알려주지 않아, VoiceOver가 그냥 밋밋한
+      // 텍스트로만 읽고 넘어간다 — `button: true`를 명시해 다른 버튼들과
+      // 같은 방식으로 인식되게 한다(라벨은 지정하지 않아 안쪽 `Text`가 그대로
+      // 올라간다. 사용자 요청 — VoiceOver 지원 추가).
+      child: Semantics(
+        button: true,
+        enabled: enabled,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: enabled ? () => _open(context) : null,
+          child: Text(
+            l10n.loginAdminEntryLabel,
+            style: AppTextStyles.body(
+              fontSize: 14,
+              color: colors.loginSubheadline,
+            ),
           ),
         ),
       ),
@@ -503,11 +545,18 @@ class _AdminLoginDialogState extends State<_AdminLoginDialog> {
             ),
             if (_errorMessage != null) ...[
               const SizedBox(height: 12),
-              Text(
-                _errorMessage!,
-                textAlign: TextAlign.center,
-                style:
-                    AppTextStyles.body(fontSize: 12.5, color: colors.busyText),
+              // 사용자가 아이디/비밀번호 입력창에 초점을 둔 채로는 화면에
+              // 새로 나타난 이 에러 문구를 못 보고 지나칠 수 있어, 실시간
+              // 안내(liveRegion)로 나타나는 즉시 읽어준다(사용자 요청 —
+              // VoiceOver 지원 추가).
+              Semantics(
+                liveRegion: true,
+                child: Text(
+                  _errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.body(
+                      fontSize: 12.5, color: colors.busyText),
+                ),
               ),
             ],
             const SizedBox(height: 24),
@@ -602,6 +651,7 @@ class _AdminDialogButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return OutlinedButton(
       onPressed: onTap,
       style: OutlinedButton.styleFrom(
@@ -616,13 +666,25 @@ class _AdminDialogButton extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         overlayColor: colors.accentTint08,
       ),
+      // 평소엔 자식 `Text(label)`의 내용이 그대로 버튼 라벨로 올라가지만,
+      // 로딩 중엔 그 `Text`가 스피너로 통째로 바뀌어 라벨을 잃는다 —
+      // `CircularProgressIndicator` 자체는 기본 라벨이 없어 VoiceOver가
+      // 빈 "버튼"만 읽게 되므로, 이 상태만 명시적으로 라벨(원래 버튼
+      // 문구)+값("로그인하는 중이에요")을 지정해준다(사용자 요청 — VoiceOver
+      // 지원 추가).
       child: loading
-          ? SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: filled ? colors.paper : colors.accentBright,
+          ? Semantics(
+              label: label,
+              value: l10n.loginInProgressLabel,
+              child: ExcludeSemantics(
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: filled ? colors.paper : colors.accentBright,
+                  ),
+                ),
               ),
             )
           : Text(

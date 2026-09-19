@@ -212,13 +212,16 @@ class _AttractionListCardState extends State<_AttractionListCard> {
           // 카드) `signguNm`만 있어도 "OO  목록"처럼 중간에 빈칸이 두 번 들어가
           // 있었다.
           if (hasTitle)
-            Text(
-              l10n.chatCardAttractionListTitle(
-                [widget.data.signguNm, widget.data.category]
-                    .where((part) => part.isNotEmpty)
-                    .join(' '),
+            Semantics(
+              header: true,
+              child: Text(
+                l10n.chatCardAttractionListTitle(
+                  [widget.data.signguNm, widget.data.category]
+                      .where((part) => part.isNotEmpty)
+                      .join(' '),
+                ),
+                style: AppTextStyles.heading(fontSize: 16, color: colors.ink),
               ),
-              style: AppTextStyles.heading(fontSize: 16, color: colors.ink),
             ),
           for (var i = 0; i < visibleItems.length; i++) ...[
             // 첫 항목 앞은 제목이 있을 때만 12px 여백, 두 번째 항목부터는
@@ -273,30 +276,40 @@ class _AttractionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context)!;
-    return InkWell(
+    // 이름/주소/CTA가 각자 별도 `Text`라 항목 하나를 다 들으려면 여러 번
+    // 스와이프해야 했고, `InkWell`도 버튼 role이 없었다 — 하나로 묶는다
+    // (사용자 요청 — VoiceOver 지원, chat_card_view.dart).
+    return Semantics(
+      button: true,
+      label: [item.title, if (item.address.isNotEmpty) item.address].join(', '),
       onTap: () => _open(context),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            item.title,
-            style: AppTextStyles.heading(
-                fontSize: 16, color: colors.chatCardAccent),
+      child: ExcludeSemantics(
+        child: InkWell(
+          onTap: () => _open(context),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                item.title,
+                style: AppTextStyles.heading(
+                    fontSize: 16, color: colors.chatCardAccent),
+              ),
+              if (item.address.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(
+                  item.address,
+                  style: AppTextStyles.body(fontSize: 12, color: colors.ink600),
+                ),
+              ],
+              const SizedBox(height: 4),
+              Text(
+                l10n.attractionListItemDetailCta,
+                style: AppTextStyles.body(
+                    fontSize: 11.5, color: colors.chatCardAccent),
+              ),
+            ],
           ),
-          if (item.address.isNotEmpty) ...[
-            const SizedBox(height: 2),
-            Text(
-              item.address,
-              style: AppTextStyles.body(fontSize: 12, color: colors.ink600),
-            ),
-          ],
-          const SizedBox(height: 4),
-          Text(
-            l10n.attractionListItemDetailCta,
-            style: AppTextStyles.body(
-                fontSize: 11.5, color: colors.chatCardAccent),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -321,23 +334,32 @@ class _ShowMoreButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context)!;
-    return InkWell(
+    final label =
+        expanded ? l10n.chatCardShowLess : l10n.chatCardShowMore(hiddenCount);
+    // `InkWell`은 버튼 role이 없어 VoiceOver가 밋밋한 텍스트로만 읽던 것을
+    // 고친다(사용자 요청 — VoiceOver 지원, chat_card_view.dart).
+    return Semantics(
+      button: true,
+      label: label,
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: colors.surfaceMuted,
-          border: Border.all(color: colors.surfaceMutedBorder),
+      child: ExcludeSemantics(
+        child: InkWell(
+          onTap: onTap,
           borderRadius: BorderRadius.circular(8),
-        ),
-        child: Center(
-          child: Text(
-            expanded
-                ? l10n.chatCardShowLess
-                : l10n.chatCardShowMore(hiddenCount),
-            style: AppTextStyles.body(fontSize: 12.5, color: colors.ink),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              color: colors.surfaceMuted,
+              border: Border.all(color: colors.surfaceMutedBorder),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Center(
+              child: Text(
+                label,
+                style: AppTextStyles.body(fontSize: 12.5, color: colors.ink),
+              ),
+            ),
           ),
         ),
       ),
@@ -444,9 +466,12 @@ class _CrowdCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                l10n.chatCardCrowdOverviewTitle(data.signguNm),
-                style: AppTextStyles.heading(fontSize: 16, color: colors.ink),
+              Semantics(
+                header: true,
+                child: Text(
+                  l10n.chatCardCrowdOverviewTitle(data.signguNm),
+                  style: AppTextStyles.heading(fontSize: 16, color: colors.ink),
+                ),
               ),
               const SizedBox(height: 10),
               RegionDonutChart(counts: data.counts),
@@ -458,9 +483,12 @@ class _CrowdCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                l10n.chatCardCrowdTitle(data.signguNm),
-                style: AppTextStyles.heading(fontSize: 16, color: colors.ink),
+              Semantics(
+                header: true,
+                child: Text(
+                  l10n.chatCardCrowdTitle(data.signguNm),
+                  style: AppTextStyles.heading(fontSize: 16, color: colors.ink),
+                ),
               ),
               if (popular.isNotEmpty) ...[
                 const SizedBox(height: 14),
@@ -537,20 +565,29 @@ class _SampleChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return InkWell(
-      borderRadius: BorderRadius.circular(999),
+    // `InkWell`은 버튼 role이 없어 VoiceOver가 밋밋한 텍스트 칩으로만 읽던
+    // 것을 고친다(사용자 요청 — VoiceOver 지원, chat_card_view.dart).
+    return Semantics(
+      button: true,
+      label: sample.name,
       onTap: () => _open(context),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: colors.surfaceMuted,
-          border: Border.all(color: colors.surfaceMutedBorder),
+      child: ExcludeSemantics(
+        child: InkWell(
           borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(
-          sample.name,
-          style: AppTextStyles.tabularNums(
-            AppTextStyles.body(fontSize: 12, color: colors.ink),
+          onTap: () => _open(context),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            decoration: BoxDecoration(
+              color: colors.surfaceMuted,
+              border: Border.all(color: colors.surfaceMutedBorder),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              sample.name,
+              style: AppTextStyles.tabularNums(
+                AppTextStyles.body(fontSize: 12, color: colors.ink),
+              ),
+            ),
           ),
         ),
       ),
@@ -667,33 +704,44 @@ class _CrowdMatchItemCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            InkWell(
+            // 이름/시군구가 각자 별도 `Text`라 항목 하나를 다 들으려면 두 번
+            // 스와이프해야 했고, `InkWell`도 버튼 role이 없었다 — 하나로
+            // 묶는다(사용자 요청 — VoiceOver 지원, chat_card_view.dart).
+            Semantics(
+              button: true,
+              label: [item.name, if (sigun != null && sigun!.isNotEmpty) sigun!]
+                  .join(', '),
               onTap: () => _open(context),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  // 장소명 길이 + 접근성 글자 크기 설정에 따라 `sigun`(시군구
-                  // 라벨)과 합친 폭이 카드 너비를 넘어 `RenderFlex` 오버플로가
-                  // 나던 문제 — `Expanded` + 말줄임으로 장소명 쪽만 줄어들게
-                  // 하고 `sigun`은 항상 온전히 보이게 한다.
-                  Expanded(
-                    child: Text(
-                      item.name,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      style:
-                          AppTextStyles.heading(fontSize: 16, color: colors.ink)
+              child: ExcludeSemantics(
+                child: InkWell(
+                  onTap: () => _open(context),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      // 장소명 길이 + 접근성 글자 크기 설정에 따라 `sigun`(시군구
+                      // 라벨)과 합친 폭이 카드 너비를 넘어 `RenderFlex` 오버플로가
+                      // 나던 문제 — `Expanded` + 말줄임으로 장소명 쪽만 줄어들게
+                      // 하고 `sigun`은 항상 온전히 보이게 한다.
+                      Expanded(
+                        child: Text(
+                          item.name,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          style: AppTextStyles.heading(
+                                  fontSize: 16, color: colors.ink)
                               .copyWith(fontWeight: FontWeight.w600),
-                    ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        sigun ?? '',
+                        style: AppTextStyles.heading(
+                                fontSize: 12, color: colors.ink600)
+                            .copyWith(fontWeight: FontWeight.w500),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    sigun ?? '',
-                    style: AppTextStyles.heading(
-                            fontSize: 12, color: colors.ink600)
-                        .copyWith(fontWeight: FontWeight.w500),
-                  ),
-                ],
+                ),
               ),
             ),
             const SizedBox(height: 15),
@@ -747,11 +795,14 @@ class _AlternativesCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            base != null
-                ? l10n.chatCardAlternativesTitle(base.name)
-                : l10n.attractionDetailAlternativesSection,
-            style: AppTextStyles.heading(fontSize: 16, color: colors.ink),
+          Semantics(
+            header: true,
+            child: Text(
+              base != null
+                  ? l10n.chatCardAlternativesTitle(base.name)
+                  : l10n.attractionDetailAlternativesSection,
+              style: AppTextStyles.heading(fontSize: 16, color: colors.ink),
+            ),
           ),
           // if (base != null) ...[
           //   const SizedBox(height: 8),
@@ -797,9 +848,12 @@ class _InterestCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            l10n.attractionDetailInterestSection,
-            style: AppTextStyles.heading(fontSize: 16, color: colors.ink),
+          Semantics(
+            header: true,
+            child: Text(
+              l10n.attractionDetailInterestSection,
+              style: AppTextStyles.heading(fontSize: 16, color: colors.ink),
+            ),
           ),
           const SizedBox(height: 8),
           for (var i = 0; i < items.length; i++) ...[
@@ -937,9 +991,12 @@ class _VisitorsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            l10n.chatCardVisitorsTitle(data.signguNm),
-            style: AppTextStyles.heading(fontSize: 16, color: colors.ink),
+          Semantics(
+            header: true,
+            child: Text(
+              l10n.chatCardVisitorsTitle(data.signguNm),
+              style: AppTextStyles.heading(fontSize: 16, color: colors.ink),
+            ),
           ),
           const SizedBox(height: 12),
           _PeakHighlight(
