@@ -85,19 +85,14 @@ const Operation = () => {
 }
 export default Operation;
 //style configuration
-// 대시보드와 같은 어두운 톤 · 얇은 호버 스크롤바
+// 대시보드와 같은 어두운 톤 · 얇은 호버 스크롤바 (index.css 의 scrollbar-thin-hover)
 const Page = clsx(
     "flex h-full flex-col gap-4",
     "overflow-y-auto",
     "bg-[#20232C]",
     "p-6",
     "animate-fade-in motion-reduce:animate-none",
-    "[scrollbar-width:thin] [scrollbar-color:transparent_transparent]",
-    "hover:[scrollbar-color:#3A3D47_transparent]",
-    "[&::-webkit-scrollbar]:w-1.5",
-    "[&::-webkit-scrollbar-track]:bg-transparent",
-    "[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent",
-    "hover:[&::-webkit-scrollbar-thumb]:bg-[#3A3D47]"
+    "scrollbar-thin-hover",
 );
 
 const Header = clsx(

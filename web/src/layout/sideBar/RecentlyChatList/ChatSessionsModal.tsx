@@ -101,7 +101,6 @@ const ChatSessionsModal = ({ isOpen, onClose } : ChatSessionsModalNeedProps) => 
 }
 export default ChatSessionsModal;
 //style configuration
-// TODO: 디테일 단계에서 개발자와 함께 스타일 작업 예정 — 지금은 구조만
 const CenterNote = clsx(
     "flex flex-col items-center justify-center gap-2",
     "py-8"

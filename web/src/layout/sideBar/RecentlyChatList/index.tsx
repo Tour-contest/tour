@@ -127,14 +127,7 @@ const RecentlyTitleGroup = clsx(
 
 const ChatList = clsx(
     "h-full overflow-y-auto",
-    // 표준 속성 (Chrome 121+ · Edge · Firefox): 얇은 바, 평소엔 투명, 호버 시 배경에 맞춘 회색
-    "[scrollbar-width:thin] [scrollbar-color:transparent_transparent]",
-    "hover:[scrollbar-color:#3A3D47_transparent]",
-    // Safari 는 아직 표준 속성을 안 읽어서 WebKit 전용 규칙을 같이 둔다 (Chrome 은 표준이 있으면 이쪽을 무시)
-    "[&::-webkit-scrollbar]:w-1.5",
-    "[&::-webkit-scrollbar-track]:bg-transparent",
-    "[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent",
-    "hover:[&::-webkit-scrollbar-thumb]:bg-[#3A3D47]",
+    "scrollbar-thin-hover",
 );
 
 const ChatGroup = clsx(

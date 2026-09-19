@@ -82,12 +82,7 @@ const EmptyText = clsx(
 const TableScroller = clsx(
     "flex flex-col gap-3",
     "min-h-0 overflow-y-auto",
-    "[scrollbar-width:thin] [scrollbar-color:transparent_transparent]",
-    "hover:[scrollbar-color:#3A3D47_transparent]",
-    "[&::-webkit-scrollbar]:w-1.5",
-    "[&::-webkit-scrollbar-track]:bg-transparent",
-    "[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent",
-    "hover:[&::-webkit-scrollbar-thumb]:bg-[#3A3D47]"
+    "scrollbar-thin-hover",
 );
 
 // 지역 방문자 카드의 표와 같은 규칙: 얇은 구분선, 숫자는 오른쪽 정렬 + 고정폭 숫자

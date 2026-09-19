@@ -25,19 +25,14 @@ const moreLinkStyle = clsx("text-[13px]", "text-[#6FC1FC]", "hover:text-[#A3F1F9
 const rowStyle = clsx("flex", "items-center", "justify-between", "gap-3", "text-[14px]", "text-[#D8D8D8]");
 
 
-// 챗봇 · 상세와 같은 얇은 스크롤바
+// 얇은 호버 스크롤바 (index.css 의 scrollbar-thin-hover)
 const pageStyle = clsx(
     "flex h-full flex-col gap-4",
     "overflow-y-auto",
     "bg-[#20232C]",
     "p-6",
     "animate-fade-in motion-reduce:animate-none",
-    "[scrollbar-width:thin] [scrollbar-color:transparent_transparent]",
-    "hover:[scrollbar-color:#3A3D47_transparent]",
-    "[&::-webkit-scrollbar]:w-1.5",
-    "[&::-webkit-scrollbar-track]:bg-transparent",
-    "[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent",
-    "hover:[&::-webkit-scrollbar-thumb]:bg-[#3A3D47]",
+    "scrollbar-thin-hover",
 );
 
 function Admin() {
@@ -68,7 +63,6 @@ function Admin() {
 
     const { daily, recent } = dashboard.apiCalls;
 
-    console.log(dashboard.apiCalls);
 
 
     return (

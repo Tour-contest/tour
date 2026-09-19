@@ -76,7 +76,6 @@ const Modal = ({
 }
 export default Modal;
 //style configuration
-// TODO: 디테일 단계에서 개발자와 함께 스타일 작업 예정 — 지금은 구조만
 const Backdrop = clsx(
     "fixed inset-0 z-50",
     "flex items-center justify-center",

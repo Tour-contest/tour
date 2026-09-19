@@ -21,7 +21,6 @@ const SidebarResizeHandle = ({ handleProps, isResizing } : SidebarResizeHandleNe
 }
 export default SidebarResizeHandle;
 //style configuration
-// TODO: 디테일 단계에서 개발자와 함께 스타일 작업 예정 — 지금은 구조만
 // 잡기 쉽게 6px 폭을 가장자리 바깥으로 반쯤 걸친다. 실제 보이는 선은 안의 2px
 const Handle = clsx(
     "group absolute top-0 -right-[3px] z-10",

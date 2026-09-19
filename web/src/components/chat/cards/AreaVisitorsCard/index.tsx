@@ -113,7 +113,7 @@ const AreaVisitorsCard = ({ payload } : AreaVisitorsCardNeedProps) => {
 };
 export default AreaVisitorsCard;
 //style configuration
-// 다른 대화 카드와 같은 어두운 톤. TODO: 디테일 단계에서 개발자와 함께 조정
+// 다른 대화 카드와 같은 어두운 톤
 const Card = clsx(
     "flex flex-col gap-3",
     "rounded-[12px]",

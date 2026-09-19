@@ -77,7 +77,6 @@ const ConfirmModal = ({
 }
 export default ConfirmModal;
 //style configuration
-// TODO: 디테일 단계에서 개발자와 함께 스타일 작업 예정 — 지금은 구조만
 const Body = clsx(
     "flex flex-col gap-1"
 );

@@ -60,7 +60,6 @@ const ChatbotAgenda = ({ onQuickStart, input } : ChatbotAgendaNeedProps) => {
 }
 export default ChatbotAgenda;
 //style configuration
-// TODO: 디테일 단계에서 개발자와 함께 조정 — 시안의 간격(로고↔인사 45 · 인사↔입력 45 · 카드 사이 24/34) 기준
 const AgendaLayout = clsx(
     "flex flex-1 flex-col items-center justify-center",
     "gap-[60px]",

@@ -90,12 +90,7 @@ const ThumbnailRow = clsx(
     "flex gap-2",
     "overflow-x-auto",
     "pb-1",
-    "[scrollbar-width:thin] [scrollbar-color:transparent_transparent]",
-    "hover:[scrollbar-color:#3A3D47_transparent]",
-    "[&::-webkit-scrollbar]:h-1.5",
-    "[&::-webkit-scrollbar-track]:bg-transparent",
-    "[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent",
-    "hover:[&::-webkit-scrollbar-thumb]:bg-[#3A3D47]",
+    "scrollbar-thin-hover",
 );
 
 const ThumbnailButton = clsx(

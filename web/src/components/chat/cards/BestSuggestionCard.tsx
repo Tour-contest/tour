@@ -58,7 +58,6 @@ const BestSuggestionCard = ({ payload } : BestSuggestionCardNeedProps) => {
 };
 export default BestSuggestionCard;
 //style configuration
-// TODO: 디테일 단계에서 개발자와 함께 스타일 작업 예정 — 지역 현황 카드와 같은 톤으로 시작
 const CardStyle = clsx(
     "bg-[#333743]",
     "flex flex-col gap-[30px]",

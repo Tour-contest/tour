@@ -22,7 +22,6 @@ const ChatbotServiceNotice = () => {
 }
 export default ChatbotServiceNotice;
 //style configuration
-// TODO: 디테일 단계에서 개발자와 함께 스타일 작업 예정 — 지금은 구조만
 // 대화 영역과 같은 폭으로 맞춘다
 const Notice = clsx(
     "w-180 max-w-full",

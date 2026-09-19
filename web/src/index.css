@@ -76,6 +76,36 @@
     }
 }
 
+/* 얇은 스크롤바: 평소엔 투명, 스크롤 영역에 마우스를 올리면 배경에 맞춘 회색.
+   표준 속성(Chrome 121+ · Edge · Firefox)과 Safari 용 WebKit 규칙을 같이 둔다 (Chrome 은 표준이 있으면 WebKit 쪽을 무시).
+   width/height 를 같이 두어 세로·가로 스크롤 모두 6px. 챗봇 · 상세 · 관리자 · 사이드바 목록이 같이 쓴다 */
+@utility scrollbar-thin-hover {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+
+    &:hover {
+        scrollbar-color: #3A3D47 transparent;
+    }
+
+    &::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        border-radius: 9999px;
+        background: transparent;
+    }
+
+    &:hover::-webkit-scrollbar-thumb {
+        background: #3A3D47;
+    }
+}
+
 /* 메인 로고(main_logo.svg)에 생기를 준다. svg 안 요소 순서: 구름(뒤) · [g] 구름(앞) · [g] 눈 · [g] 눈 · [g] 입.
    svgr 이 id 만 바꾸고 구조는 그대로 두므로 위치 선택자로 잡는다. 동작 줄이기 설정에서는 전부 멈춘다 */
 @layer components {

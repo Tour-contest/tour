@@ -37,7 +37,6 @@ const AlternativesCard = ({ payload } : AlternativesCardNeedProps) => {
     const baseName = payload.base?.name;
     const candidateSourceText = buildCandidateSourceText(payload.candidate_source, region);
 
-    console.log({ payload });
 
     return <div className={CardShell}>
         <h4 className={CardTitle}>{baseName ? `${baseName} 대신 여기는 어때요?` : "덜 붐비는 곳을 찾았어요"}</h4>
@@ -108,7 +107,6 @@ const ItemRow = clsx(
     "py-2.5"
 );
 
-// TODO: 디테일 단계에서 개발자와 함께 스타일 작업 예정
 const Thumbnail = clsx(
     "size-14 shrink-0",
     "rounded-[10px] object-cover",

@@ -115,12 +115,7 @@ const ChatbotContainer = clsx(
 const ChatbotScroller = clsx(
     "flex-1 min-h-0 w-full",
     "overflow-y-auto",
-    "[scrollbar-width:thin] [scrollbar-color:transparent_transparent]",
-    "hover:[scrollbar-color:#3A3D47_transparent]",
-    "[&::-webkit-scrollbar]:w-1.5",
-    "[&::-webkit-scrollbar-track]:bg-transparent",
-    "[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent",
-    "hover:[&::-webkit-scrollbar-thumb]:bg-[#3A3D47]",
+    "scrollbar-thin-hover",
 );
 
 // 내용 기둥. min-h-full 이라 빈 대화의 Quick Start(flex-1) 가 세로 가운데에 온다

@@ -19,7 +19,6 @@ const AttractionThumbnail = ({ contentId, image, name } : AttractionThumbnailNee
 };
 export default AttractionThumbnail;
 //style configuration
-// TODO: 디테일 단계에서 개발자와 함께 스타일 작업 예정 (AlternativesCard 의 Thumbnail 과 같은 값)
 const Thumbnail = clsx(
     "size-14 shrink-0",
     "rounded-[10px] object-cover",

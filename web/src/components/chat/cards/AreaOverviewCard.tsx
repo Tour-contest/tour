@@ -64,7 +64,6 @@ const drawArc = arc<PieArcDatum<LevelSlice>>()
 const AreaOverviewCard = ({ payload } : AreaOverviewCardNeedProps) => {
     const { signgu_nm, date, summary, coverage, source, message } = payload;
 
-    console.log({ payload });
 
     const slices = summary ? buildSlices(summary) : [];
     const total = slices.reduce((sum, slice) => sum + slice.count, 0);
@@ -122,7 +121,6 @@ const AreaOverviewCard = ({ payload } : AreaOverviewCardNeedProps) => {
 }
 export default AreaOverviewCard;
 //style configuration
-// TODO: 디테일 단계에서 개발자와 함께 스타일 작업 예정 — 지금은 구조만
 const Card = clsx(
     "bg-[#333743]",
     "flex flex-col gap-[30px]",
