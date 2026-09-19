@@ -328,6 +328,17 @@ def list_extras(base: dict, result: dict) -> None:
         )
 
 
+def whole(v):
+    """16.0 같은 값은 16 으로. 모델이 받은 그대로 "16.0도" 라고 쓰는 것을 막는다."""
+    if isinstance(v, float) and v.is_integer():
+        return int(v)
+    if isinstance(v, dict):
+        return {k: whole(x) for k, x in v.items()}
+    if isinstance(v, list):
+        return [whole(x) for x in v]
+    return v
+
+
 def for_model(name: str, result: dict) -> dict:
     st = result.get("status")
     base: dict = {"status": st}
@@ -449,7 +460,7 @@ def for_model(name: str, result: dict) -> dict:
     if name == "get_weather":
         for k in ("place", "weekday", "kind", "now", "forecast"):
             if result.get(k) is not None:
-                base[k] = result[k]
+                base[k] = whole(result[k])
         fc = base.get("forecast")
         if isinstance(fc, dict) and "hourly" in fc:
             base["forecast"] = {**fc, "hourly": [h for h in fc["hourly"] if h.get("temp") is not None]}
