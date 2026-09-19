@@ -1,9 +1,5 @@
-//react
-import { useEffect, useState } from "react";
-//api
-import { clearSession } from "@/api/tokenManager";
 //hooks
-import { useAuth } from "@/hooks/api";
+import useLoginEntry from "./hooks/useLoginEntry";
 //logins
 import AdminLoginForm from "./AdminLoginForm";
 import SocialLogin from "./SocialLogin";
@@ -15,14 +11,8 @@ type LoginCardNeedProps = {
 };
 
 const LoginCard = ({ isAdminMode } : LoginCardNeedProps) => {
-    const [providerData, setProviderData] = useState<ResponseProviderData | null>(null);
-
-    const { fetchAuthenticateProvider } = useAuth();
-
-    useEffect(() => {
-        clearSession();
-        fetchAuthenticateProvider().then(setProviderData);
-    }, []);
+    // 로그인 화면 진입 = 새 로그인의 시작점: 남은 세션을 비우고 로그인 수단을 받는다
+    const { providerData } = useLoginEntry();
 
     return <div className={LoginCardWrapper}>
         <div className={LoginCardLayout}>

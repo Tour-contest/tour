@@ -1,29 +1,14 @@
-import { useEffect, useState } from "react";
 import clsx from "clsx";
-import { LoadingIndicator } from "@/components/common";
+import { LogoLoading } from "@/components/common";
 import { useAdmin } from "@/hooks/api";
+import useAsyncData from "@/hooks/useAsyncData";
 import DailyCallsChart from "./DailyCallsChart";
+import { OPERATION_LABEL, formatTokens, predictExhaustionTime, resolveQuotaLevel } from "./utils/dashboard";
 
-type AdminDashboardState = {
+type AdminDashboardData = {
     apiCalls: ApiCallsData | null;
     mapping: MappingMetricsData | null;
-    isLoading: boolean;
 };
-
-const INITIAL_DASHBOARD: AdminDashboardState = {
-    apiCalls: null,
-    mapping: null,
-    isLoading: true,
-};
-
-// 상류 오퍼레이션명을 화면용 한글 라벨로 바꾼다. 미등록 값은 원본을 그대로 보여준다
-const OPERATION_LABEL: Record<string, string> = {
-    tatsCnctrRate: "관광지 집중률 조회",
-    searchKeyword2: "키워드 검색",
-};
-
-const QUOTA_WARNING_RATE = 0.7;
-const QUOTA_DANGER_RATE = 0.9;
 
 const sectionStyle = clsx("flex", "flex-col", "gap-[12px]", "rounded-[12px]", "border-[1px]", "border-[#e5e4e7]", "p-[16px]");
 const sectionTitleStyle = clsx("text-[14px]", "font-bold");
@@ -42,59 +27,28 @@ const GaugeStyle = {
     normal: "bg-[#1a8c4a]",
 } as const;
 
-const resolveQuotaLevel = (usedRate: number) => {
-    if (usedRate >= QUOTA_DANGER_RATE) return "danger";
-    if (usedRate >= QUOTA_WARNING_RATE) return "warning";
-    return "normal";
-};
-
-const formatTokens = (tokens: number) => {
-    if (tokens >= 1_000_000) return `${(tokens / 1_000_000).toFixed(1)}M`;
-    if (tokens >= 1_000) return `${Math.round(tokens / 1_000)}K`;
-    return String(tokens);
-};
-
-// 당일 사용 추세를 그대로 연장해 소진 시각을 추정한다 (대화 1회당 상류 4~8건 소모)
-const predictExhaustionTime = (quota: ApiCallQuota) => {
-    if (quota.used_today <= 0 || quota.remaining <= 0) return null;
-
-    const now = new Date();
-    const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const elapsedHours = (now.getTime() - midnight.getTime()) / 3_600_000;
-    if (elapsedHours <= 0) return null;
-
-    const perHour = quota.used_today / elapsedHours;
-    const exhaustedAt = new Date(now.getTime() + (quota.remaining / perHour) * 3_600_000);
-
-    // 오늘 안에 소진되지 않을 추세면 예측을 표시하지 않는다
-    if (exhaustedAt.getDate() !== now.getDate()) return null;
-
-    return `${String(exhaustedAt.getHours()).padStart(2, "0")}:${String(exhaustedAt.getMinutes()).padStart(2, "0")}`;
-};
-
 function Admin() {
     const { fetchApiCallMetrics, fetchMappingMetrics } = useAdmin();
 
-    const [dashboard, setDashboard] = useState<AdminDashboardState>(INITIAL_DASHBOARD);
+    // 지표 두 종을 한 번에 받는다. 호출 지표가 없으면 화면을 못 그리므로 그때만 실패로 본다
+    const { data: dashboard, isLoading, hasError, reload } = useAsyncData<AdminDashboardData>("dashboard", async () => {
+        const [apiCalls, mapping] = await Promise.all([fetchApiCallMetrics(), fetchMappingMetrics()]);
+        return apiCalls ? { apiCalls, mapping } : null;
+    });
 
-    useEffect(() => {
-        Promise.all([fetchApiCallMetrics(), fetchMappingMetrics()]).then(([apiCalls, mapping]) => {
-            setDashboard({ apiCalls, mapping, isLoading: false });
-        });
-    }, []);
-
-    if (dashboard.isLoading) {
+    if (isLoading) {
         return (
             <div className={clsx("flex", "h-full", "items-center", "justify-center")}>
-                <LoadingIndicator label="지표를 불러오는 중…" />
+                <LogoLoading label="지표를 불러오는 중…" />
             </div>
         );
     }
 
-    if (!dashboard.apiCalls) {
+    if (hasError || !dashboard?.apiCalls) {
         return (
-            <div className={clsx("flex", "h-full", "items-center", "justify-center")}>
+            <div className={clsx("flex", "h-full", "flex-col", "items-center", "justify-center", "gap-[8px]")}>
                 <p className={clsx("text-[13px]", "text-[#ff3b30]")}>지표를 불러오지 못했습니다.</p>
+                <button type="button" onClick={reload} className={clsx("text-[12px]", "underline")}>다시 시도</button>
             </div>
         );
     }

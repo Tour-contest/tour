@@ -1,6 +1,6 @@
 import { useState } from "react";
 import clsx from "clsx";
-import { PROVIDER_LABEL, STATUS_LABEL, type UserFilters } from "./userDisplay";
+import { PROVIDER_LABEL, STATUS_LABEL, type UserFilters } from "./utils/userDisplay";
 
 type AdminUserFiltersNeedProps = {
     // 서버 검색어 (닉네임 · 로그인 ID 부분 일치). 제출할 때만 요청이 나간다

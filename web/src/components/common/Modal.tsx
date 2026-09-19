@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import clsx from "clsx";
+import useDismiss from "@/hooks/useDismiss";
 
 type ModalNeedProps = {
     isOpen: boolean;
@@ -32,17 +33,14 @@ const Modal = ({
     const titleId = useId();
     const dialogRef = useRef<HTMLDivElement | null>(null);
 
+    // 열릴 때 포커스를 안으로 옮긴다
     useEffect(() => {
         if (!isOpen) return;
-
         (initialFocusRef?.current ?? dialogRef.current)?.focus();
+    }, [isOpen, initialFocusRef]);
 
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape" && !isLocked) onClose();
-        };
-        document.addEventListener("keydown", handleKeyDown);
-        return () => document.removeEventListener("keydown", handleKeyDown);
-    }, [isOpen, isLocked, onClose, initialFocusRef]);
+    // Esc 로 닫기 (요청 중엔 잠금). 배경 클릭은 아래 onClick 에서
+    useDismiss({ isActive: isOpen && !isLocked, onDismiss: onClose });
 
     if (!isOpen) return null;
 

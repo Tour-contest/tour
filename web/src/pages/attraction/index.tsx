@@ -2,55 +2,16 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import clsx from "clsx";
 import { AlternativesCard, CrowdAttractionCard } from "@/components/chat";
-import { LoadingIndicator } from "@/components/common";
+import { LoadingIndicator, LogoLoading } from "@/components/common";
 import { buildKakaoMapPointUrl, buildKakaoMapSearchUrl } from "@/components/chat/cards/utils/crowdVisual";
 import { decodeHtmlText } from "@/utils";
 import AttractionGallery from "./AttractionGallery";
-import useAttractionData from "./useAttractionData";
+import useAttractionData from "./hooks/useAttractionData";
+import { CONTENT_TYPE_LABEL, LCLS1_LABEL, toCrowdPayload } from "./utils/attractionDisplay";
 
 const ATTRIBUTION = "출처: ⓒ한국관광공사";
 // 명세: 소개글은 400자까지 표시한다. 그 이상은 접어 두고 펼쳐 볼 수 있게 한다
 const OVERVIEW_LIMIT = 400;
-
-const CONTENT_TYPE_LABEL: Record<string, string> = {
-    "12": "관광지",
-    "14": "문화시설",
-    "15": "행사",
-    "25": "여행코스",
-    "28": "레포츠",
-    "32": "숙박",
-    "38": "쇼핑",
-    "39": "음식점",
-};
-
-const LCLS1_LABEL: Record<SearchSimilarTouristContext["lcls1"], string> = {
-    NA: "자연",
-    HS: "역사",
-    VE: "휴양",
-    EX: "체험",
-    LS: "레포츠",
-    EV: "행사",
-    SH: "쇼핑",
-    FD: "음식",
-    AC: "숙박",
-};
-
-// 관광지 지정 혼잡도 REST 응답을 대화 카드 payload 형태로 바꿔 같은 카드로 그린다
-const toCrowdPayload = (title: string, congestion: TouristCongestionData): ChatCrowdAttractionPayload => ({
-    status: congestion.status,
-    signgu_cd: congestion.signgu_cd,
-    signgu_nm: congestion.signgu_nm,
-    source: congestion.source,
-    items: [{
-        content_id: congestion.content_id,
-        name: title,
-        matched_title: congestion.matched_name,
-        match_method: congestion.match_method,
-        series: congestion.series ?? [],
-        summary: congestion.summary,
-        available_days: congestion.available_days,
-    }],
-});
 
 type OverviewTextNeedProps = {
     text: string;
@@ -86,7 +47,7 @@ function Attraction() {
 
     if (detail === undefined) {
         return <div className={CenterNote}>
-            <LoadingIndicator label="관광지 정보를 불러오는 중…" />
+            <LogoLoading label="관광지 정보를 불러오는 중…" />
         </div>
     }
 

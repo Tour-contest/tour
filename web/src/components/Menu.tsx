@@ -1,10 +1,7 @@
-//react
-import { useEffect } from "react";
 //router
 import { NavLink } from "react-router";
 //store
 import { useAuthorityStore } from "@/store/authority";
-import { useChatSessionStore } from "@/store/chatSession";
 //style
 import clsx from "clsx";
 //icons
@@ -17,14 +14,8 @@ const ADMIN_MENUS = [
 
 const Menu = () => {
     const role = useAuthorityStore((state) => state.role);
-    const refreshSessions = useChatSessionStore((state) => state.refreshSessions);
 
     const isAdmin = role === "admin";
-    
-    useEffect(() => {
-        if (isAdmin) return;
-        refreshSessions();
-    }, [isAdmin]);
 
     return <nav className={MenuWrapper}>
         {

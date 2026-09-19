@@ -1,5 +1,5 @@
 //side features
-import { useRepresentativeImage } from "../utils/representativeImage";
+import { useRepresentativeImage } from "../hooks/useRepresentativeImage";
 //style
 import clsx from "clsx";
 

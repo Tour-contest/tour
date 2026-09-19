@@ -2,7 +2,7 @@ import { Link } from "react-router";
 import clsx from "clsx";
 import LevelChip from "./LevelChip";
 import { buildKakaoMapSearchUrl, formatDateLabel } from "./utils/crowdVisual";
-import { useRepresentativeImage } from "./utils/representativeImage";
+import { useRepresentativeImage } from "./hooks/useRepresentativeImage";
 
 type BestSuggestionCardNeedProps = {
     payload: AreaOverviewData;

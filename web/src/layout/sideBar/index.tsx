@@ -1,5 +1,5 @@
 //react
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 //router
 import { useNavigate } from "react-router";
 //api
@@ -11,6 +11,7 @@ import { useChatSessionStore } from "@/store/chatSession";
 //hooks
 import { useAuth } from "@/hooks/api";
 import useResizableWidth from "@/hooks/useResizableWidth";
+import useConfirmAction from "@/hooks/useConfirmAction";
 //components
 import { Menu } from "@/components";
 import { ConfirmModal, LoadingIndicator } from "@/components/common";
@@ -36,12 +37,19 @@ const WITHDRAW_DESCRIPTIONS = [
 ];
 
 const Sidebar = () => {
-    const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState<boolean>(false);
-    const [isWithdrawing, setIsWithdrawing] = useState<boolean>(false);
-    const [withdrawErrorMessage, setWithdrawErrorMessage] = useState<string | null>(null);
-
     const navigate = useNavigate();
     const { handleLogout, handleWithdrawMembership } = useAuth();
+
+    // 회원 탈퇴: 메뉴 → 확인 모달 → 요청 중 잠금 → 실패 시 모달 유지 → 성공 시에만 로컬 토큰 삭제 (명세) 후 로그인 화면.
+    // 계정 · 대화 · 최근 본 관광지가 함께 삭제되고 복구할 수 없다. 카카오 연결 해제는 서버가 처리한다
+    const withdraw = useConfirmAction<true>({
+        perform: () => handleWithdrawMembership(),
+        onSuccess: () => {
+            clearSession();
+            navigate("/login", { replace: true });
+        },
+        fallbackErrorMessage: "탈퇴를 처리하지 못했어요. 잠시 후 다시 시도해주세요.",
+    });
     const { width, isResizing, handleProps } = useResizableWidth({ ...SIDEBAR_WIDTH, storageKey: SIDEBAR_WIDTH_STORAGE_KEY });
 
     const user = useAuthenticateStore((state) => state.user);
@@ -62,38 +70,6 @@ const Sidebar = () => {
     // 서버가 리프레시 토큰을 폐기해야 로그아웃이다. 로컬 정리는 /login 진입 시점에 이뤄진다
     const handleLogoutClick = async () => {
         await handleLogout();
-        navigate("/login", { replace: true });
-    };
-
-    // 메뉴의 "회원 탈퇴"는 바로 요청하지 않고 모달을 연다 (댑스 하나 더)
-    const handleWithdrawClick = () => {
-        setWithdrawErrorMessage(null);
-        setIsWithdrawModalOpen(true);
-    };
-
-    const handleWithdrawCancel = () => {
-        if (isWithdrawing) return;
-        setIsWithdrawModalOpen(false);
-    };
-
-    // 계정 · 대화 · 최근 본 관광지가 함께 삭제되고 복구할 수 없다 (명세). 카카오 연결 해제는 서버가 처리한다
-    const handleWithdrawConfirm = async () => {
-        if (isWithdrawing) return;
-        setIsWithdrawing(true);
-        setWithdrawErrorMessage(null);
-
-        const { isSuccess, errorMessage } = await handleWithdrawMembership();
-        setIsWithdrawing(false);
-
-        if (!isSuccess) {
-            // 모달은 열어둔 채 사유를 보여주고 재시도할 수 있게 한다
-            setWithdrawErrorMessage(errorMessage ?? "탈퇴를 처리하지 못했어요. 잠시 후 다시 시도해주세요.");
-            return;
-        }
-
-        // 명세: 로컬 토큰은 성공 응답을 받은 뒤에만 지운다 (실패했는데 지우면 되살릴 세션도 잃는다)
-        setIsWithdrawModalOpen(false);
-        clearSession();
         navigate("/login", { replace: true });
     };
 
@@ -123,22 +99,22 @@ const Sidebar = () => {
                     user={user}
                     canWithdraw={canWithdraw}
                     onLogout={handleLogoutClick}
-                    onWithdraw={handleWithdrawClick}
+                    onWithdraw={() => withdraw.request(true)}
                 />
             </div>
 
             <ConfirmModal
-                isOpen={isWithdrawModalOpen}
+                isOpen={withdraw.isOpen}
                 title="정말 탈퇴할까요?"
                 descriptions={WITHDRAW_DESCRIPTIONS}
                 confirmLabel="최종 회원 탈퇴"
                 cancelLabel="취소"
-                isPending={isWithdrawing}
+                isPending={withdraw.isPending}
                 pendingLabel="탈퇴 처리 중"
-                errorMessage={withdrawErrorMessage}
+                errorMessage={withdraw.errorMessage}
                 isDanger
-                onConfirm={handleWithdrawConfirm}
-                onCancel={handleWithdrawCancel}
+                onConfirm={withdraw.confirm}
+                onCancel={withdraw.cancel}
             />
         </aside>
     );

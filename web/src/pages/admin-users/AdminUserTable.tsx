@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { PROVIDER_LABEL, ROLE_LABEL, STATUS_LABEL, formatDateTime, isLocked, resolveUserLabel } from "./userDisplay";
+import { PROVIDER_LABEL, ROLE_LABEL, STATUS_LABEL, formatDateTime, isLocked, resolveUserLabel } from "./utils/userDisplay";
 
 type AdminUserTableNeedProps = {
     users: AdminUser[];

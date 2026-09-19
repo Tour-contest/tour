@@ -5,7 +5,7 @@ import LevelChip from "../LevelChip";
 //side features
 import { buildCandidateSourceText, buildReasonText } from "./alternativesText";
 import { buildKakaoMapSearchUrl } from "../utils/crowdVisual";
-import { useRepresentativeImage } from "../utils/representativeImage";
+import { useRepresentativeImage } from "../hooks/useRepresentativeImage";
 //style
 import clsx from "clsx";
 //icons

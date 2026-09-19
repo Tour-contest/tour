@@ -4,20 +4,9 @@ import clsx from "clsx";
 import { LoadingIndicator } from "@/components/common";
 import { useAuth, INITIAL_ADMIN_LOGIN_STATE } from "@/hooks/api";
 import KakaoSocialIcon from "@/assets/icons/kakao_social_login_logo.svg?react";
+import { buildKakaoAuthorizeUrl } from "./utils/kakaoAuth";
 
 const DEV_LOGIN_NICKNAME = "테스터";
-const KAKAO_AUTHORIZE_URL = "https://kauth.kakao.com/oauth/authorize";
-// 카카오 디벨로퍼스 콘솔에 등록된 Redirect URI와 정확히 같아야 한다 (호스트가 window.location.origin과 다를 수 있어 env로 고정)
-const REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI;
-
-const buildKakaoAuthorizeUrl = (clientId: string) => {
-    const url = new URL(KAKAO_AUTHORIZE_URL);
-    url.searchParams.set("client_id", clientId);
-    url.searchParams.set("redirect_uri", REDIRECT_URI);
-    url.searchParams.set("response_type", "code");
-    return url.toString();
-};
-
 type SocialLoginNeedProps = {
     providerData: ResponseProviderData | null;
 };

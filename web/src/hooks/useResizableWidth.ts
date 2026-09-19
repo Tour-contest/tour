@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import useBodyDragState from "./useBodyDragState";
 
 type ResizableWidthOptions = {
     min: number;
@@ -86,16 +87,7 @@ const useResizableWidth = ({ min, max, initial, storageKey, keyboardStep = 16 }:
     const reset = () => commitWidth(initial);
 
     // 드래그 중엔 화면 어디서든 열 커서, 글자 드래그 선택 금지
-    useEffect(() => {
-        if (!isResizing) return;
-        const { cursor, userSelect } = document.body.style;
-        document.body.style.cursor = "col-resize";
-        document.body.style.userSelect = "none";
-        return () => {
-            document.body.style.cursor = cursor;
-            document.body.style.userSelect = userSelect;
-        };
-    }, [isResizing]);
+    useBodyDragState(isResizing, "col-resize");
 
     return {
         width,

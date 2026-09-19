@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+//hooks
+import useDismiss from "@/hooks/useDismiss";
 //style
 import clsx from "clsx";
 //icon
@@ -27,23 +29,7 @@ const SidebarUserMenu = ({ user, canWithdraw, onLogout, onWithdraw } : SidebarUs
     const rootRef = useRef<HTMLDivElement | null>(null);
 
     // 메뉴 바깥을 누르거나 Esc 를 누르면 닫힌다
-    useEffect(() => {
-        if (!isOpen) return;
-
-        const handlePointerDown = (e: PointerEvent) => {
-            if (!rootRef.current?.contains(e.target as Node)) setIsOpen(false);
-        };
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") setIsOpen(false);
-        };
-
-        document.addEventListener("pointerdown", handlePointerDown);
-        document.addEventListener("keydown", handleKeyDown);
-        return () => {
-            document.removeEventListener("pointerdown", handlePointerDown);
-            document.removeEventListener("keydown", handleKeyDown);
-        };
-    }, [isOpen]);
+    useDismiss({ isActive: isOpen, onDismiss: () => setIsOpen(false), containerRef: rootRef });
 
     const handleLogoutClick = () => {
         setIsOpen(false);

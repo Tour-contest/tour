@@ -1,7 +1,7 @@
 import { ChatCardView } from "@/components/chat";
-import { LoadingIndicator } from "@/components/common";
 import clsx from "clsx";
 import ChatBubble from "./ChatBubble";
+import ChatbotThinking from "./ChatbotThinking";
 
 type ChatbotStreamingNeedProps = {
     streamingCards: ChatCard[];
@@ -17,7 +17,7 @@ const ChatbotStreaming = ({ streamingCards, statusLabel, streamingText } : Chatb
                 return <ChatCardView key={`streaming-${index}`} card={card} />
             })
         }
-        {statusLabel && <LoadingIndicator label={`${statusLabel}…`} />}
+        {statusLabel && <ChatbotThinking label={statusLabel} />}
         {streamingText && <ChatBubble role="assistant">{streamingText}</ChatBubble>}
     </div>
 }

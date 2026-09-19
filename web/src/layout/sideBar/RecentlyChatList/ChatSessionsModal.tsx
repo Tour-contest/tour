@@ -1,9 +1,10 @@
 //react
-import { useEffect, useState } from "react";
+import { useState } from "react";
 //router
 import { useNavigate } from "react-router";
 //hooks
 import { useChat } from "@/hooks/api";
+import useAsyncData from "@/hooks/useAsyncData";
 //components
 import { LoadingIndicator, Modal } from "@/components/common";
 //style
@@ -18,12 +19,6 @@ type ChatSessionsModalNeedProps = {
 const PAGE_SIZE = 10;
 // 번호 버튼은 현재 페이지 앞뒤로 이만큼만 보인다
 const PAGE_WINDOW = 2;
-
-type SessionPageState = {
-    key: number | null;
-    data: ChatSessionsData | null;
-    hasError: boolean;
-};
 
 // "9/18 14:02". 최근 활동순이라 연도까지는 필요 없다. 원문은 title 툴팁에
 const formatDateTime = (iso: string | null) => {
@@ -48,26 +43,13 @@ const ChatSessionsModal = ({ isOpen, onClose } : ChatSessionsModalNeedProps) => 
     const { fetchChatSessions } = useChat();
 
     const [page, setPage] = useState<number>(0);
-    const [reloadCount, setReloadCount] = useState<number>(0);
-    const [list, setList] = useState<SessionPageState>({ key: null, data: null, hasError: false });
 
-    // 어떤 조건으로 받은 결과인지 key 로 기억한다. 지금 조건과 다르면 불러오는 중
-    const requestKey = page * 1000 + reloadCount;
-    const isLoading = isOpen && list.key !== requestKey;
-
-    useEffect(() => {
-        if (!isOpen) return;
-
-        let isCurrent = true;
-        const key = page * 1000 + reloadCount;
-
-        fetchChatSessions({ limit: PAGE_SIZE, offset: page * PAGE_SIZE }).then((data) => {
-            if (!isCurrent) return;
-            setList({ key, data, hasError: data === null });
-        });
-
-        return () => { isCurrent = false; };
-    }, [isOpen, page, reloadCount]);
+    // 열려 있을 때만, 페이지가 바뀌면 다시 받는다. 늦게 온 이전 응답은 버린다
+    const { data, isLoading, hasError, reload } = useAsyncData(
+        page,
+        () => fetchChatSessions({ limit: PAGE_SIZE, offset: page * PAGE_SIZE }),
+        { isEnabled: isOpen },
+    );
 
     // 닫을 때 첫 페이지로 되돌려 다음에 열면 최근 대화부터 보이게 한다
     const handleClose = () => {
@@ -80,8 +62,8 @@ const ChatSessionsModal = ({ isOpen, onClose } : ChatSessionsModalNeedProps) => 
         handleClose();
     };
 
-    const sessions = list.data?.items ?? [];
-    const total = list.data?.page.total ?? 0;
+    const sessions = data?.items ?? [];
+    const total = data?.page.total ?? 0;
     const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
     const pageNumbers = buildPageNumbers(page, pageCount);
 
@@ -92,18 +74,18 @@ const ChatSessionsModal = ({ isOpen, onClose } : ChatSessionsModalNeedProps) => 
             </div>
         )}
 
-        {!isLoading && list.hasError && (
+        {hasError && (
             <div className={CenterNote}>
                 <p className={ErrorText}>대화 목록을 불러오지 못했어요.</p>
-                <button type="button" onClick={() => setReloadCount((prev) => prev + 1)} className={Button}>다시 시도</button>
+                <button type="button" onClick={reload} className={Button}>다시 시도</button>
             </div>
         )}
 
-        {!isLoading && !list.hasError && sessions.length === 0 && (
+        {!isLoading && !hasError && sessions.length === 0 && (
             <p className={clsx(CenterNote, Muted)}>아직 대화가 없어요</p>
         )}
 
-        {!isLoading && !list.hasError && sessions.length > 0 && (
+        {!isLoading && !hasError && sessions.length > 0 && (
             <>
                 <ul className={List}>
                     {
