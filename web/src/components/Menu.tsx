@@ -47,8 +47,8 @@ const Menu = () => {
                     onDragStart={(e) => e.preventDefault()}
                     className={({ isActive }) => clsx("flex gap-3.25 items-center"  ,isActive ? MenuStyle.active : MenuStyle.normal)} 
                 >
-                    <NewChatIcon className="w-5 h-5" />
-                    <p>새 채팅</p>
+                    <NewChatIcon className="w-5 h-5 text-[#FFFFFF]" />
+                    <p className="text-[18px] text-[#FFFFFF] font-normal">새 채팅</p>
                 </NavLink>
             )
         }
@@ -57,7 +57,8 @@ const Menu = () => {
 export default Menu;
 //style configuration
 const MenuWrapper = clsx(
-    "flex", "flex-col", "gap-1"
+    "p-[0px_16px] box-border",
+    "flex flex-col gap-1",
 );
 
 const MenuBaseStyle = clsx(
@@ -68,6 +69,6 @@ const MenuBaseStyle = clsx(
 );
 
 const MenuStyle = {
-    active: clsx(MenuBaseStyle, "bg-[#20232C]", "font-bold", "text-[#FFFFFF]"),
+    active: clsx(MenuBaseStyle, "bg-[#20232C]"),
     normal: clsx(MenuBaseStyle, "hover:bg-[#20232C]"),
 } as const;

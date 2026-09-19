@@ -1,7 +1,7 @@
-import { useEffect, useId, useRef } from "react";
-import { createPortal } from "react-dom";
+import { useId, useRef } from "react";
 import clsx from "clsx";
 import LoadingIndicator from "./LoadingIndicator";
+import Modal from "./Modal";
 
 type ConfirmModalNeedProps = {
     isOpen: boolean;
@@ -21,7 +21,7 @@ type ConfirmModalNeedProps = {
 };
 
 // 되돌릴 수 없는 동작(회원 탈퇴 등) 앞에 한 번 더 묻는 모달.
-// 취소 버튼에 먼저 포커스를 두고, Esc · 배경 클릭은 취소로 취급한다
+// 취소 버튼에 먼저 포커스를 두고, Esc · 배경 클릭은 취소로 취급한다 (공용 Modal 위에 얹는다)
 const ConfirmModal = ({
     isOpen,
     title,
@@ -35,95 +35,49 @@ const ConfirmModal = ({
     onConfirm,
     onCancel,
 } : ConfirmModalNeedProps) => {
-    const titleId = useId();
     const descriptionId = useId();
     const cancelRef = useRef<HTMLButtonElement | null>(null);
 
-    useEffect(() => {
-        if (!isOpen) return;
+    return <Modal
+        isOpen={isOpen}
+        title={title}
+        isLocked={isPending}
+        initialFocusRef={cancelRef}
+        describedById={descriptionId}
+        onClose={onCancel}
+    >
+        <div id={descriptionId} className={Body}>
+            {descriptions.map((line) => (
+                <p key={line} className={Description}>{line}</p>
+            ))}
+        </div>
 
-        cancelRef.current?.focus();
+        {errorMessage && <p role="alert" className={ErrorText}>{errorMessage}</p>}
 
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape" && !isPending) onCancel();
-        };
-        document.addEventListener("keydown", handleKeyDown);
-        return () => document.removeEventListener("keydown", handleKeyDown);
-    }, [isOpen, isPending, onCancel]);
-
-    if (!isOpen) return null;
-
-    const handleBackdropClick = () => {
-        if (!isPending) onCancel();
-    };
-
-    return createPortal(
-        <div className={Backdrop} onClick={handleBackdropClick}>
-            <div
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby={titleId}
-                aria-describedby={descriptionId}
-                onClick={(e) => e.stopPropagation()}
-                className={Dialog}
+        <div className={Actions}>
+            <button
+                ref={cancelRef}
+                type="button"
+                onClick={onCancel}
+                disabled={isPending}
+                className={clsx(ActionButton, CancelButton)}
             >
-                <h2 id={titleId} className={Title}>{title}</h2>
-                <div id={descriptionId} className={Body}>
-                    {descriptions.map((line) => (
-                        <p key={line} className={Description}>{line}</p>
-                    ))}
-                </div>
-
-                {errorMessage && <p role="alert" className={ErrorText}>{errorMessage}</p>}
-
-                <div className={Actions}>
-                    <button
-                        ref={cancelRef}
-                        type="button"
-                        onClick={onCancel}
-                        disabled={isPending}
-                        className={clsx(ActionButton, CancelButton)}
-                    >
-                        {cancelLabel}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={onConfirm}
-                        disabled={isPending}
-                        className={clsx(ActionButton, isDanger ? DangerButton : ConfirmButton)}
-                    >
-                        {isPending ? <LoadingIndicator label={pendingLabel} /> : confirmLabel}
-                    </button>
-                </div>
-            </div>
-        </div>,
-        document.body,
-    );
+                {cancelLabel}
+            </button>
+            <button
+                type="button"
+                onClick={onConfirm}
+                disabled={isPending}
+                className={clsx(ActionButton, isDanger ? DangerButton : ConfirmButton)}
+            >
+                {isPending ? <LoadingIndicator label={pendingLabel} /> : confirmLabel}
+            </button>
+        </div>
+    </Modal>
 }
 export default ConfirmModal;
 //style configuration
-// TODO: 스타일은 개발자 지시에 맞춰 교체 예정 — 지금은 배치만 잡아둔 최소 스타일
-const Backdrop = clsx(
-    "fixed inset-0 z-50",
-    "flex items-center justify-center",
-    "bg-[#00000066]",
-    "p-4"
-);
-
-const Dialog = clsx(
-    "flex flex-col gap-4",
-    "w-full max-w-[360px]",
-    "rounded-[12px]",
-    "bg-white",
-    "p-6",
-    "shadow-lg",
-    "animate-fade-in"
-);
-
-const Title = clsx(
-    "text-[16px] font-bold"
-);
-
+// TODO: 디테일 단계에서 개발자와 함께 스타일 작업 예정 — 지금은 구조만
 const Body = clsx(
     "flex flex-col gap-1"
 );

@@ -1,16 +1,15 @@
 //react
 import { useEffect, useState } from "react";
 //router
-import { NavLink, useLocation, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 //api
 import { clearSession } from "@/api/tokenManager";
 //store
 import { useAuthenticateStore } from "@/store/authenticate";
 import { useAuthorityStore } from "@/store/authority";
-import { useChatStore } from "@/store/chat";
 import { useChatSessionStore } from "@/store/chatSession";
 //hooks
-import { useAuth, useChat } from "@/hooks/api";
+import { useAuth } from "@/hooks/api";
 //components
 import { Menu } from "@/components";
 import { ConfirmModal, LoadingIndicator } from "@/components/common";
@@ -19,12 +18,7 @@ import RecentlyChatList from "./RecentlyChatList";
 //style
 import clsx from "clsx";
 //icon
-// import NewChatIcon from "@/assets/icons/new_chat.svg?react";
-
-// const ADMIN_MENUS = [
-//     { to: "/admin", label: "관제 대시보드" },
-//     { to: "/admin/users", label: "회원 관리" },
-// ] as const;
+import MainLogoCharacter from '@/assets/logo/main_logo_character.svg?react';
 
 // 회원 탈퇴는 소셜 로그인 유저에게만 있다. 관리자(local) · 개발 로그인(dev) 계정은 서버가 관리한다
 const SOCIAL_PROVIDERS: ReadonlyArray<UserInfo["provider"]> = ["kakao"];
@@ -41,19 +35,15 @@ const Sidebar = () => {
     const [withdrawErrorMessage, setWithdrawErrorMessage] = useState<string | null>(null);
 
     const navigate = useNavigate();
-    const { pathname } = useLocation();
     const { handleLogout, handleWithdrawMembership } = useAuth();
-    const { handleDeleteChatSession } = useChat();
-
+   
     const user = useAuthenticateStore((state) => state.user);
     const role = useAuthorityStore((state) => state.role);
-    const sessions = useChatSessionStore((state) => state.sessions);
     const hasMoreSessions = useChatSessionStore((state) => state.hasMore);
     const isLoadingMoreSessions = useChatSessionStore((state) => state.isLoadingMore);
     const refreshSessions = useChatSessionStore((state) => state.refreshSessions);
     const loadMoreSessions = useChatSessionStore((state) => state.loadMoreSessions);
-    const removeConversation = useChatStore((state) => state.removeConversation);
-
+    
     const isAdmin = role === "admin";
     const canWithdraw = !isAdmin && user !== null && SOCIAL_PROVIDERS.includes(user.provider);
 
@@ -100,27 +90,9 @@ const Sidebar = () => {
         navigate("/login", { replace: true });
     };
 
-    // 세션과 메시지가 함께 지워지고 복구할 수 없다 (명세)
-    const handleDeleteSessionClick = async (sessionId: string) => {
-        if (!window.confirm("이 대화를 삭제할까요? 삭제하면 복구할 수 없어요.")) return;
-
-        const isDeleted = await handleDeleteChatSession(sessionId);
-        if (!isDeleted) {
-            window.alert("대화를 삭제하지 못했어요. 잠시 후 다시 시도해주세요.");
-            return;
-        }
-
-        // 보고 있던 대화를 지웠다면 먼저 새 대화로 빠져나가야 사라진 대화 화면에 남지 않는다
-        if (pathname === `/c/${sessionId}`) navigate("/", { replace: true });
-        removeConversation(sessionId);
-        refreshSessions();
-    };
-
     return (
         <aside className={SideBarLayout}>
-            <p className={clsx("px-[12px]", "text-[16px]", "font-black")}>
-                널널{isAdmin && <span className={clsx("text-[12px]", "font-normal")}> admin</span>}
-            </p>
+            <a className="p-[32px_28px_0px_28px]" href="/"><MainLogoCharacter className="w-10 h-10" /></a>
             <Menu />
             {!isAdmin && (
                 <div className={clsx("flex", "min-h-0", "flex-1", "flex-col", "gap-[4px]", "overflow-y-auto")}>
@@ -169,8 +141,6 @@ const SideBarLayout = clsx(
     "w-60 h-full bg-[#1A1C22]",
     "flex flex-col gap-4",
     "shrink-0",
-    "border-r border-[#e5e4e7]",
-    "p-4 box-border",
 );
 
 const menuBaseStyle = clsx(
@@ -178,28 +148,6 @@ const menuBaseStyle = clsx(
     "text-[16px] text-[#909090] font-normal",
     "rounded-[8px]", 
     "select-none"
-);
-
-const MenuStyle = {
-    active: clsx(menuBaseStyle, "bg-[#20232C]", "font-bold", "text-[#FFFFFF]"),
-    normal: clsx(menuBaseStyle, "hover:bg-[#20232C]"),
-} as const;
-
-const sectionLabelStyle = clsx("px-[12px]", "text-[12px]", "text-[#6b6375]");
-
-// 평소엔 숨기고 행에 마우스를 올리거나 키보드 포커스가 오면 보인다
-const deleteButtonStyle = clsx(
-    "shrink-0",
-    "rounded-[6px]",
-    "px-[8px]",
-    "py-[4px]",
-    "text-[12px]",
-    "text-[#6b6375]",
-    "opacity-0",
-    "group-hover:opacity-100",
-    "focus:opacity-100",
-    "hover:bg-[#e9e7df]",
-    "hover:text-[#ff3b30]",
 );
 
 // 목록 마지막 줄. 메뉴 항목과 같은 높이라 목록에 자연스럽게 이어진다
