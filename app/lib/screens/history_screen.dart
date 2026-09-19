@@ -547,7 +547,8 @@ class _DateFilterMenuItem extends StatelessWidget {
       onTap: onTap,
       child: Container(
         alignment: Alignment.centerLeft,
-        margin: EdgeInsets.only(left: 8, right: 8, top: isFirst ? 8 : 0, bottom: isFirst ? 0 : 8),
+        margin: EdgeInsets.only(
+            left: 8, right: 8, top: isFirst ? 8 : 0, bottom: isFirst ? 0 : 8),
         padding: const EdgeInsets.symmetric(horizontal: 11),
         decoration: BoxDecoration(
           color: selected ? colors.dateFilterActiveBackground : null,

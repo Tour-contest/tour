@@ -93,14 +93,18 @@ class MapAppSheet extends StatelessWidget {
           const SizedBox(height: 20),
           _SheetButton(
             label: l10n.mapAppSheetKakaoButton,
-            onTap: () => _open(context,
-                openKakaoMap ?? () => MapLauncherService.openKakaoMap(placeName)),
+            onTap: () => _open(
+                context,
+                openKakaoMap ??
+                    () => MapLauncherService.openKakaoMap(placeName)),
           ),
           const SizedBox(height: 16),
           _SheetButton(
             label: l10n.mapAppSheetNaverButton,
-            onTap: () => _open(context,
-                openNaverMap ?? () => MapLauncherService.openNaverMap(placeName)),
+            onTap: () => _open(
+                context,
+                openNaverMap ??
+                    () => MapLauncherService.openNaverMap(placeName)),
           ),
           const SizedBox(height: 12),
           TextButton(

@@ -613,8 +613,7 @@ class _AdminDialogButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         backgroundColor: filled ? colors.accent : null,
         side: filled ? BorderSide.none : BorderSide(color: colors.accent),
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         overlayColor: colors.accentTint08,
       ),
       child: loading

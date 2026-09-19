@@ -167,8 +167,8 @@ class AlternativeCard extends StatelessWidget {
             const SizedBox(height: 30),
             Text(
               l10n.alternativeDetailLinkLabel,
-              style:
-                  AppTextStyles.body(fontSize: 11, color: colors.alternativeReasonText),
+              style: AppTextStyles.body(
+                  fontSize: 11, color: colors.alternativeReasonText),
             ),
           ],
         ),

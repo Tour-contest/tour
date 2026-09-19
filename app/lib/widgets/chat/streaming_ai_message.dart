@@ -249,7 +249,7 @@ class _BlockView extends StatelessWidget {
         ),
       final ChatCardBlock cardBlock => Padding(
           padding: const EdgeInsets.only(top: 12),
-          child: ChatCardView(block: cardBlock),
+          child: ChatCardView(block: cardBlock, onActionTap: onActionTap),
         ),
     };
   }

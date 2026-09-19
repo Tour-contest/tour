@@ -113,14 +113,25 @@ class ChatDoneEvent extends ChatStreamEvent {
 
 /// 스트림 처리 중 실패. **자동 재연결 금지** — 재시도는 사용자가 버튼으로만 하도록
 /// 호출부에서 이 이벤트(혹은 스트림 자체의 에러)를 받아 안내만 하고 끝내야 한다.
+/// **[API 문서로 확인함]** 실제 필드는 `{code, message, retriable}` — 같은
+/// 세션에 답변 생성 중 다시 보내면 `code`가 `CHAT_BUSY`로 오고(메시지는
+/// 저장되지 않음) — 전송 버튼을 `done`/`error`까지 비활성화해두는 클라이언트
+/// 정책(`chat_screen.dart`의 `_isGenerating`)상 정상 경로에서는 거의 안
+/// 나야 하지만, 혹시 와도 무관한 대체 조회(`_runFallbackSearch`)를 제안하지
+/// 않도록 `chat_screen.dart`가 이 값을 확인한다.
 class ChatErrorEvent extends ChatStreamEvent {
-  const ChatErrorEvent({required this.message, this.retriable = false});
+  const ChatErrorEvent({
+    required this.code,
+    required this.message,
+    this.retriable = false,
+  });
+  final String code;
   final String message;
   final bool retriable;
 
   @override
   String toString() =>
-      'ChatErrorEvent(message: $message, retriable: $retriable)';
+      'ChatErrorEvent(code: $code, message: $message, retriable: $retriable)';
 }
 
 /// 알 수 없는 이벤트 타입. 명세에 새 이벤트가 추가되어도 파서가 죽지 않도록 한다.
@@ -230,7 +241,8 @@ class ChatMessagesPage {
 
 /// 세션 목록/이력 조회, 세션 삭제 요청이 실패(`success: false`)했을 때 던지는 예외.
 class ChatApiException implements Exception {
-  ChatApiException(this.message, {this.retriable = false});
+  ChatApiException(this.message, {this.code = '', this.retriable = false});
+  final String code;
   final String message;
   final bool retriable;
 
@@ -282,8 +294,8 @@ class LoggingChatApi implements ChatApi {
     required String text,
     String? sessionId,
   }) async* {
-    AppLog.logger.i(
-        '[ChatApi] sendMessage → text: "$text", sessionId: $sessionId');
+    AppLog.logger
+        .i('[ChatApi] sendMessage → text: "$text", sessionId: $sessionId');
     try {
       await for (final event
           in _inner.sendMessage(text: text, sessionId: sessionId)) {
@@ -576,6 +588,7 @@ class DioChatApi implements ChatApi {
     if (envelope?['success'] != true) {
       throw ChatApiException(
         envelope?['message'] as String? ?? errorMessage,
+        code: envelope?['code'] as String? ?? '',
         retriable: envelope?['retriable'] as bool? ?? false,
       );
     }
@@ -661,6 +674,7 @@ class DioChatApi implements ChatApi {
       'final' => const ChatFinalEvent(),
       'done' => const ChatDoneEvent(),
       'error' => ChatErrorEvent(
+          code: data['code'] as String? ?? '',
           message: data['message'] as String? ?? '',
           retriable: data['retriable'] as bool? ?? false,
         ),

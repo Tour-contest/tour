@@ -277,9 +277,13 @@ class _ChatScreenState extends State<ChatScreen>
                       ChatCardBlock(type: type, payload: payload));
                 case ChatSourcesEvent(:final sources):
                   capturedSources.addAll(sources);
-                case ChatErrorEvent(:final message, :final retriable):
-                  completeWithError(
-                      ChatApiException(message, retriable: retriable));
+                case ChatErrorEvent(
+                    :final code,
+                    :final message,
+                    :final retriable
+                  ):
+                  completeWithError(ChatApiException(message,
+                      code: code, retriable: retriable));
                 case ChatFinalEvent():
                 case ChatToolEvent():
                 case ChatDoneEvent():
@@ -331,10 +335,16 @@ class _ChatScreenState extends State<ChatScreen>
       // HTTP 429뿐 아니라, SSE `error` 이벤트 자체가 `retriable: true`로 온
       // 경우(서버가 "그냥 다시 보내보라"는 뜻으로 표시하는 일시적 실패)도
       // 같은 취급 — 관련 없는 REST 대체 조회를 제안하는 대신 다시 보내보라는
-      // 토스트로 끝낸다.
+      // 토스트로 끝낸다. `code: CHAT_BUSY`(같은 세션에서 답변 생성 중 다시
+      // 보낸 경우 — `_isGenerating`이 전송 버튼을 이미 막아둬 정상 경로에서는
+      // 거의 안 나지만)도 "내용을 못 찾음"과 무관한 실패라 마찬가지로 제외한다.
       final isRateLimited = e is DioException && e.response?.statusCode == 429;
       final isRetriableSseError = e is ChatApiException && e.retriable;
-      if (buffer.isEmpty && !isRateLimited && !isRetriableSseError) {
+      final isChatBusy = e is ChatApiException && e.code == 'CHAT_BUSY';
+      if (buffer.isEmpty &&
+          !isRateLimited &&
+          !isRetriableSseError &&
+          !isChatBusy) {
         setState(() {
           aiEntry.fallbackQuery = text;
           aiEntry.fallbackState = ChatFallbackState.offered;

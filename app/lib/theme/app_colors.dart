@@ -41,6 +41,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.congestionQuiet,
     required this.congestionNormal,
     required this.congestionBusy,
+    required this.chatCardAccent,
   });
 
   final Color paper;
@@ -141,6 +142,16 @@ class AppColors extends ThemeExtension<AppColors> {
   /// `CongestionBadge`의 "혼잡"/"매우 혼잡" 텍스트·테두리 색(#B84B15).
   final Color congestionBusy;
 
+  /// 채팅 카드(`chat_card_view.dart`), 관광지 상세 화면(`attraction_detail_screen.dart`),
+  /// 설정 화면(`settings_screen.dart`) 강조 텍스트/막대 그래프에 쓰는 색
+  /// (#46A8EE, 사용자 요청으로 화면들에 차례로 반영). 앱 전역 `accentBright`
+  /// (로그인·앱바 등에서는 여전히 옛 색 그대로 쓰임)와는 별개 토큰이다 —
+  /// `CrowdBarChart`처럼 여러 화면이 공유하는 위젯은 `barColor` 파라미터로
+  /// 이 색을 명시적으로 받을 때만 적용되고, 파라미터를 안 주면 기본값은
+  /// 여전히 `accentBright`다(이름과 달리 이제 채팅 카드 전용은 아니지만,
+  /// 처음 이 색을 도입한 위치를 그대로 이름에 남겨둠).
+  final Color chatCardAccent;
+
   Color get ink800 => ink.withAlpha(230);
 
   Color get ink700 => const Color(0xFFA9B6BF);
@@ -208,6 +219,7 @@ class AppColors extends ThemeExtension<AppColors> {
     congestionQuiet: Color(0xFF15B836),
     congestionNormal: Color(0xFFD3A418),
     congestionBusy: Color(0xFFB84B15),
+    chatCardAccent: Color(0xFF46A8EE),
   );
 
   static AppColors of(BuildContext context) {
@@ -254,6 +266,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? congestionQuiet,
     Color? congestionNormal,
     Color? congestionBusy,
+    Color? chatCardAccent,
   }) {
     return AppColors(
       paper: paper ?? this.paper,
@@ -294,10 +307,12 @@ class AppColors extends ThemeExtension<AppColors> {
       dateFilterActiveBackground:
           dateFilterActiveBackground ?? this.dateFilterActiveBackground,
       toastBorder: toastBorder ?? this.toastBorder,
-      alternativeReasonText: alternativeReasonText ?? this.alternativeReasonText,
+      alternativeReasonText:
+          alternativeReasonText ?? this.alternativeReasonText,
       congestionQuiet: congestionQuiet ?? this.congestionQuiet,
       congestionNormal: congestionNormal ?? this.congestionNormal,
       congestionBusy: congestionBusy ?? this.congestionBusy,
+      chatCardAccent: chatCardAccent ?? this.chatCardAccent,
     );
   }
 
@@ -351,12 +366,13 @@ class AppColors extends ThemeExtension<AppColors> {
       dateFilterActiveBackground: Color.lerp(
           dateFilterActiveBackground, other.dateFilterActiveBackground, t)!,
       toastBorder: Color.lerp(toastBorder, other.toastBorder, t)!,
-      alternativeReasonText: Color.lerp(
-          alternativeReasonText, other.alternativeReasonText, t)!,
+      alternativeReasonText:
+          Color.lerp(alternativeReasonText, other.alternativeReasonText, t)!,
       congestionQuiet: Color.lerp(congestionQuiet, other.congestionQuiet, t)!,
       congestionNormal:
           Color.lerp(congestionNormal, other.congestionNormal, t)!,
       congestionBusy: Color.lerp(congestionBusy, other.congestionBusy, t)!,
+      chatCardAccent: Color.lerp(chatCardAccent, other.chatCardAccent, t)!,
     );
   }
 }

@@ -56,7 +56,8 @@ class ConfirmDialog extends StatelessWidget {
               children: [
                 Expanded(
                   child: _DialogButton(
-                    label: cancelLabel ?? AppLocalizations.of(context)!.commonCancel,
+                    label: cancelLabel ??
+                        AppLocalizations.of(context)!.commonCancel,
                     filled: false,
                     onTap: () => Navigator.of(context).pop(false),
                   ),
@@ -103,8 +104,7 @@ class _DialogButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         backgroundColor: filled ? colors.accent : null,
         side: filled ? BorderSide.none : BorderSide(color: colors.accent),
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         overlayColor: colors.accentTint08,
       ),
       child: Text(

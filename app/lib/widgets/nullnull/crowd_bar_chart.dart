@@ -4,16 +4,20 @@ import 'package:nullnull/api/attractions_api.dart';
 import 'package:nullnull/theme/app_colors.dart';
 import 'package:nullnull/theme/app_text_styles.dart';
 
-/// [AttractionCrowdDay] 목록을 막대 그래프로 그린다. 막대 색은 `colors.accentBright`로
-/// 통일한다(등급별 색상 구분 없음). 막대 폭은 가용 너비를 [days] 개수로 나눠
+/// [AttractionCrowdDay] 목록을 막대 그래프로 그린다. 막대 색은 기본적으로
+/// `colors.accentBright`로 통일한다(등급별 색상 구분 없음) — `attraction_detail_screen.dart`의
+/// 혼잡도 섹션(생성형 응답이 아님)이 이 기본값을 그대로 쓴다. `chat_card_view.dart`의
+/// 매칭된 관광지 혼잡도 카드(생성형 응답 위젯)는 [barColor]로 `colors.chatCardAccent`를
+/// 넘겨 그 카드 전용 강조색을 쓴다. 막대 폭은 가용 너비를 [days] 개수로 나눠
 /// 채우되(`LayoutBuilder`), 날짜 수가 많아 폭이 [_minBarSlotWidth] 아래로
-/// 내려가는 경우(예: 28일)에만 그 최소 폭을 유지하고 가로 스크롤로 훑어보게
-/// 한다. `attraction_detail_screen.dart`의 혼잡도 섹션과 `chat_card_view.dart`의
-/// 매칭된 관광지 혼잡도 카드가 공유한다.
+/// 내려가는 경우(예: 28일)에만 그 최소 폭을 유지하고 가로 스크롤로 훑어보게 한다.
 class CrowdBarChart extends StatelessWidget {
-  const CrowdBarChart({super.key, required this.days});
+  const CrowdBarChart({super.key, required this.days, this.barColor});
 
   final List<AttractionCrowdDay> days;
+
+  /// 막대 색 오버라이드. 안 주면 `colors.accentBright`(기본값).
+  final Color? barColor;
 
   static const _barAreaHeight = 200.0;
   static const _gridValues = [0, 30, 50, 70, 90];
@@ -28,6 +32,7 @@ class CrowdBarChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final resolvedBarColor = barColor ?? colors.accentBright;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -92,7 +97,7 @@ class CrowdBarChart extends StatelessWidget {
                                         child: Container(
                                           width: _barWidth,
                                           decoration: BoxDecoration(
-                                            color: colors.accentBright,
+                                            color: resolvedBarColor,
                                             borderRadius:
                                                 const BorderRadius.vertical(
                                                     top: Radius.circular(3)),

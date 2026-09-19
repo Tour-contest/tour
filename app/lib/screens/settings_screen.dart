@@ -329,7 +329,7 @@ class _SectionLabel extends StatelessWidget {
       child: Text(
         text,
         style: AppTextStyles.body(
-            fontSize: 11, color: colors.accentBright, letterSpacing: 1.8),
+            fontSize: 11, color: colors.chatCardAccent, letterSpacing: 1.8),
       ),
     );
   }
@@ -498,7 +498,7 @@ class _ConnectedAccountRow extends StatelessWidget {
         l10n.settingsDisconnect,
         style: AppTextStyles.body(
             fontSize: 11.5,
-            color: enabled ? colors.accentBright : colors.ink600),
+            color: enabled ? colors.chatCardAccent : colors.ink600),
       ),
     );
     return Container(
@@ -596,6 +596,11 @@ class _ProfileSummary extends StatelessWidget {
             imageUrl: profileImageUrl,
             initial: displayName.substring(0, 1),
             borderColor: colors.accent,
+            // `ProfileAvatar`의 기본 이니셜 글자색(`accentBright`)을 이 화면만
+            // `chatCardAccent`로 오버라이드한다 — `chat_screen.dart` 헤더의
+            // 프로필 버튼은 그대로 기본값(`accentBright`)을 쓴다.
+            initialStyle: AppTextStyles.heading(
+                color: colors.chatCardAccent, fontSize: 14),
           ),
           const SizedBox(width: 14),
           Expanded(

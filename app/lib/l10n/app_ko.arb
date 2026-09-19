@@ -328,14 +328,11 @@
   "@regionQuietLabel": {
     "description": "지역 현황 카드의 한적한 관광지 칩 섹션 라벨"
   },
-  "chatCardAttractionListTitle": "{signguNm} {category} 목록",
+  "chatCardAttractionListTitle": "{label} 목록",
   "@chatCardAttractionListTitle": {
-    "description": "실 서버 채팅 카드(attraction_list) 제목",
+    "description": "attraction_list/detail 채팅 카드 제목. signgu_nm/category 중 값이 있는 것만 호출부(_AttractionListCardState)가 공백으로 이어붙여 label 하나로 넘긴다 — 이전엔 두 placeholder를 템플릿에 나란히 넣어, 실제 payload에 category가 없는 경우(대부분의 attraction_list/모든 detail 카드) signguNm만 있어도 \"OO  목록\"처럼 중간에 빈칸이 두 번 들어갔다",
     "placeholders": {
-      "signguNm": {
-        "type": "String"
-      },
-      "category": {
+      "label": {
         "type": "String"
       }
     }
@@ -368,7 +365,72 @@
   },
   "chatCardNoDataMessage": "이 카드에 표시할 정보가 없어요.",
   "@chatCardNoDataMessage": {
-    "description": "채팅 카드의 payload.status가 no_data이거나 has_data가 false일 때 안내 문구"
+    "description": "attraction_detail_screen.dart의 _CrowdSection(혼잡도 예보가 비었을 때) 전용 안내 문구 — 채팅 카드는 더 이상 이 문구를 안 쓰고 chatCardFollowUpAction/chatCardNoCrowdDataMessage를 쓴다"
+  },
+  "chatCardFollowUpAction": "지역 전체 현황 보기",
+  "@chatCardFollowUpAction": {
+    "description": "채팅 카드의 payload.status가 no_data이거나 has_data가 false일 때(has_crowd_data:false인 특수 케이스 제외) 대신 보여주는 후속 질문 버튼 — 탭하면 이 문구 그대로 다음 채팅 메시지로 보낸다(NoDataCard.onActionTap)"
+  },
+  "chatCardNoCrowdDataMessage": "이 지역은 아직 혼잡도가 제공되지 않아요.",
+  "@chatCardNoCrowdDataMessage": {
+    "description": "채팅 카드의 payload.has_crowd_data가 false일 때(지역 자체에 집중률 데이터가 없음) 버튼 없이 보여주는 한 줄 안내"
+  },
+  "chatCardInterestLine": "{name} 검색 관심도가 최근 {weeks}주간 {trendLabel} ({changePct})",
+  "@chatCardInterestLine": {
+    "description": "interest 카드에서 trend가 flat이 아닌 항목만 한 줄로 보여주는 안내 문구. changePct는 부호(+/-)까지 포함해 미리 포맷한 문자열을 받는다",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "weeks": {
+        "type": "int"
+      },
+      "trendLabel": {
+        "type": "String"
+      },
+      "changePct": {
+        "type": "String"
+      }
+    }
+  },
+  "chatCardVisitorsTitle": "{signguNm} 방문자 추이",
+  "@chatCardVisitorsTitle": {
+    "description": "visitors 카드(날짜별 방문자 수 목록) 제목",
+    "placeholders": {
+      "signguNm": {
+        "type": "String"
+      }
+    }
+  },
+  "chatCardVisitorsDayCount": "{count}명",
+  "@chatCardVisitorsDayCount": {
+    "description": "visitors 카드의 날짜별 행에서 방문자 수 옆에 붙는 단위. count는 천단위 콤마까지 미리 포맷한 문자열",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "chatCardVisitorsPeakLabel": "최고 방문일",
+  "@chatCardVisitorsPeakLabel": {
+    "description": "visitors 카드 상단 강조 박스 — 방문자 수가 가장 많았던 날짜 위에 붙는 라벨"
+  },
+  "chatCardVisitorsRecentLabel": "최근 3일",
+  "@chatCardVisitorsRecentLabel": {
+    "description": "visitors 카드에서 최근 3일치 날짜별 목록 위에 붙는 섹션 라벨"
+  },
+  "chatCardVisitorsBasisLabel": "근거",
+  "@chatCardVisitorsBasisLabel": {
+    "description": "visitors 카드 맨 아래 데이터 출처/지연 설명 앞에 붙는 라벨"
+  },
+  "chatCardVisitorsDataThrough": "{date} 기준 데이터",
+  "@chatCardVisitorsDataThrough": {
+    "description": "visitors 카드의 근거 설명에서 데이터 기준일(data_through) 부분 — 서버 payload의 note 필드가 있으면 이 뒤에 이어붙여 함께 보여줌",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
   },
   "chatCardShowMore": "{count}개 더보기",
   "@chatCardShowMore": {

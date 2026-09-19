@@ -117,7 +117,8 @@ class _WebViewScreenState extends State<WebViewScreen> {
                         AppLog.logger.e(error.toString());
                         _handleLoadFailure(request);
                       },
-                      onReceivedHttpError: (controller, request, errorResponse) {
+                      onReceivedHttpError:
+                          (controller, request, errorResponse) {
                         AppLog.logger.e(errorResponse.toString());
                         _handleLoadFailure(request);
                       },

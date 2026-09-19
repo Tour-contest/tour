@@ -417,7 +417,7 @@ class _MessageState extends StatelessWidget {
                 ),
                 child: Text(
                   l10n.historyRetryButton,
-                  style: AppTextStyles.body(color: colors.accentBright),
+                  style: AppTextStyles.body(color: colors.chatCardAccent),
                 ),
               ),
             ],
@@ -451,7 +451,7 @@ class _SectionLabel extends StatelessWidget {
       child: Text(
         text,
         style: AppTextStyles.body(
-            fontSize: 16, color: colors.accentBright, letterSpacing: 1.8),
+            fontSize: 16, color: colors.chatCardAccent, letterSpacing: 1.8),
       ),
     );
   }
@@ -607,7 +607,7 @@ class _CrowdSection extends StatelessWidget {
           Text(l10n.chatCardNoDataMessage,
               style: AppTextStyles.body(color: colors.ink600))
         else ...[
-          CrowdBarChart(days: forecast!.days),
+          CrowdBarChart(days: forecast!.days, barColor: colors.chatCardAccent),
           if (forecast!.summary != null) ...[
             const SizedBox(height: 12),
             Text(
@@ -653,7 +653,7 @@ class _DayOptionPill extends StatelessWidget {
           label,
           style: AppTextStyles.body(
             fontSize: 12.5,
-            color: selected ? colors.accentBright : colors.ink600,
+            color: selected ? colors.chatCardAccent : colors.ink600,
           ),
         ),
       ),
@@ -726,7 +726,10 @@ class _MapButton extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SvgPicture.asset('assets/images/map.svg', height: 16,),
+            SvgPicture.asset(
+              'assets/images/map.svg',
+              height: 16,
+            ),
             const SizedBox(width: 10),
             Text(
               l10n.attractionDetailOpenMapButton,
