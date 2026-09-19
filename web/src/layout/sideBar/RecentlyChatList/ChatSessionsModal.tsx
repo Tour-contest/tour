@@ -111,7 +111,7 @@ const Muted = clsx(
 );
 
 const ErrorText = clsx(
-    "text-[13px] text-[#FF6B6B]"
+    "text-[13px] text-[#FF7A7A]"
 );
 
 const List = clsx(

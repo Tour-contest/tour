@@ -29,7 +29,13 @@ const RecentlyChatList = () => {
         <div className={RecentlyGroup}>
             <div className={RecentlyTitleGroup}>
                 <h3 className={Title}>최근 대화</h3>
-                <button onClick={() => setIsDrops(!isDrops)} className="select-none cursor-pointer">
+                <button
+                    type="button"
+                    aria-label={isDrops ? "최근 대화 접기" : "최근 대화 펼치기"}
+                    aria-expanded={isDrops}
+                    onClick={() => setIsDrops(!isDrops)}
+                    className="select-none cursor-pointer"
+                >
                     { isDrops ? <DownIcon className="w-3 h-3 text-[#909090]" /> : 
                         <UpIcon className="w-3 h-3 text-[#909090]" /> }
                 </button> 

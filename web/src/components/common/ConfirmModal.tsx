@@ -86,7 +86,7 @@ const Description = clsx(
 );
 
 const ErrorText = clsx(
-    "text-[12px] text-[#FF6B6B]"
+    "text-[12px] text-[#FF7A7A]"
 );
 
 const Actions = clsx(

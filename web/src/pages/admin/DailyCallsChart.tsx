@@ -120,9 +120,11 @@ const TickLabel = clsx(
     "fill-[#909090] text-[11px] tabular-nums"
 );
 
+// svg <g> 에는 outline 이 안 그려지므로 포커스 시 점의 테두리를 흰색·굵게
 const PointGroup = clsx(
     "outline-none",
-    "hover:opacity-80 focus-visible:opacity-80"
+    "hover:opacity-80",
+    "[&:focus-visible>circle]:stroke-[#FFFFFF] [&:focus-visible>circle]:stroke-[3]"
 );
 
 const Muted = clsx(

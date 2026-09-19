@@ -12,6 +12,8 @@ type SidebarResizeHandleNeedProps = {
 const SidebarResizeHandle = ({ handleProps, isResizing } : SidebarResizeHandleNeedProps) => {
     return <div
         {...handleProps}
+        role="separator"
+        aria-orientation="vertical"
         aria-label="사이드바 너비 조절"
         title="끌어서 너비 조절 · 더블클릭으로 기본 너비"
         className={clsx(Handle, isResizing && HandleActive)}

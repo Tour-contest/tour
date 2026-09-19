@@ -66,7 +66,7 @@ const TourApiMonitor = ({ dashboard } : TourApiMonitorNeedProps) => {
             {
                 KPIGroup.map((kpi) => {
                     return <div key={kpi.id} className={KPIContext}>
-                        <h4 className={KPIContextTitle}>{kpi.title}</h4>
+                        <h2 className={KPIContextTitle}>{kpi.title}</h2>
                         {kpi.discription}
                     </div>
                 })

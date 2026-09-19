@@ -55,7 +55,7 @@ function Admin() {
     if (hasError || !dashboard?.apiCalls) {
         return (
             <div className={clsx("flex", "h-full", "flex-col", "items-center", "justify-center", "gap-2", "bg-[#20232C]")}>
-                <p className={clsx("text-[13px]", "text-[#FF6B6B]")}>지표를 불러오지 못했습니다.</p>
+                <p className={clsx("text-[13px]", "text-[#FF7A7A]")}>지표를 불러오지 못했습니다.</p>
                 <button type="button" onClick={reload} className={clsx("text-[12px]", "text-[#D8D8D8]", "underline", "cursor-pointer")}>다시 시도</button>
             </div>
         );
@@ -67,17 +67,19 @@ function Admin() {
 
     return (
         <div className={pageStyle}>
+            {/* 화면엔 메뉴가 제목 역할을 하지만 보조기기용 페이지 제목은 둔다 */}
+            <h1 className="sr-only">관제 대시보드</h1>
             <TourApiMonitor dashboard={dashboard} />
             <div className="flex gap-4 h-[360px] shrink-0">
                 <CaseByOperationCall dashboard={dashboard} />
                 <div className={sectionStyle}>
-                    <p className={sectionTitleStyle}>일자별 호출 추이</p>
+                    <h2 className={sectionTitleStyle}>일자별 호출 추이</h2>
                     <DailyCallsChart daily={daily} />
                 </div>
             </div>
             <div className={sectionStyle}>
                 <div className={sectionHeaderStyle}>
-                    <p className={sectionTitleStyle}>최근 호출 이력</p>
+                    <h2 className={sectionTitleStyle}>최근 호출 이력</h2>
                     <Link to="/operation" className={moreLinkStyle}>전체 보기</Link>
                 </div>
                 {recent.length === 0 && <p className={mutedStyle}>호출 기록이 없습니다</p>}

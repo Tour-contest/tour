@@ -82,7 +82,7 @@ const KeyCode = clsx(
 );
 
 const StatusOk = clsx(
-    "text-[#15B836]"
+    "text-[#4CD96A]"
 );
 
 const StatusError = clsx(

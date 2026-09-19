@@ -17,7 +17,7 @@ const CaseByOperationCall = ({ dashboard } : CaseByOperationCallNeedProps) => {
     const totalCalls = operations.reduce((sum, [, count]) => sum + count, 0);
 
     return <section className={InterfaceLayout}>
-        <h4 className={Title}>오퍼레이션별 호출 ({date})</h4>
+        <h2 className={Title}>오퍼레이션별 호출 ({date})</h2>
         {
             operations.length === 0 ? <div className={EmptyState}>
                 <MainLogoIcon className="w-10 h-10 fill-[#909090]" />

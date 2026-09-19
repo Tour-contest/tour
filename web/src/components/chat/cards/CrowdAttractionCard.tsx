@@ -193,7 +193,8 @@ const BarSlot = clsx(
     "group relative",
     "flex flex-1 flex-col items-center justify-end",
     "h-full",
-    "outline-none"
+    "rounded-[4px]",
+    "outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#6FC1FC]"
 );
 
 const Bar = clsx(
