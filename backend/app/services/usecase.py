@@ -7,7 +7,7 @@ from datetime import date as _date
 
 from app.core import clock
 from app.core.config import settings
-from app.core.errors import NotFound, QuotaExceeded
+from app.core.errors import BudgetExceeded, NotFound, QuotaExceeded
 from app.repository import db
 from app.services import (
     area, crowding, datalab, embedding, matcher, recommender, tourapi, trend, weather,
@@ -147,6 +147,85 @@ async def decorate(items: list[dict]) -> list[dict]:
     return items
 
 
+CROWD_AREAS_MAX = 4
+QUIET_PICKS_MAX = 5
+
+
+async def attach_crowd(items: list[dict], date_on: str | None = None, session_id=None) -> int:
+    """목록 항목에 그날 집중률을 붙인다. 붙인 개수를 돌려준다.
+
+    목록은 관광정보에서, 혼잡도는 집중률에서 따로 오고 이름도 서로 다르다. 관광지 혼잡도에
+    쓰는 이름 매핑으로 짝을 찾고, 매핑에 없으면 이름이 그대로 겹치는 경우만 잡는다. 집중률은
+    지역 단위로 한 번에 받으므로 항목이 여러 시군구에 걸치면 항목이 많은 지역부터 몇 곳만 본다.
+    """
+    codes = Counter(i.get("signgu_cd") for i in items if i.get("signgu_cd"))
+    matched = 0
+    for code, _ in codes.most_common(CROWD_AREAS_MAX):
+        a = await db.get_area(code)
+        if not a or a.get("has_crowd_data") is False:
+            continue
+        try:
+            by_name = await crowding.fetch_area(a, session_id=session_id)
+        except (BudgetExceeded, QuotaExceeded):
+            break
+        except Exception:
+            continue
+        await flag_crowd(a, bool(by_name))
+        if not by_name:
+            continue
+        mapping = await db.get_mapping(a["crowd_cd"])
+        by_id = matcher.by_content_id(mapping)
+        # 이미 다른 관광지와 짝지어진 이름은 후보에서 뺀다. 남은 이름끼리만 새로 맞춘다.
+        free = [n for n in by_name if not (mapping.get(n) or {}).get("content_id")]
+        learned = []
+        for it in items:
+            if it.get("signgu_cd") != code:
+                continue
+            name = by_id.get(it.get("content_id"))
+            if name not in by_name:
+                name = matcher.reverse_match(it.get("title") or "", free)
+                score = 0.9
+                if not name:
+                    hit = matcher.fuzzy_match(it.get("title") or "", free, a["signgu_nm"])
+                    name, score = hit if hit else (None, 0.0)
+                if name and it.get("content_id"):
+                    free.remove(name)
+                    learned.append({
+                        "tats_nm": name, "content_id": it["content_id"],
+                        "matched_title": it.get("title"), "match_method": "list",
+                        "confidence": score, "image": it.get("image") or "",
+                    })
+            day = crowding.day_rate(by_name.get(name, []), date_on) if name else None
+            if day:
+                it["crowd"] = {"rate": day["rate"], "level": day["level"],
+                               "date": day["date"], "name": name}
+                matched += 1
+        if learned:
+            # 찾은 짝은 저장해 둔다. 그 관광지 하나를 콕 집어 혼잡도를 물을 때도 바로 나온다.
+            await db.put_mapping(a["crowd_cd"], learned)
+    return matched
+
+
+async def with_crowd(
+    items: list[dict], limit: int, date_on: str | None, sort: str | None, session_id=None
+) -> dict:
+    """목록 결과의 공통 마무리. 지역 표기와 혼잡도를 붙이고, 요청이 있으면 한적한 순으로 세운다."""
+    items = await decorate(items)
+    matched = await attach_crowd(items, date_on, session_id)
+    ranked = sorted((i for i in items if i.get("crowd")), key=lambda i: i["crowd"]["rate"])
+    if sort == "quiet":
+        items = ranked + [i for i in items if not i.get("crowd")]
+    return {
+        "items": items[:limit],
+        "sort": sort,
+        "crowd_coverage": {"listed": len(items), "with_crowd": matched},
+        "quiet_picks": [
+            {"title": i["title"], "content_id": i.get("content_id"), **i["crowd"]}
+            for i in ranked[:QUIET_PICKS_MAX]
+        ],
+    }
+
+
 def norm(s: str) -> str:
     return re.sub(r"\s", "", s or "")
 
@@ -269,8 +348,29 @@ async def region_places(
     )
 
 
+NEAR_RADIUS = (3000, 10000)
+
+
+async def places_near(content_id: str, f: dict, session_id=None) -> tuple[dict | None, list[dict], int]:
+    """기준 관광지 좌표에서 가까운 순. 좁은 반경에 3곳이 안 되면 한 번 넓힌다."""
+    base = await tourapi.detail_common(content_id, session_id=session_id)
+    if not base or not base.get("mapx") or not base.get("mapy"):
+        return base, [], 0
+    items, radius = [], NEAR_RADIUS[0]
+    for radius in NEAR_RADIUS:
+        items = await tourapi.location_based_list(
+            base["mapx"], base["mapy"], radius, session_id=session_id, **f
+        )
+        items = [i for i in items if i.get("content_id") != content_id]
+        if len(items) >= 3:
+            break
+    return base, items, radius
+
+
 async def list_places(
-    signgu_cd: str, category: str, limit: int = 10, session_id=None
+    signgu_cd: str, category: str, limit: int = 10, session_id=None,
+    date_on: str | None = None, sort: str | None = None,
+    near_content_id: str | None = None,
 ) -> dict:
     a = await area_of(signgu_cd)
     f = category_filter(category)
@@ -282,10 +382,29 @@ async def list_places(
                     f"{', '.join(CATEGORY_FILTER)} 중에서 물어봐 주세요",
         }
 
+    near = None
     try:
-        items = await region_places(a, arrange="Q", session_id=session_id, **f)
+        if near_content_id:
+            base, items, radius = await places_near(near_content_id, f, session_id)
+            if base:
+                near = {"content_id": near_content_id, "title": base.get("title"),
+                        "radius_km": radius / 1000}
+        if near is None:
+            items = await region_places(a, arrange="Q", session_id=session_id, **f)
     except QuotaExceeded as e:
         return {"status": "quota_exceeded", "items": [], "message": e.message}
+
+    if not items and near:
+        return {
+            "status": "no_data",
+            "items": [],
+            "signgu_nm": a["signgu_nm"],
+            "category": category,
+            "near": near,
+            "message": f"{near['title']} 반경 {near['radius_km']:g}km 안에 {category}(으)로 등록된 곳이 없어요",
+            "instruction": "가까운 곳에 등록된 곳이 없다고 한 문장으로 답하고 끝내라. "
+                           "지역 전체 목록으로 대신하지 마라.",
+        }
 
     if not items:
         return {
@@ -297,17 +416,22 @@ async def list_places(
             "instruction": "이 갈래로 등록된 곳이 없다고 한 문장으로 답하고 끝내라. "
                            "다른 갈래로 대신 조회하거나 앞서 보여준 목록을 다시 내놓지 마라.",
         }
-    return {
+    out = {
         "status": "ok",
         "category": category,
+        "signgu_cd": a["crowd_cd"],
         "signgu_nm": a["signgu_nm"],
-        "items": await decorate(items[:limit]),
+        **await with_crowd(items, limit, date_on, sort, session_id),
         "source": SOURCE,
     }
+    if near:
+        out["near"] = near
+    return out
 
 
 async def find_pet_friendly(
-    signgu_cd: str, limit: int = 8, session_id=None, category: str | None = None
+    signgu_cd: str, limit: int = 8, session_id=None, category: str | None = None,
+    date_on: str | None = None, sort: str | None = None,
 ) -> dict:
     a = await area_of(signgu_cd)
     filters: list[dict] = [{"content_type_id": t} for t in ("12", "14", "28")]
@@ -326,7 +450,7 @@ async def find_pet_friendly(
                 if t and "불가" not in t and i["content_id"] not in seen:
                     seen.add(i["content_id"])
                     hits.append({**i, "note": f"반려동물 {t}"})
-            if len(hits) >= limit:
+            if len(hits) >= limit and sort != "quiet":
                 break
     except QuotaExceeded as e:
         return {"status": "quota_exceeded", "items": [], "message": e.message}
@@ -339,8 +463,10 @@ async def find_pet_friendly(
         }
     return {
         "status": "ok",
+        "category": category,
+        "signgu_cd": a["crowd_cd"],
         "signgu_nm": a["signgu_nm"],
-        "items": await decorate(hits[:limit]),
+        **await with_crowd(hits, limit, date_on, sort, session_id),
         "source": SOURCE,
     }
 
@@ -366,7 +492,8 @@ def fmt_ymd(ymd: str) -> str:
 
 
 async def list_festivals(
-    signgu_cd: str, date_from: str | None = None, limit: int = 10, session_id=None
+    signgu_cd: str, date_from: str | None = None, limit: int = 10, session_id=None,
+    sort: str | None = None,
 ) -> dict:
     a = await area_of(signgu_cd)
     start = (date_from or clock.today_str()).replace("-", "")
@@ -391,8 +518,9 @@ async def list_festivals(
         }
     return {
         "status": "ok",
+        "signgu_cd": a["crowd_cd"],
         "signgu_nm": a["signgu_nm"],
-        "items": await decorate(items[:limit]),
+        **await with_crowd(items, limit, date_from, sort, session_id),
         "source": SOURCE,
     }
 
@@ -445,6 +573,10 @@ async def reverse_map(
         return None
     free = [n for n in by_name if not (mapping.get(n) or {}).get("content_id")]
     hit = matcher.reverse_match(d.get("title") or "", free)
+    score = 0.9
+    if not hit:
+        fuzzy = matcher.fuzzy_match(d.get("title") or "", free, area_row.get("signgu_nm") or "")
+        hit, score = fuzzy if fuzzy else (None, 0.0)
     if not hit:
         return None
     row = {
@@ -452,7 +584,7 @@ async def reverse_map(
         "content_id": cid,
         "matched_title": d.get("title"),
         "match_method": "reverse",
-        "confidence": 0.9,
+        "confidence": score,
         "image": d.get("image") or "",
     }
     await db.put_mapping(area_row["crowd_cd"], [row])
@@ -666,7 +798,21 @@ async def recommend_alternatives(
     )
     res["signgu_nm"] = a["signgu_nm"]
     res["source"] = SOURCE
+    await attach_pet(res.get("items") or [], session_id)
     return res
+
+
+async def attach_pet(items: list[dict], session_id=None) -> None:
+    """관광지 항목에 반려동물 동반 구분을 붙인다. 등록이 없는 곳은 빈 문자열."""
+    if not items:
+        return
+    try:
+        pets = await tourapi.pet_tour_map(session_id=session_id)
+    except Exception:
+        return
+    for it in items:
+        if it.get("content_id"):
+            it["pet"] = pets.get(it["content_id"]) or ""
 
 
 async def interest_trend(
