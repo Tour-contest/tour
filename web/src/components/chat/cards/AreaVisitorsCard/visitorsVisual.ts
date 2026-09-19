@@ -21,15 +21,16 @@ export const SEGMENT_LABEL: Record<VisitorSegment, string> = {
     foreigner: "외국인",
 };
 
-// 상태값이 아니라 분류라서 혼잡도 팔레트(초록·노랑·빨강)와 겹치지 않는 색을 쓴다
-export const SEGMENT_COLOR: Record<VisitorSegment, string> = {
-    local: "#2f6fed",
-    outsider: "#8b5cf6",
-    foreigner: "#9ca3af",
+// 상태값이 아니라 분류라서 혼잡도 팔레트(초록·노랑·빨강)와 겹치지 않게, 강조색(하늘색) 한 계열의 밝기 단계로 구분한다.
+// [위, 아래] 두 색으로 세로 그라데이션을 만든다 (막대 조각 · 범례 색칩 공용)
+export const SEGMENT_GRADIENT: Record<VisitorSegment, [string, string]> = {
+    local: ["#A3F1F9", "#6FC1FC"],
+    outsider: ["#6FC1FC", "#309AE6"],
+    foreigner: ["#309AE6", "#1D5FB0"],
 };
 
-// 구분이 없을 때 합계 하나로 그리는 막대 색
-export const TOTAL_COLOR = "#52514e";
+// 구분이 없을 때 합계 하나로 그리는 막대 (현지인 조각과 같은 그라데이션)
+export const TOTAL_GRADIENT: [string, string] = SEGMENT_GRADIENT.local;
 
 const parseDate = (date: string) => {
     const [year, month, day] = date.split("-").map(Number);

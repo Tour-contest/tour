@@ -4,5 +4,6 @@ import AlternativesCard from "./cards/AlternativesCard";
 import AreaOverviewCard from "./cards/AreaOverviewCard";
 import AreaVisitorsCard from "./cards/AreaVisitorsCard";
 import CrowdAttractionCard from "./cards/CrowdAttractionCard";
+import BestSuggestionCard from "./cards/BestSuggestionCard";
 
-export { ChatCardView, ChatFollowUps, AlternativesCard, AreaOverviewCard, AreaVisitorsCard, CrowdAttractionCard };
+export { ChatCardView, ChatFollowUps, AlternativesCard, AreaOverviewCard, AreaVisitorsCard, CrowdAttractionCard, BestSuggestionCard };

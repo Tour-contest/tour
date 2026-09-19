@@ -10,7 +10,7 @@ import {
     formatRate,
     formatShortDate,
     isToday,
-} from "./crowdVisual";
+} from "./utils/crowdVisual";
 
 type CrowdAttractionCardNeedProps = {
     payload: ChatCrowdAttractionPayload;
@@ -156,12 +156,13 @@ const CrowdAttractionCard = ({ payload, isTitleLink = true } : CrowdAttractionCa
 }
 export default CrowdAttractionCard;
 //style configuration
+// 다른 대화 카드(대안 · 추천 · 지역 현황)와 같은 어두운 톤
 const CardShell = clsx(
     "flex flex-col gap-3",
-    "border border-[#e5e4e7] rounded-[12px]",
-    "bg-white",
-    "p-4 box-border",
-    "text-[13px]"
+    "rounded-[12px]",
+    "bg-[#333743]",
+    "p-[22px_32px] box-border",
+    "text-[13px] text-[#FFFFFF]"
 );
 
 const CardHeader = clsx(
@@ -174,17 +175,17 @@ const TitleGroup = clsx(
 
 const CardTitle = clsx(
     "truncate",
-    "text-[15px] font-bold"
+    "text-[20px] text-[#FFFFFF] font-medium"
 );
 
 const Muted = clsx(
-    "text-[12px] text-[#6b6375]"
+    "text-[12px] text-[#909090]"
 );
 
 const ChartPlot = clsx(
     "flex items-end gap-2",
     "h-28",
-    "border-b border-[#c3c2b7]"
+    "border-b border-[#63717A]"
 );
 
 // 막대보다 넓은 슬롯 전체가 호버·포커스 영역이다
@@ -204,14 +205,15 @@ const Bar = clsx(
 
 const BarValue = clsx(
     "mb-1",
-    "text-[11px] text-[#52514e] tabular-nums"
+    "text-[11px] text-[#D8D8D8] tabular-nums"
 );
 
 const BarTooltip = clsx(
     "pointer-events-none absolute bottom-full z-10",
     "whitespace-nowrap",
     "rounded-[6px]",
-    "bg-[#222] text-white",
+    "bg-[#1A1C22] text-[#FFFFFF]",
+    "border border-[#63717A]",
     "px-2 py-1",
     "text-[11px]",
     "opacity-0",
@@ -231,36 +233,38 @@ const AxisRow = clsx(
 
 const AxisLabel = clsx(
     "flex-1 text-center",
-    "text-[11px] text-[#6b6375]"
+    "text-[11px] text-[#909090]"
 );
 
 const AxisLabelToday = clsx(
-    "font-bold text-[#0b0b0b]"
+    "font-bold text-[#FFFFFF]"
 );
 
 const ActionRow = clsx(
     "flex flex-wrap gap-2"
 );
 
+// 대안 · 추천 카드의 ActionButton 과 같은 모양
 const ActionButton = clsx(
-    "border border-[#b1bdc8] rounded-[8px]",
+    "border border-[#63717A] rounded-[8px]",
     "px-3 py-1.5",
-    "text-[12px]",
-    "hover:bg-[#f4f3ec]"
+    "text-[12px] text-[#FFFFFF] font-normal",
+    "hover:bg-[#1A1C22] hover:border-[#FFFFFF]",
+    "cursor-pointer"
 );
 
 const ForecastTable = clsx(
     "w-full border-collapse",
-    "text-[12px]"
+    "text-[12px] text-[#D8D8D8]"
 );
 
 const TableHeadRow = clsx(
-    "border-b border-[#e1e0d9]",
-    "text-[#6b6375]"
+    "border-b border-[#63717A]",
+    "text-[#909090]"
 );
 
 const TableRow = clsx(
-    "border-b border-[#e1e0d9] last:border-b-0"
+    "border-b border-[#63717A] last:border-b-0"
 );
 
 const TableCell = clsx(

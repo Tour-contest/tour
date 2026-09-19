@@ -12,7 +12,6 @@ import ChatbotServiceNotice from "./ChatbotServiceNotice";
 import ChatbotStreaming from "./ChatbotStreaming";
 import ChatbotInput from "./ChatbotInput";
 
-const ATTRIBUTION = "출처: ⓒ한국관광공사";
 // 이 거리 안까지 위로 올리면 이전 묶음을 받는다
 const LOAD_OLDER_THRESHOLD_PX = 80;
 
@@ -114,7 +113,9 @@ function Home() {
     return (
         <div className={ChatbotContainer}>
             <ChatbotServiceNotice />
-            <div ref={scrollContainerRef} onScroll={handleScroll} className={ChatbotLayout}>
+            {/* 스크롤 영역은 본문 전체 폭이라 스크롤바가 오른쪽 끝에 붙고, 내용만 가운데 720px 로 모은다 */}
+            <div ref={scrollContainerRef} onScroll={handleScroll} className={ChatbotScroller}>
+                <div className={ChatbotLayout}>
                 <ChatbotHistoryLoader
                     hasMore={conversation.hasMoreHistory}
                     isLoading={conversation.isLoadingOlder}
@@ -146,9 +147,10 @@ function Home() {
                     />
                 )}
                 <div ref={scrollAnchorRef} />
+                </div>
             </div>
+            <div aria-hidden="true" className={ChatFadeStrip} />
             <ChatbotInput isStreaming={conversation.isStreaming} onSubmit={handleSendMessage} />
-            <p className={Attribution}>{ATTRIBUTION}</p>
         </div>
     );
 }
@@ -156,21 +158,40 @@ export default Home;
 //style configuration
 const ChatbotContainer = clsx(
     "flex flex-col items-center",
-    "h-full"
+    "h-full bg-[#20232C]"
 );
 
-const ChatbotLayout = clsx(
-    "flex flex-col gap-4 flex-1",
-    "w-180 max-w-full",
+// 실제 스크롤되는 요소. 본문 폭 전체를 차지해 스크롤바가 오른쪽 끝에 붙는다.
+// 사이드바 목록과 같은 얇은 스크롤바: 평소엔 투명, 올리면 배경에 맞춘 회색
+const ChatbotScroller = clsx(
+    "flex-1 min-h-0 w-full",
     "overflow-y-auto",
+    "[scrollbar-width:thin] [scrollbar-color:transparent_transparent]",
+    "hover:[scrollbar-color:#3A3D47_transparent]",
+    "[&::-webkit-scrollbar]:w-1.5",
+    "[&::-webkit-scrollbar-track]:bg-transparent",
+    "[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent",
+    "hover:[&::-webkit-scrollbar-thumb]:bg-[#3A3D47]",
+);
+
+// 내용 기둥. min-h-full 이라 빈 대화의 Quick Start(flex-1) 가 세로 가운데에 온다
+const ChatbotLayout = clsx(
+    "flex flex-col gap-4",
+    "min-h-full w-180 max-w-full mx-auto",
     "p-6 box-border"
+);
+
+// 대화 목록 끝에 겹쳐서 아래로 갈수록 배경색으로 녹아들고 살짝 흐려진다. 클릭·스크롤은 통과.
+// 높이(h)와 끌어올림(-mt)은 같은 값으로 유지한다
+const ChatFadeStrip = clsx(
+    "w-180 max-w-full h-7.5 shrink-0",
+    "-mt-7.5 relative z-10",
+    "pointer-events-none",
+    "bg-[#20232C] backdrop-blur-[3px]",
+    "mask-[linear-gradient(to_bottom,transparent,black)]",
 );
 
 const CenterNote = clsx(
     "flex flex-1 items-center justify-center"
 );
 
-const Attribution = clsx(
-    "pb-4",
-    "text-[12px] text-[#6b6375]"
-);

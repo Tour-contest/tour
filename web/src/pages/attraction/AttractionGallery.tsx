@@ -58,11 +58,12 @@ const GalleryGroup = clsx(
     "flex flex-col gap-2"
 );
 
+// 어두운 배경 위 갤러리. 사진이 뜨기 전에는 카드보다 한 톤 어두운 바탕이 자리를 지킨다
 const HeroFrame = clsx(
     "relative m-0",
     "aspect-[16/9] w-full max-w-full",
     "overflow-hidden rounded-[12px]",
-    "bg-[#f4f3ec]"
+    "bg-[#1A1C22]"
 );
 
 const HeroImage = clsx(
@@ -72,7 +73,7 @@ const HeroImage = clsx(
 const Copyright = clsx(
     "absolute bottom-0 right-0",
     "rounded-tl-[8px]",
-    "bg-[#222]/70 text-white",
+    "bg-[#1A1C22]/80 text-[#D8D8D8]",
     "px-2 py-1",
     "text-[11px]"
 );
@@ -81,24 +82,33 @@ const EmptyHero = clsx(
     "flex items-center justify-center",
     "aspect-[16/9] w-full",
     "rounded-[12px]",
-    "bg-[#f4f3ec]"
+    "bg-[#333743]"
 );
 
+// 가로 썸네일 줄도 얇은 스크롤바 (세로 스크롤러와 같은 규칙)
 const ThumbnailRow = clsx(
     "flex gap-2",
     "overflow-x-auto",
-    "pb-1"
+    "pb-1",
+    "[scrollbar-width:thin] [scrollbar-color:transparent_transparent]",
+    "hover:[scrollbar-color:#3A3D47_transparent]",
+    "[&::-webkit-scrollbar]:h-1.5",
+    "[&::-webkit-scrollbar-track]:bg-transparent",
+    "[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent",
+    "hover:[&::-webkit-scrollbar-thumb]:bg-[#3A3D47]",
 );
 
 const ThumbnailButton = clsx(
     "block size-16 shrink-0",
     "overflow-hidden rounded-[8px]",
     "border-2 border-transparent",
-    "opacity-70 hover:opacity-100"
+    "opacity-60 hover:opacity-100",
+    "cursor-pointer"
 );
 
+// 선택된 사진은 포커스 링과 같은 하늘색
 const ThumbnailSelected = clsx(
-    "border-[#222] opacity-100"
+    "border-[#A3F1F9] opacity-100"
 );
 
 const ThumbnailImage = clsx(
@@ -106,5 +116,5 @@ const ThumbnailImage = clsx(
 );
 
 const Muted = clsx(
-    "text-[12px] text-[#6b6375]"
+    "text-[12px] text-[#909090]"
 );

@@ -7,17 +7,21 @@ type ChatBubbleNeedProps = {
 };
 
 const ChatBubble = ({ role, children } : ChatBubbleNeedProps) => {
-    return <p className={clsx(BubbleBase, BubbleRole[role])}>{children}</p>
+    return <p className={clsx(BubbleRole[role])}>{children}</p>
 }
 export default ChatBubble;
 //style configuration
-const BubbleBase = clsx(
-    "max-w-[640px] rounded-[16px]",
-    "px-4 py-3",
-    "text-[14px]"
-);
-
 const BubbleRole = {
-    user: clsx("self-end", "bg-[#222] text-white"),
-    assistant: clsx("self-start", "bg-[#f4f3ec]"),
+    user: clsx(
+        "self-end", 
+        "bg-[#1A1C22] max-w-160", 
+        "text-[#FFFFFF] text-[14px] font-normal",
+        "rounded-[16px]",
+        "px-4 py-3 box-border"
+    ),
+    assistant: clsx(
+        "self-start",
+        "max-w-160", 
+        "text-[#FFFFFF] text-[14px] font-normal",
+    ),
 } as const;

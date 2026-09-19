@@ -1,46 +1,24 @@
-import { Link } from "react-router";
 import clsx from "clsx";
 import { isAreaOverviewPayload, resolveFollowUps } from "./followUp";
 import AlternativesCard from "./cards/AlternativesCard";
 import AreaOverviewCard from "./cards/AreaOverviewCard";
 import AreaVisitorsCard from "./cards/AreaVisitorsCard";
+import AttractionCard from "./cards/AttractionCard";
 import CrowdAttractionCard from "./cards/CrowdAttractionCard";
+import BestSuggestionCard from "./cards/BestSuggestionCard";
 
+// 관광지 목록 · 단일 관광지 카드의 껍데기 (다른 대화 카드와 같은 톤). 항목 행은 cards/AttractionCard
 const cardStyle = clsx(
-    "flex",
-    "flex-col",
-    "gap-[8px]",
+    "flex flex-col gap-3",
     "rounded-[12px]",
-    "border-[1px]",
-    "border-[#e5e4e7]",
-    "p-[16px]",
+    "bg-[#333743]",
+    "p-[22px_32px] box-border",
     "text-[13px]",
 );
 
-const cardTitleStyle = clsx("text-[14px]", "font-bold");
-const sourceStyle = clsx("text-[12px]", "text-[#6b6375]");
-
-// 관광지 항목은 상세(/attractions/:id)로 이어진다. 응답에 딸려온 대표 이미지가 있으면 썸네일로 같이 보여준다
-const attractionRowStyle = clsx("flex", "items-center", "gap-[10px]");
-const thumbnailStyle = clsx("size-[40px]", "shrink-0", "rounded-[8px]", "object-cover", "bg-[#f4f3ec]");
-const attractionLinkStyle = clsx("min-w-0", "truncate", "hover:underline");
-
-type AttractionLinkRowProps = {
-    contentId: string;
-    title: string | null | undefined;
-    image?: string | null;
-    note?: string | null;
-};
-
-const AttractionLinkRow = ({ contentId, title, image, note }: AttractionLinkRowProps) => (
-    <div className={attractionRowStyle}>
-        {image && <img src={image} alt="" loading="lazy" className={thumbnailStyle} />}
-        <p className={clsx("min-w-0", "truncate")}>
-            <Link to={`/attractions/${contentId}`} className={attractionLinkStyle}>{title || "이름 없는 관광지"}</Link>
-            {note && <span className={sourceStyle}> · {note}</span>}
-        </p>
-    </div>
-);
+const cardTitleStyle = clsx("text-[20px]", "text-[#FFFFFF]", "font-medium");
+const sourceStyle = clsx("text-[12px]", "text-[#909090]");
+const itemListStyle = clsx("flex", "flex-col");
 
 type ChatCardViewProps = {
     card: ChatCard;
@@ -52,25 +30,29 @@ const ChatCardView = ({ card }: ChatCardViewProps) => {
     if (resolveFollowUps(card) !== null) return null;
 
     switch (card.type) {
-        // 지역 전체 형태(summary 보유)는 SB-05 도넛 카드, 관광지 지정 형태는 SB-03 막대 카드
+        // 지역 전체 형태(summary 보유)는 SB-05 도넛 카드 + 그 지역에서 가장 한적한 곳(가장 추천), 관광지 지정 형태는 SB-03 막대 카드.
+        // 이어서 alternatives 카드가 오면 "다른 대안" 흐름이 된다
         case "crowd":
             return isAreaOverviewPayload(card.payload)
-                ? <AreaOverviewCard payload={card.payload} />
+                ? <><AreaOverviewCard payload={card.payload} /><BestSuggestionCard payload={card.payload} /></>
                 : <CrowdAttractionCard payload={card.payload} />;
 
         case "attraction_list":
             return (
                 <div className={cardStyle}>
-                    <p className={cardTitleStyle}>{card.payload.signgu_nm ?? "관광지"}</p>
-                    {card.payload.items.map((item) => (
-                        <AttractionLinkRow
-                            key={item.content_id}
-                            contentId={item.content_id}
-                            title={item.title}
-                            image={item.image}
-                            note={item.addr1 ?? item.period ?? item.note}
-                        />
-                    ))}
+                    <h4 className={cardTitleStyle}>{card.payload.signgu_nm ?? "관광지"}</h4>
+                    <div className={itemListStyle}>
+                        {card.payload.items.map((item) => (
+                            <AttractionCard
+                                key={item.content_id}
+                                contentId={item.content_id}
+                                title={item.title}
+                                image={item.image}
+                                note={item.addr1 ?? item.period ?? item.note}
+                                region={card.payload.signgu_nm}
+                            />
+                        ))}
+                    </div>
                     {card.payload.source && <p className={sourceStyle}>{card.payload.source}</p>}
                 </div>
             );
@@ -82,18 +64,19 @@ const ChatCardView = ({ card }: ChatCardViewProps) => {
         case "attraction":
             return (
                 <div className={cardStyle}>
-                    <AttractionLinkRow
+                    <AttractionCard
                         contentId={card.payload.content_id}
                         title={card.payload.title}
                         image={card.payload.image}
                         note={card.payload.addr1}
+                        region={card.payload.signgu_nm}
                     />
                     {card.payload.source && <p className={sourceStyle}>{card.payload.source}</p>}
                 </div>
             );
 
         case "area_overview":
-            return <AreaOverviewCard payload={card.payload} />;
+            return <><AreaOverviewCard payload={card.payload} /><BestSuggestionCard payload={card.payload} /></>;
 
         case "visitors":
             return <AreaVisitorsCard payload={card.payload} />;

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTour } from "@/hooks/api";
-import { todayKey } from "@/components/chat/cards/crowdVisual";
+import { todayKey } from "@/components/chat/cards/utils/crowdVisual";
 
 // 카드 그래프는 한 주를 그리고 나머지는 표로 열리므로 두 주치를 받아 표에도 내용이 있게 한다
 const CONGESTION_DAYS = 14;

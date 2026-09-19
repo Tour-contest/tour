@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router";
 import clsx from "clsx";
 import { AlternativesCard, CrowdAttractionCard } from "@/components/chat";
 import { LoadingIndicator } from "@/components/common";
-import { buildKakaoMapPointUrl, buildKakaoMapSearchUrl } from "@/components/chat/cards/crowdVisual";
+import { buildKakaoMapPointUrl, buildKakaoMapSearchUrl } from "@/components/chat/cards/utils/crowdVisual";
 import { decodeHtmlText } from "@/utils";
 import AttractionGallery from "./AttractionGallery";
 import useAttractionData from "./useAttractionData";
@@ -230,16 +230,24 @@ function Attraction() {
 }
 export default Attraction;
 //style configuration
+// 챗봇 홈과 같은 구조: 실제 스크롤되는 요소가 본문 전체 폭이라 스크롤바가 오른쪽 끝에 붙고, 내용만 가운데 720px 로 모은다.
+// 스크롤바도 같은 규칙 — 얇고, 평소엔 투명, 올리면 배경에 맞춘 회색
 const PageContainer = clsx(
-    "flex flex-col items-center",
-    "h-full"
+    "h-full w-full bg-[#20232C]",
+    "overflow-y-auto",
+    "[scrollbar-width:thin] [scrollbar-color:transparent_transparent]",
+    "hover:[scrollbar-color:#3A3D47_transparent]",
+    "[&::-webkit-scrollbar]:w-1.5",
+    "[&::-webkit-scrollbar-track]:bg-transparent",
+    "[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent",
+    "hover:[&::-webkit-scrollbar-thumb]:bg-[#3A3D47]",
 );
 
 const PageLayout = clsx(
-    "flex flex-col gap-4 flex-1",
-    "w-180 max-w-full",
-    "overflow-y-auto",
+    "flex flex-col gap-4",
+    "min-h-full w-180 max-w-full mx-auto",
     "p-6 box-border",
+    "text-[#FFFFFF]",
     "animate-fade-in motion-reduce:animate-none"
 );
 
@@ -250,13 +258,15 @@ const FadeIn = clsx(
 
 const CenterNote = clsx(
     "flex items-center justify-center",
-    "h-full"
+    "h-full bg-[#20232C]",
+    "text-[#FFFFFF]"
 );
 
 const BackButton = clsx(
     "self-start",
-    "text-[13px] text-[#6b6375]",
-    "hover:underline"
+    "text-[13px] text-[#909090]",
+    "hover:text-[#FFFFFF]",
+    "select-none cursor-pointer"
 );
 
 const Header = clsx(
@@ -268,32 +278,34 @@ const TitleGroup = clsx(
 );
 
 const Title = clsx(
-    "text-[24px] font-bold"
+    "text-[24px] text-[#FFFFFF] font-medium"
 );
 
 const Muted = clsx(
-    "text-[12px] text-[#6b6375]"
+    "text-[12px] text-[#909090]"
 );
 
+// 카드 안 버튼과 같은 모양 (대안 카드 · 추천 카드의 ActionButton)
 const ActionButton = clsx(
     "shrink-0",
-    "border border-[#b1bdc8] rounded-[8px]",
+    "border border-[#63717A] rounded-[8px]",
     "px-3 py-1.5",
-    "text-[12px]",
-    "hover:bg-[#f4f3ec]"
+    "text-[12px] text-[#FFFFFF] font-normal",
+    "hover:bg-[#1A1C22] hover:border-[#FFFFFF]"
 );
 
+// 대화 카드와 같은 톤의 어두운 카드
 const Section = clsx(
-    "flex flex-col gap-2",
-    "border border-[#e5e4e7] rounded-[12px]",
-    "bg-white",
-    "p-4 box-border",
-    "text-[13px]",
+    "flex flex-col gap-3",
+    "rounded-[12px]",
+    "bg-[#333743]",
+    "p-[22px_32px] box-border",
+    "text-[14px] font-normal",
     "animate-fade-in motion-reduce:animate-none"
 );
 
 const SectionTitle = clsx(
-    "text-[15px] font-bold"
+    "text-[20px] text-[#FFFFFF] font-medium"
 );
 
 const OverviewGroup = clsx(
@@ -301,58 +313,60 @@ const OverviewGroup = clsx(
 );
 
 const OverviewBody = clsx(
-    "text-[14px] leading-relaxed",
+    "text-[14px] text-[#D8D8D8] leading-relaxed",
     "whitespace-pre-line"
 );
 
 const TextToggle = clsx(
     "self-start",
-    "text-[12px] text-[#6b6375] underline underline-offset-2"
+    "text-[12px] text-[#909090] underline underline-offset-2",
+    "hover:text-[#FFFFFF]",
+    "select-none cursor-pointer"
 );
 
 const ContactRow = clsx(
-    "flex gap-2"
+    "flex gap-2",
+    "text-[#D8D8D8]"
 );
 
 const InfoList = clsx(
-    "flex flex-col",
-    "border-t border-[#e1e0d9]"
+    "flex flex-col"
 );
 
 const InfoRow = clsx(
     "flex gap-3",
-    "border-b border-[#e1e0d9] last:border-b-0",
-    "py-2"
+    "border-b border-[#63717A] last:border-b-0",
+    "py-2.5"
 );
 
 const InfoName = clsx(
     "w-24 shrink-0",
-    "text-[#6b6375]"
+    "text-[#909090]"
 );
 
 const InfoValue = clsx(
     "m-0 min-w-0",
+    "text-[#D8D8D8]",
     "whitespace-pre-line"
 );
 
 const SimilarList = clsx(
-    "flex flex-col",
-    "border-t border-[#e1e0d9]"
+    "flex flex-col"
 );
 
 const SimilarRow = clsx(
     "flex items-center justify-between gap-3",
-    "border-b border-[#e1e0d9] last:border-b-0",
-    "py-2"
+    "border-b border-[#63717A] last:border-b-0",
+    "py-2.5"
 );
 
 const SimilarLink = clsx(
     "truncate",
-    "text-[14px]",
+    "text-[14px] text-[#FFFFFF] font-semibold",
     "hover:underline"
 );
 
 const Attribution = clsx(
     "pb-4",
-    "text-[12px] text-[#6b6375]"
+    "text-[12px] text-[#909090]"
 );
