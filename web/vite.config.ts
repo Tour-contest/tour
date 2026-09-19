@@ -9,6 +9,19 @@ export default defineConfig(({ mode }) => {
   // 세 번째 인자 '' : VITE_ 접두사 없는 변수(DEV_SERVER_URL)도 로드 — 이 파일은 Node 에서만 실행되므로 번들에는 노출되지 않음
   const env = loadEnv(mode, process.cwd(), '')
 
+  // 빠진 값은 실행 중에야 드러난다 (카카오 로그인 주소가 "undefined" 로 나가는 식). 빌드 단계에서 바로 멈춘다
+  if (!env.VITE_KAKAO_REDIRECT_URI) {
+    throw new Error(`[env] VITE_KAKAO_REDIRECT_URI 가 없습니다. .env.${mode} 에 카카오 콘솔에 등록한 Redirect URI 를 적어 주세요 (.env.example 참고)`)
+  }
+  if (!env.DEV_SERVER_URL) {
+    throw new Error(`[env] DEV_SERVER_URL 이 없습니다. dev · preview 가 /api 를 넘길 서버 주소를 .env.${mode} 에 적어 주세요`)
+  }
+
+  // dev · preview 가 같은 규칙으로 /api 를 실제 서버에 넘긴다 (서버가 CORS 를 열지 않아 같은 origin 이어야 한다)
+  const apiProxy = {
+    '/api': { target: env.DEV_SERVER_URL, changeOrigin: true },
+  }
+
   return {
     plugins: [
       react(),
@@ -65,9 +78,15 @@ export default defineConfig(({ mode }) => {
     server: {
       host: true,
       port: 3000,
-      proxy: {
-        '/api': { target: env.DEV_SERVER_URL, changeOrigin: true },
-      },
+      proxy: apiProxy,
+    },
+    // 프로덕션 빌드를 그대로 시연: pnpm build && pnpm preview.
+    // 개발 서버와 같은 3000 포트를 써서 카카오 콘솔에 등록한 Redirect URI(…:3000/oauth/kakao/callback)를 그대로 쓴다
+    preview: {
+      host: true,
+      port: 3000,
+      strictPort: true,
+      proxy: apiProxy,
     },
   }
 })

@@ -15,6 +15,8 @@ dist-ssr
 # Env
 .env
 .env.*
+# 견본은 값이 없으므로 올린다
+!.env.example
 
 # Docs (requirements/decision records — not shipped with source)
 docs/
