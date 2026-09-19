@@ -130,7 +130,11 @@ def mid_tmfc(now: datetime) -> tuple[date, str]:
 
 
 def mid_issues(now: datetime) -> list[tuple[date, str]]:
-    """최신 회차와 그 직전 회차. 발표 직후엔 최신 회차가 아직 비어 있을 수 있어 하나 더 본다."""
+    """최신 회차와 그 직전 회차.
+
+    06시 발표분은 4~10일 뒤를, 18시 발표분은 5~10일 뒤만 준다. 그래서 저녁에 4일 뒤를 물으면
+    직전 회차(06시)를 봐야 한다. 발표 직후 최신 회차가 아직 비어 있을 때도 직전 회차로 넘어간다.
+    """
     latest = mid_tmfc(now)
     return [latest, mid_tmfc(now - timedelta(hours=12))]
 
@@ -318,8 +322,9 @@ async def forecast(
             fetch_mid(MID_LAND, land_reg, tmfc, session_id),
             fetch_mid(MID_TA, ta_region(lat, lon), tmfc, session_id),
         )
-        if land:
-            hit = mid_days(land, ta, issued).get(day)
+        # 18시 발표분은 5일 뒤부터만 준다. 그 날짜가 없으면 4일 뒤까지 주는 06시 발표분을 본다.
+        hit = mid_days(land, ta, issued).get(day) if land else None
+        if hit:
             break
     if not hit:
         return {**out, "status": "no_data", "kind": "mid",
