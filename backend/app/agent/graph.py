@@ -85,7 +85,16 @@ def remember(resolved: dict, name: str, result: dict) -> None:
         resolved["last_content_id"] = top.get("content_id")
         resolved["last_content_name"] = top.get("title")
     elif name == "recommend_alternatives" and result.get("items"):
-        resolved["last_alternatives"] = [i["name"] for i in result["items"][:3]]
+        resolved["last_alternatives"] = [i["name"] for i in result["items"][:5]]
+        resolved["last_shown"] = "alternatives"
+    elif name in LIST_TOOLS and result.get("items"):
+        resolved["last_shown"] = "list"
+        # "이 중에 한적한 곳" 같은 후속 질문에서 같은 목록을 다시 부를 수 있게 남긴다.
+        resolved["last_list"] = {
+            "tool": name,
+            "signgu_cd": result.get("signgu_cd"),
+            "category": result.get("category"),
+        }
 
 
 def limit_event(e: llm.RateLimited) -> dict:
@@ -98,6 +107,68 @@ def limit_event(e: llm.RateLimited) -> dict:
     }
 
 
+LIST_TOOLS = ("list_places", "find_pet_friendly", "list_festivals")
+
+# 도구 결과에 새로 붙인 값은 모델이 문장을 쓰는 데만 쓴다. 카드로 내려가는 응답은 예전 모양 그대로 둔다.
+_CARD_HIDDEN = ("signgu_cd", "sort", "crowd_coverage", "quiet_picks", "near")
+_ITEM_HIDDEN = ("crowd", "distance_km", "pet")
+
+_QUIET_WORDS = ("한적", "조용", "덜 붐", "안 붐", "붐비지", "한가", "사람 없", "사람 적")
+
+
+def wants_quiet(text: str) -> bool:
+    return any(w in text for w in _QUIET_WORDS)
+
+
+_REFER_WORDS = ("추천해준", "추천한", "추천해 준", "알려준", "알려 준", "방금", "그중", "그 중",
+                "이중", "이 중", "위에", "거기서")
+_PET_WORDS = ("반려", "애견", "강아지", "펫", "개 데리", "개랑")
+
+
+def followup_hint(message: str, resolved: dict) -> str:
+    """직전 결과를 가리키며 조건을 더 거는 질문이면, 어떤 도구를 어떻게 다시 불러야 하는지 알려준다.
+
+    모델에게만 맡기면 직전 결과가 아니라 지역 전체를 새로 조회해서 목록에 없던 곳을 답한다.
+    """
+    if not any(w in message for w in _REFER_WORDS):
+        return ""
+    alts = resolved.get("last_alternatives")
+    base_id = resolved.get("last_content_id")
+    asked_pet = any(w in message for w in _PET_WORDS)
+    last = resolved.get("last_list") or {}
+    if asked_pet and alts and base_id and resolved.get("last_shown") == "alternatives":
+        return (
+            f"직전에 대안으로 추천한 곳은 {', '.join(alts)} 이다. 사용자는 이 곳들의 반려동물 동반 여부를 "
+            f"묻고 있다. recommend_alternatives 를 content_id={base_id} 로 다시 불러 각 항목의 pet 값으로 "
+            "답하라. find_pet_friendly 나 기준 관광지 상세를 부르면 추천하지 않은 곳을 답하게 된다."
+        )
+    if wants_quiet(message) and last.get("tool") and resolved.get("last_shown") == "list":
+        cat = f", category={last['category']}" if last.get("category") else ""
+        return (
+            f"직전에 보여준 목록은 {last['tool']}(signgu_cd={last.get('signgu_cd')}{cat}) 결과다. "
+            "사용자는 그 안에서 한적한 곳을 묻고 있다. 같은 도구를 같은 인자에 sort=quiet 로 다시 불러라. "
+            "get_crowding 지역 현황이나 recommend_alternatives 로 대신하지 마라."
+        )
+    return ""
+
+
+def public_card(name: str, card: dict) -> dict:
+    """프론트로 내려보낼 카드. 이 브랜치에서 도구 결과에 추가한 필드를 떼어 낸다."""
+    if settings.card_extras:
+        return card
+    if name not in LIST_TOOLS and name != "recommend_alternatives":
+        return card
+    p = dict(card["payload"])
+    if name in LIST_TOOLS:
+        for k in _CARD_HIDDEN:
+            p.pop(k, None)
+        if name == "find_pet_friendly":
+            p.pop("category", None)
+    if p.get("items"):
+        p["items"] = [{k: v for k, v in i.items() if k not in _ITEM_HIDDEN} for i in p["items"]]
+    return {"type": card["type"], "payload": p}
+
+
 def has(results: list, kind: str) -> bool:
     for r in results:
         if not isinstance(r, dict):
@@ -106,6 +177,7 @@ def has(results: list, kind: str) -> bool:
             any(isinstance(i, dict) and "series" in i for i in r.get("items") or [])
             or "summary" in r
             or "samples" in r
+            or "crowd_coverage" in r
         ):
             return True
     return False
@@ -191,6 +263,48 @@ def args(raw: str) -> dict | None:
 VISITOR_LABEL = {"local": "현지인", "outsider": "외지인", "foreigner": "외국인", "other": "기타"}
 
 
+def list_items(result: dict, extra: tuple[str, ...] = ()) -> list[dict]:
+    """목록 도구 결과를 모델에 넘길 모양으로. 집중률이 붙은 항목은 수치와 등급을 같이 준다."""
+    out = []
+    for i in (result.get("items") or [])[:8]:
+        row = {"title": i["title"], "addr1": i.get("addr1", "")}
+        for k in extra:
+            row[k] = i.get(k, "")
+        c = i.get("crowd")
+        if c:
+            row["crowd_rate"], row["crowd_level"] = c["rate"], c["level"]
+        if i.get("distance_km") is not None:
+            row["distance_km"] = i["distance_km"]
+        out.append(row)
+    return out
+
+
+def list_extras(base: dict, result: dict) -> None:
+    cov = result.get("crowd_coverage")
+    if cov is None:
+        return
+    base["crowd_coverage"] = cov
+    picks = result.get("quiet_picks") or []
+    if picks:
+        base["quiet_picks"] = [
+            {"title": p["title"], "crowd_rate": p["rate"], "crowd_level": p["level"], "date": p["date"]}
+            for p in picks
+        ]
+    base["note"] = (
+        f"목록 {cov['listed']}곳 가운데 집중률이 집계되는 곳은 {cov['with_crowd']}곳이다. "
+        "수치가 붙은 곳끼리만 비교하고 나머지는 집계되지 않는다고 말한다."
+    )
+    near = result.get("near")
+    if near:
+        base["near"] = near
+        base["note"] += f" {near['title']} 에서 가까운 순이고 distance_km 는 그곳까지의 직선거리다."
+    if result.get("sort") == "quiet":
+        base["note"] += (
+            " 한적한 순은 같은 조건의 전체 목록에서 세운 것이다. 앞서 보여준 목록에 없던 곳이 "
+            "끼어 있으면 같은 조건의 다른 곳이라고 밝힌다."
+        )
+
+
 def for_model(name: str, result: dict) -> dict:
     st = result.get("status")
     base: dict = {"status": st}
@@ -262,6 +376,7 @@ def for_model(name: str, result: dict) -> dict:
                 "lower_by": (i.get("reason") or {}).get("lower_by"),
                 "distance_km": (i.get("reason") or {}).get("distance_km"),
                 "same_category": (i.get("reason") or {}).get("same_category"),
+                "pet": i.get("pet") if i.get("pet") is not None else "확인 못 함",
             }
             for i in (result.get("items") or [])[:4]
         ]
@@ -271,24 +386,21 @@ def for_model(name: str, result: dict) -> dict:
         base["category"] = result.get("category")
         if result.get("instruction"):
             base["instruction"] = result["instruction"]
-        base["items"] = [
-            {"title": i["title"], "addr1": i.get("addr1", "")}
-            for i in (result.get("items") or [])[:8]
-        ]
+        base["items"] = list_items(result)
+        list_extras(base, result)
         return base
 
     if name == "find_pet_friendly":
         base["items"] = [
-            {"title": i["title"], "pet_note": i.get("note", ""), "addr1": i.get("addr1", "")}
-            for i in (result.get("items") or [])[:8]
+            {("pet_note" if k == "note" else k): v for k, v in row.items()}
+            for row in list_items(result, ("note",))
         ]
+        list_extras(base, result)
         return base
 
     if name == "list_festivals":
-        base["items"] = [
-            {"title": i["title"], "period": i.get("period", ""), "addr1": i.get("addr1", "")}
-            for i in (result.get("items") or [])[:8]
-        ]
+        base["items"] = list_items(result, ("period",))
+        list_extras(base, result)
         return base
 
     if name == "get_interest_trend":
@@ -408,12 +520,16 @@ async def run(
         )
     if ctx:
         messages.append({"role": "system", "content": f"직전 대화:\n{ctx}"})
+    hint = followup_hint(message, resolved)
+    if hint:
+        messages.append({"role": "system", "content": hint})
     messages.append({"role": "user", "content": optimized})
 
     tool_results: list = []
     cards_out: list[dict] = []
     upstream.begin_budget()
     seen_calls: dict[str, object] = {}
+    unverified_quiet = False
     # 이번 대화에서 도구가 실제로 돌려준 지역 코드. 모델이 코드를 지어내 부르는 것을 막는다.
     known_codes: set[str] = {str(resolved["signgu_cd"])} if resolved.get("signgu_cd") else set()
     called_names: set[str] = set()
@@ -477,7 +593,10 @@ async def run(
                 todo = []
                 if needs_crowding(message) and not has(tool_results, "crowding"):
                     todo.append("get_crowding")
-                if wants_alternatives(message) and "recommend_alternatives" not in called_names:
+                # 목록을 부른 턴은 그 목록 안에서 고르는 질문이다. 대안 추천으로 밀면 목록 밖 장소가 나온다.
+                listed = any(n in called_names for n in LIST_TOOLS)
+                if (wants_alternatives(message) and not listed
+                        and "recommend_alternatives" not in called_names):
                     todo.append("recommend_alternatives")
                 if todo:
                     nudged = True
@@ -543,6 +662,9 @@ async def run(
                 params["name"] = restore_name(str(params["name"]), message)
             if name == "resolve_area" and params.get("query"):
                 params["query"] = restore_region(str(params["query"]).strip(), message)
+            if name in ("list_places", "find_pet_friendly") and wants_quiet(message):
+                # 한적한 곳을 찾는 질문이면 모델이 빠뜨려도 한적한 순으로 세운다.
+                params["sort"] = "quiet"
             code = str(params.get("signgu_cd") or "").strip()
             if code and code not in known_codes:
                 log.warning("확인되지 않은 지역 코드 사용 시도: %s %s", name, code)
@@ -587,7 +709,7 @@ async def run(
                 # 갈래 목록이 비었을 때도 마찬가지. 빈 카드가 가면 화면이 같은 버튼을 그린다.
                 empty_list = card_type == "attraction_list" and result.get("status") == "no_data"
                 if result.get("has_crowd_data") is not False and not empty_list:
-                    yield "card", card
+                    yield "card", public_card(name, card)
 
             messages.append(
                 {
@@ -596,6 +718,18 @@ async def run(
                     "name": name,
                     "content": json.dumps(for_model(name, result), ensure_ascii=False)[:2500],
                 }
+            )
+            cov = result.get("crowd_coverage") if name in LIST_TOOLS else None
+            if cov and not cov.get("with_crowd") and wants_quiet(message):
+                unverified_quiet = True
+
+        if unverified_quiet:
+            # 도구 응답들 뒤에 붙인다. 사이에 끼우면 tool 메시지 순서가 깨진다.
+            unverified_quiet = False
+            messages.append(
+                {"role": "system", "content": "방금 받은 목록에는 혼잡도가 집계된 곳이 없다. 이 목록을 "
+                 "'한적한 곳'이라고 소개하지 마라. 목록은 주되, 혼잡도가 집계되지 않아 한적한지는 "
+                 "확인할 수 없다고 한 문장으로 밝혀라."}
             )
     else:
         msg = "이제 도구를 더 부르지 말고 지금까지 받은 결과로 답하라."

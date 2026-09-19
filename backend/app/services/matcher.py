@@ -150,6 +150,43 @@ def delisted(mapping: dict[str, dict], name: str) -> bool:
     return m is not None and not m.get("content_id")
 
 
+FUZZY_MIN = 0.7
+FUZZY_GAP = 0.1
+
+
+def bigrams(text: str, signgu_nm: str = "") -> set[str]:
+    """이름을 두 글자 조각으로. 괄호 설명과 지역명은 빼고 본다."""
+    s = _PAREN.sub("", _BRACKET.sub("", text or ""))
+    bare = re.sub(r"[시군구]$", "", signgu_nm or "")
+    if len(bare) >= 2:
+        s = s.replace(bare, "")
+    s = re.sub(r"[^0-9A-Za-z가-힣]", "", s)
+    return {s[i:i + 2] for i in range(len(s) - 1)}
+
+
+def fuzzy_match(title: str, names: list[str], signgu_nm: str = "") -> tuple[str, float] | None:
+    """두 API 의 이름이 어순만 다른 경우를 잡는다. "유곡리평화마을캠핑장" 과 "철원평화마을 유곡리캠핑장".
+
+    겹치는 두 글자 조각을 짧은 쪽 기준 비율로 보고, 1등이 기준을 넘고 2등과 차이가 날 때만 짝으로 본다.
+    "캠핑장", "해수욕장" 같은 흔한 꼬리말만 겹치는 경우는 기준에 못 미친다.
+    """
+    t = bigrams(title, signgu_nm)
+    if len(t) < 3:
+        return None
+    scored = []
+    for n in names:
+        b = bigrams(n, signgu_nm)
+        if len(b) < 3:
+            continue
+        scored.append((len(t & b) / min(len(t), len(b)), n))
+    scored.sort(reverse=True)
+    if not scored or scored[0][0] < FUZZY_MIN:
+        return None
+    if len(scored) > 1 and scored[0][0] - scored[1][0] < FUZZY_GAP:
+        return None
+    return scored[0][1], round(scored[0][0], 2)
+
+
 def reverse_match(title: str, names: list[str]) -> str | None:
     t = re.sub(r"\s", "", title or "")
     if not t:
