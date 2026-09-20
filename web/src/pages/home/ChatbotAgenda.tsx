@@ -1,7 +1,5 @@
-//react
-import { useEffect } from "react";
 //hooks
-import { useUser } from "@/hooks/api";
+import useCurrentUser from "@/hooks/useCurrentUser";
 //components
 import { AnimatedLogo } from "@/components/common";
 //style
@@ -24,18 +22,15 @@ type ChatbotAgendaNeedProps = {
 
 // 새 채팅(빈 대화) 화면: 로고 → 인사말 → 입력창 → Quick Start 2×2
 const ChatbotAgenda = ({ onQuickStart, input } : ChatbotAgendaNeedProps) => {
-    const { fetchMyInfo, myInfo } = useUser();
-
-    useEffect(() => {
-        fetchMyInfo();
-    }, []);
+    // 사이드바와 같은 유저 정보를 쓴다 — 내 정보 API 를 따로 또 부르지 않는다
+    const user = useCurrentUser();
 
     return <div className={AgendaLayout}>
         <div className={HeroGroup}>
             {/* 살아 있는 로고 (답변 생성 중 · 페이지 로딩과 같은 컴포넌트) */}
             <AnimatedLogo size={88} />
             <h2 className={Greeting}>
-                안녕하세요, {myInfo?.nickname ?? "여행자"}님 오늘은 어떤 여행지를 찾으시나요?
+                안녕하세요, {user?.nickname ?? "여행자"}님 오늘은 어떤 여행지를 찾으시나요?
             </h2>
             <div className={InputSlot}>{input}</div>
         </div>
