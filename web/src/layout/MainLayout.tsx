@@ -26,6 +26,7 @@ const SkipLink = clsx(
 );
 
 const MainLayoutContainer = clsx(
-    "h-screen bg-[#20232C]",
+    // 최소 1280×720 — 창이 더 작으면 브라우저 스크롤 (index.css 의 h-app · #root min-width)
+    "h-app bg-[#20232C]",
     "flex"
 );

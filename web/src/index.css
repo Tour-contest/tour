@@ -76,6 +76,32 @@
     }
 }
 
+/* 앱이 보장하는 최소 화면은 1280×720. 창이 그보다 작아지면 레이아웃을 찌그러뜨리지 않고 브라우저 스크롤이 생긴다.
+   - 가로: #root 의 최소 폭 1280px
+   - 세로: 화면을 꽉 채우는 최상위 컨테이너(레이아웃 · 404 · 소셜 콜백)는 h-screen 대신 h-app 을 쓴다.
+     min-height 만 주면 자식의 h-full 이 그 값을 따라오지 않아, 높이 자체를 max() 로 잡는다.
+     내용이 720px 보다 클 수 있는 로그인은 min-h-app (내용만큼 늘어남) 을 쓴다
+   스크롤되어 드러나는 바깥 영역과 브라우저 스크롤바도 어두운 톤에 맞춘다 */
+@layer base {
+    html {
+        background-color: #20232C;
+        scrollbar-color: #3A3D47 #20232C;
+    }
+
+    #root {
+        min-width: 1280px;
+    }
+}
+
+@utility h-app {
+    height: max(100vh, 720px);
+}
+
+/* 고정 높이에 가운데 정렬이면 넘친 윗부분이 스크롤로도 닿지 않게 잘린다 — 내용이 큰 화면은 최소 높이만 */
+@utility min-h-app {
+    min-height: max(100vh, 720px);
+}
+
 /* 얇은 스크롤바: 평소엔 투명, 스크롤 영역에 마우스를 올리면 배경에 맞춘 회색.
    표준 속성(Chrome 121+ · Edge · Firefox)과 Safari 용 WebKit 규칙을 같이 둔다 (Chrome 은 표준이 있으면 WebKit 쪽을 무시).
    width/height 를 같이 두어 세로·가로 스크롤 모두 6px. 챗봇 · 상세 · 관리자 · 사이드바 목록이 같이 쓴다 */
