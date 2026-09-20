@@ -33,8 +33,18 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   /// 않으면 `colors.paper`를 쓴다.
   final Color? backgroundColor;
 
+  /// 헤더 자체의 높이(위 `_contentHeight` + 아래 여백 [_bottomPadding]).
   @override
-  Size get preferredSize => const Size.fromHeight(52);
+  Size get preferredSize => Size.fromHeight(_contentHeight + _bottomPadding);
+
+  static const double _contentHeight = 52;
+
+  /// 이 헤더는 `chat_screen.dart`에서 스크롤되는 메시지 목록(`Expanded`)
+  /// 바로 위에 형제로 놓이는데, 배경색이 같아 경계가 없다 보니 스크롤로 내용이
+  /// 올라오면 헤더 아이콘 바로 아래까지 바짝 붙어 보였다 — 헤더 아래에
+  /// 고정 여백을 둬서 스크롤 중에도 항상 숨 쉴 공간이 남도록 한다(사용자
+  /// 요청).
+  static const double _bottomPadding = 12;
 
   @override
   Widget build(BuildContext context) {
@@ -42,10 +52,9 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
     return Container(
       height: preferredSize.height,
       // 사용자 요청 — 시스템 상태 바(위 `SafeArea`가 만드는 상단 인셋)와 이
-      // 헤더 내용이 너무 붙어 보여, 위쪽에만 8px 여백을 줘서 `_HeaderSlot`의
-      // 탭 영역(44)과 정확히 맞아떨어지게 함(52 - 8 = 44, 기존엔 Row의
-      // 기본 세로 중앙 정렬로 위/아래 각각 ~4px씩만 생겼었음).
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      // 헤더 내용이 너무 붙어 보여, 위쪽에 12px 여백을 준다. 아래쪽은
+      // [_bottomPadding] 문서 참고.
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, _bottomPadding),
       decoration: BoxDecoration(
         color: backgroundColor ?? colors.paper,
       ),

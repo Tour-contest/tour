@@ -72,9 +72,9 @@ class MapAppSheet extends StatelessWidget {
           colors: [colors.graphite, colors.mapSheetGradientEnd],
         ),
         border: Border(
-          top: BorderSide(color: colors.inputBarBorder, width: 4),
-          left: BorderSide(color: colors.inputBarBorder, width: 4),
-          right: BorderSide(color: colors.inputBarBorder, width: 4),
+          top: BorderSide(color: colors.inputBarBorder, width: 1.5),
+          left: BorderSide(color: colors.inputBarBorder, width: 1.5),
+          right: BorderSide(color: colors.inputBarBorder, width: 1.5),
         ),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(30),
@@ -87,7 +87,7 @@ class MapAppSheet extends StatelessWidget {
           Text(
             l10n.mapAppSheetTitle(placeName),
             textAlign: TextAlign.center,
-            style: AppTextStyles.heading(fontSize: 18, color: colors.ink)
+            style: AppTextStyles.heading(color: colors.ink)
                 .copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 20),
@@ -112,7 +112,7 @@ class MapAppSheet extends StatelessWidget {
             child: Text(
               l10n.mapAppSheetCancel,
               style: AppTextStyles.body(
-                      fontSize: 13, color: colors.ink600, height: 1.5)
+                      fontSize: 14, color: colors.ink600, height: 1.5)
                   .copyWith(fontWeight: FontWeight.w500),
             ),
           ),
@@ -138,15 +138,15 @@ class _SheetButton extends StatelessWidget {
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
           backgroundColor: colors.graphite,
-          side: BorderSide(color: colors.inputBarBorder, width: 3),
+          side: BorderSide(color: colors.inputBarBorder, width: 1.5),
           padding: const EdgeInsets.symmetric(vertical: 12),
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(9.5)),
         ),
         child: Text(
           label,
           style: AppTextStyles.heading(
-                  fontSize: 14, height: 1.5, color: colors.ink)
+                  fontSize: 15, height: 1.5, color: colors.ink)
               .copyWith(fontWeight: FontWeight.w500),
         ),
       ),

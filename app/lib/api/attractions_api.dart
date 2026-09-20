@@ -853,6 +853,8 @@ class DioAttractionsApi implements AttractionsApi {
       AppConfig.attractionInterestEndpoint(contentId),
       queryParameters: weeks == null ? null : {'weeks': weeks},
     );
+    AppLog.logger
+        .d('[AttractionsApi] fetchInterest raw response: ${response.data}');
     final data = _unwrap(response, errorMessage: '검색 관심도를 불러오지 못했어요.');
     return AttractionInterestTrend.fromJson(data);
   }

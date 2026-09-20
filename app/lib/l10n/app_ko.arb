@@ -339,6 +339,10 @@
   "@historySearchFieldLabel": {
     "description": "지난 대화 화면 하단 검색창의 VoiceOver 라벨 — 플레이스홀더 텍스트 대신 아이콘만 보여주는 디자인이라 시각적 힌트가 없어 시맨틱스로만 목적을 알림"
   },
+  "historySearchHint": "제목을 입력해주세요.",
+  "@historySearchHint": {
+    "description": "지난 대화 검색창의 플레이스홀더 텍스트(사용자 요청으로 재추가 — 아이콘만으로 검색창임을 표시하던 것에 더해 실제 힌트 문구도 함께 보여줌)"
+  },
   "historySearchClearTooltip": "검색어 지우기",
   "@historySearchClearTooltip": {
     "description": "지난 대화 검색창의 지우기(X) 버튼 VoiceOver 라벨"
@@ -711,6 +715,10 @@
   "@attractionDetailIntroSection": {
     "description": "관광지 상세 화면 소개문 섹션 라벨"
   },
+  "attractionDetailOverviewShowMore": "더보기",
+  "@attractionDetailOverviewShowMore": {
+    "description": "상세 소개 문단이 접혀 있을 때(일부 줄만 표시) 펼치는 버튼. 접을 때는 chatCardShowLess('접기')를 재사용함"
+  },
   "attractionDetailAlternativesSection": "함께 찾는 곳",
   "@attractionDetailAlternativesSection": {
     "description": "관광지 상세 화면 대안 여행지 섹션 라벨"
@@ -774,6 +782,10 @@
   "@attractionDetailInterestSection": {
     "description": "관광지 상세 화면 검색 관심도 섹션 라벨"
   },
+  "attractionDetailInterestSource": "출처: 네이버",
+  "@attractionDetailInterestSource": {
+    "description": "검색 관심도 섹션 하단 출처 표기 — 서버 응답에 이 섹션 전용 출처 필드가 없어(전체 관광지 출처인 detail.source와 별개) 데이터 출처(네이버 트렌드)가 고정이라는 사실에 근거해 항상 고정 문구로 보여준다(사용자 요청)"
+  },
   "attractionDetailInterestTrendUp": "상승",
   "@attractionDetailInterestTrendUp": {
     "description": "검색 관심도 trend가 up일 때 라벨"
@@ -784,13 +796,40 @@
   },
   "attractionDetailInterestTrendFlat": "보합",
   "@attractionDetailInterestTrendFlat": {
-    "description": "검색 관심도 trend가 flat이거나 알 수 없는 값일 때 기본 라벨"
+    "description": "검색 관심도 trend가 flat이거나 알 수 없는 값일 때 기본 라벨 — chat_card_view.dart의 _InterestCard가 여전히 사용(attraction_detail_screen.dart는 아래 Summary 문장으로 대체됨)"
   },
-  "attractionDetailInterestWeeksLabel": "최근 {weeks}주 기준",
-  "@attractionDetailInterestWeeksLabel": {
-    "description": "검색 관심도 요약이 집계된 기간",
+  "attractionDetailInterestTrendUpSummary": "최근 {weeks}주 네이버 트렌드 기준 검색이 늘고 있어요 {pct}%",
+  "@attractionDetailInterestTrendUpSummary": {
+    "description": "관광지 상세 화면 검색 관심도 trend가 up일 때 보여주는 안내 문장(사용자 요청 — 기존 '상승 n%' + '최근 N주 기준' 두 줄을 문장 하나로 합침)",
     "placeholders": {
       "weeks": {
+        "type": "int"
+      },
+      "pct": {
+        "type": "int"
+      }
+    }
+  },
+  "attractionDetailInterestTrendDownSummary": "최근 {weeks}주 네이버 트렌드 기준 검색이 줄고 있어요 ({pct}%)",
+  "@attractionDetailInterestTrendDownSummary": {
+    "description": "관광지 상세 화면 검색 관심도 trend가 down일 때 보여주는 안내 문장",
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      },
+      "pct": {
+        "type": "int"
+      }
+    }
+  },
+  "attractionDetailInterestTrendFlatSummary": "최근 {weeks}주 네이버 트렌드 기준 검색에 큰 변화가 없어요 {pct}%",
+  "@attractionDetailInterestTrendFlatSummary": {
+    "description": "관광지 상세 화면 검색 관심도 trend가 flat이거나 알 수 없는 값일 때 보여주는 안내 문장 — 처음엔 방향이 없어 증감률을 생략했으나, 사용자 요청으로 up/down과 동일하게 증감률(절댓값)을 함께 보여줌",
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      },
+      "pct": {
         "type": "int"
       }
     }

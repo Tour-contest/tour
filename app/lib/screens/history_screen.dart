@@ -640,26 +640,54 @@ class _DateFilterMenuItem extends StatelessWidget {
   }
 }
 
-/// 지난 대화 타이틀 검색창. `chat_input_bar.dart`의 알약형 입력창과 같은
-/// 테두리(`colors.inputBarBorder`) 스타일을 따르되, 배경은 사용자 지정대로
-/// `colors.inputBar`를 20%(0x33/0xFF) 알파로 낮춘 반투명(#252A3133)을 쓴다.
-/// 플레이스홀더 문구 대신 왼쪽에 `search.svg` 아이콘으로 검색창임을 표시한다
-/// (사용자 요청). 입력값이 있으면 지우기(X) 버튼을 보여준다.
-class _SearchField extends StatelessWidget {
+/// 지난 대화 타이틀 검색창. `chat_input_bar.dart`의 알약형 입력창과 완전히
+/// 같은 톤으로 맞춘다(사용자 요청 — 둘 다 각 화면 하단에 고정된 입력창이라는
+/// 같은 역할이라 스타일도 통일) — 배경을 반투명(#252A3133, 기존 사용자
+/// 지정 시안)에서 `chat_input_bar.dart`와 동일한 불투명 `colors.inputBar`로,
+/// 테두리도 `chat_input_bar.dart`처럼 포커스 여부에 따라
+/// `colors.accent`/`colors.inputBarBorder`로 바뀌는 1.5px 테두리로 바꿨다
+/// (기존엔 포커스 상태 표시가 아예 없었음, `FocusNode`를 새로 들고 있어야
+/// 해서 `StatelessWidget`에서 `StatefulWidget`으로 전환함). 플레이스홀더
+/// 문구 대신 왼쪽에 `search.svg` 아이콘으로 검색창임을 표시하는 디자인은
+/// 그대로 유지(사용자 요청). 입력값이 있으면 지우기(X) 버튼을 보여준다.
+class _SearchField extends StatefulWidget {
   const _SearchField({required this.controller});
 
   final TextEditingController controller;
+
+  @override
+  State<_SearchField> createState() => _SearchFieldState();
+}
+
+class _SearchFieldState extends State<_SearchField> {
+  final _focusNode = FocusNode();
+  bool _focused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode
+        .addListener(() => setState(() => _focused = _focusNode.hasFocus));
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final l10n = AppLocalizations.of(context)!;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
       decoration: BoxDecoration(
-        color: colors.inputBar.withAlpha(0x33),
+        color: colors.inputBar,
         borderRadius: BorderRadius.circular(99),
-        border: Border.all(color: colors.inputBarBorder),
+        border: Border.all(
+            color: _focused ? colors.accent : colors.inputBarBorder,
+            width: 1.5),
       ),
       child: Row(
         children: [
@@ -680,17 +708,21 @@ class _SearchField extends StatelessWidget {
             child: Semantics(
               label: l10n.historySearchFieldLabel,
               child: TextField(
-                controller: controller,
+                controller: widget.controller,
+                focusNode: _focusNode,
                 style: AppTextStyles.body(fontSize: 15, color: colors.ink),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   isDense: true,
                   border: InputBorder.none,
+                  hintText: l10n.historySearchHint,
+                  hintStyle:
+                      AppTextStyles.body(fontSize: 15, color: colors.ink600),
                 ),
               ),
             ),
           ),
           ValueListenableBuilder<TextEditingValue>(
-            valueListenable: controller,
+            valueListenable: widget.controller,
             builder: (context, value, _) {
               if (value.text.isEmpty) return const SizedBox.shrink();
               // `GestureDetector`만으로는 버튼 role이 없어 VoiceOver가 이
@@ -699,14 +731,13 @@ class _SearchField extends StatelessWidget {
               return Semantics(
                 button: true,
                 label: l10n.historySearchClearTooltip,
-                onTap: controller.clear,
+                onTap: widget.controller.clear,
                 child: ExcludeSemantics(
                   child: GestureDetector(
-                    onTap: controller.clear,
+                    onTap: widget.controller.clear,
                     behavior: HitTestBehavior.opaque,
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 10, horizontal: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
                       child: AppIcon(AppIconShape.close,
                           size: 14, color: colors.ink600),
                     ),

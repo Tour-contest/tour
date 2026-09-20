@@ -195,7 +195,8 @@ class _AttractionDetailScreenState extends State<AttractionDetailScreen> {
 
   Future<void> _loadInterest() async {
     try {
-      final trend = await _api.fetchInterest(contentId: widget.contentId);
+      final trend =
+          await _api.fetchInterest(contentId: widget.contentId, weeks: 4);
       if (!mounted) return;
       setState(() => _interest = trend);
     } catch (e, stackTrace) {
@@ -332,10 +333,7 @@ class _AttractionDetailScreenState extends State<AttractionDetailScreen> {
               _Divider(colors: colors),
               const SizedBox(height: 20),
               _SectionLabel(l10n.attractionDetailIntroSection),
-              Text(
-                detail.overview!,
-                style: AppTextStyles.body(color: colors.ink, height: 1.8),
-              ),
+              _OverviewText(text: detail.overview!),
             ],
             // 7. 함께 찾는 곳
             if (_alternatives != null && _alternatives!.items.isNotEmpty) ...[
@@ -378,6 +376,13 @@ class _AttractionDetailScreenState extends State<AttractionDetailScreen> {
               const SizedBox(height: 20),
               _SectionLabel(l10n.attractionDetailInterestSection),
               _InterestSummary(items: _interest!.items),
+              const SizedBox(height: 8),
+              Text(
+                l10n.attractionDetailInterestSource,
+                style: AppTextStyles.body(fontSize: 11, color: colors.ink600),
+              ),
+              const SizedBox(height: 24),
+              _Divider(colors: colors),
             ],
             if (detail.source != null && detail.source!.isNotEmpty) ...[
               const SizedBox(height: 24),
@@ -807,6 +812,77 @@ class _MapButton extends StatelessWidget {
   }
 }
 
+/// 6. 상세 소개. 문단이 길면 [_collapsedMaxLines]줄까지만 보여주고 "더보기"
+/// 버튼으로 펼칠 수 있다(사용자 요청) — `LayoutBuilder`+`TextPainter`로 실제
+/// 그 줄 수를 넘기는 경우에만 버튼을 그려, 짧은 소개문에는 버튼이 뜨지 않는다.
+class _OverviewText extends StatefulWidget {
+  const _OverviewText({required this.text});
+
+  final String text;
+
+  @override
+  State<_OverviewText> createState() => _OverviewTextState();
+}
+
+class _OverviewTextState extends State<_OverviewText> {
+  static const _collapsedMaxLines = 6;
+
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final style = AppTextStyles.body(color: colors.ink, height: 1.8);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final painter = TextPainter(
+          text: TextSpan(text: widget.text, style: style),
+          maxLines: _collapsedMaxLines,
+          textDirection: Directionality.of(context),
+          textScaler: MediaQuery.textScalerOf(context),
+        )..layout(maxWidth: constraints.maxWidth);
+        final overflows = painter.didExceedMaxLines;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.text,
+              style: style,
+              maxLines: overflows && !_expanded ? _collapsedMaxLines : null,
+              overflow: overflows && !_expanded
+                  ? TextOverflow.ellipsis
+                  : TextOverflow.visible,
+            ),
+            if (overflows) ...[
+              const SizedBox(height: 8),
+              Semantics(
+                button: true,
+                label: _expanded
+                    ? l10n.chatCardShowLess
+                    : l10n.attractionDetailOverviewShowMore,
+                onTap: () => setState(() => _expanded = !_expanded),
+                child: ExcludeSemantics(
+                  child: InkWell(
+                    onTap: () => setState(() => _expanded = !_expanded),
+                    child: Text(
+                      _expanded
+                          ? l10n.chatCardShowLess
+                          : l10n.attractionDetailOverviewShowMore,
+                      style: AppTextStyles.heading(
+                          fontSize: 13, color: colors.chatCardAccent),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
 /// 7. 함께 찾는 곳 — 가로 스크롤 카드형 목록. [items] 순서는 서버가 이미
 /// 혼잡도 우선으로 정렬해 보낸 것이라 **재정렬하지 않고 그대로** 그린다
 /// (`docs/API_SPEC.md`의 "구현 주의").
@@ -924,12 +1000,22 @@ class _InterestSummary extends StatelessWidget {
 
   final List<AttractionInterestItem> items;
 
-  (String, Color) _trendLabelAndColor(
-      AppLocalizations l10n, AppColors colors, String trend) {
-    return switch (trend) {
-      'up' => (l10n.attractionDetailInterestTrendUp, colors.busyText),
-      'down' => (l10n.attractionDetailInterestTrendDown, colors.quietText),
-      _ => (l10n.attractionDetailInterestTrendFlat, colors.ink600),
+  (String, Color) _trendSummary(
+      AppLocalizations l10n, AppColors colors, AttractionInterestItem item) {
+    final pct = item.changePct.abs().round();
+    return switch (item.trend) {
+      'rising' => (
+          l10n.attractionDetailInterestTrendUpSummary(item.weeks, pct),
+          colors.ink600,
+        ),
+      'falling' => (
+          l10n.attractionDetailInterestTrendDownSummary(item.weeks, pct),
+          colors.ink600,
+        ),
+      _ => (
+          l10n.attractionDetailInterestTrendFlatSummary(item.weeks, pct),
+          colors.ink600,
+        ),
     };
   }
 
@@ -950,34 +1036,18 @@ class _InterestSummary extends StatelessWidget {
 
   Widget _buildRow(
       AppColors colors, AppLocalizations l10n, AttractionInterestItem item) {
-    final (trendLabel, trendColor) =
-        _trendLabelAndColor(l10n, colors, item.trend);
-    final sign = item.changePct > 0 ? '+' : '';
+    final (summary, trendColor) = _trendSummary(l10n, colors, item);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                item.displayName,
-                style: AppTextStyles.heading(fontSize: 14, color: colors.ink),
-              ),
-            ),
-            Text(trendLabel,
-                style: AppTextStyles.body(fontSize: 12, color: trendColor)),
-            const SizedBox(width: 6),
-            Text(
-              '$sign${item.changePct}%',
-              style: AppTextStyles.tabularNums(
-                  AppTextStyles.body(fontSize: 12, color: trendColor)),
-            ),
-          ],
+        Text(
+          item.displayName,
+          style: AppTextStyles.heading(fontSize: 14, color: colors.ink),
         ),
         const SizedBox(height: 2),
         Text(
-          l10n.attractionDetailInterestWeeksLabel(item.weeks),
-          style: AppTextStyles.body(fontSize: 12, color: colors.ink600),
+          summary,
+          style: AppTextStyles.body(fontSize: 12, color: trendColor),
         ),
       ],
     );
