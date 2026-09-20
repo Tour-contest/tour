@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { authenticate, badRequest } from './exception'
+import { authenticate, badRequest, rateLimit } from './exception'
 import attachRefreshToken from './attachRefreshToken'
 
 export const axiosInstance = axios.create({
@@ -13,6 +13,8 @@ export const axiosInstance = axios.create({
 
 // Bearer 부착 + 선제 refresh (request)
 attachRefreshToken(axiosInstance)
+// error exception 429 — 조회 요청은 Retry-After 만큼 기다렸다 다시 (호출 제한 60회/분)
+rateLimit(axiosInstance)
 // error exception 400
 badRequest(axiosInstance)
 // error exception 401

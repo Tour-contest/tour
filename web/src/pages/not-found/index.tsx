@@ -51,7 +51,7 @@ const NotFound = ({
 export default NotFound;
 //style configuration
 const Page = clsx(
-    "flex h-screen flex-col items-center justify-center gap-8.75",
+    "flex h-app flex-col items-center justify-center gap-8.75",
     "bg-[#20232C]",
     "p-6",
     "animate-fade-in motion-reduce:animate-none"

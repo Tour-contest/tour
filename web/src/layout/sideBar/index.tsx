@@ -1,15 +1,15 @@
 //react
 import { useEffect } from "react";
 //router
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 //api
 import { clearSession } from "@/api/tokenManager";
 //store
-import { useAuthenticateStore } from "@/store/authenticate";
 import { useAuthorityStore } from "@/store/authority";
 import { useChatSessionStore } from "@/store/chatSession";
 //hooks
 import { useAuth } from "@/hooks/api";
+import useCurrentUser from "@/hooks/useCurrentUser";
 import useResizableWidth from "@/hooks/useResizableWidth";
 import useConfirmAction from "@/hooks/useConfirmAction";
 //components
@@ -52,7 +52,8 @@ const Sidebar = () => {
     });
     const { width, isResizing, handleProps } = useResizableWidth({ ...SIDEBAR_WIDTH, storageKey: SIDEBAR_WIDTH_STORAGE_KEY });
 
-    const user = useAuthenticateStore((state) => state.user);
+    // 메모리의 유저 정보. 새로고침으로 비어 있으면 내 정보 API 로 한 번 채운다
+    const user = useCurrentUser();
     const role = useAuthorityStore((state) => state.role);
     const hasMoreSessions = useChatSessionStore((state) => state.hasMore);
     const isLoadingMoreSessions = useChatSessionStore((state) => state.isLoadingMore);
@@ -76,11 +77,12 @@ const Sidebar = () => {
     return (
         <aside style={{ width }} className={SideBarLayout}>
             <SidebarResizeHandle handleProps={handleProps} isResizing={isResizing} />
-            <a className={LogoLink} href="/">
+            {/* 전체 새로고침(a href) 이 아니라 SPA 이동 — 대화 목록 · 썸네일 캐시가 유지되고 같은 API 를 다시 부르지 않는다 (호출 제한 60회/분) */}
+            <Link to="/" aria-label="홈으로" className={LogoLink}>
                 <MainLogoCharacter className="w-10 h-10" />
                 {/* 관리자 화면임을 로고 옆에 작게 표시 */}
                 {isAdmin && <span className={AdminTag}>관리자</span>}
-            </a>
+            </Link>
             <Menu />
             {!isAdmin && (
                 <div className={clsx("flex", "min-h-0", "flex-1", "flex-col", "gap-[4px]", "overflow-y-auto")}>
