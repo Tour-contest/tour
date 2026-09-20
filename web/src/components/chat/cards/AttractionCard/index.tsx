@@ -6,8 +6,6 @@ import AttractionThumbnail from "./AttractionThumbnail";
 import { buildKakaoMapSearchUrl } from "../utils/crowdVisual";
 //style
 import clsx from "clsx";
-//icons
-import MapIcon from "@/assets/logo/map_icon.svg?react";
 
 type AttractionCardNeedProps = {
     contentId: string;
@@ -40,8 +38,7 @@ const AttractionCard = ({ contentId, title, image, note, region } : AttractionCa
                 aria-label={`${name} 카카오맵에서 보기 (새 창)`}
                 className={ActionLink}
             >
-                <MapIcon />
-                <p>지도 ↗</p>
+                <p>지도에서보기 ↗</p>
             </a>
         </div>
     </div>
@@ -77,8 +74,8 @@ const ActionGroup = clsx(
 const ActionLink = clsx(
     "flex items-center gap-1 shrink-0",
     "border border-[#63717A] rounded-[8px]",
-    "px-2.5 py-1",
-    "text-[14px] text-[#FFFFFF] font-normal",
+    "px-3 py-1.5 box-border",
+    "text-[12px] text-[#FFFFFF] font-normal",
     "hover:bg-[#1A1C22]",
     "hover:border-[#FFFFFF]"
 );

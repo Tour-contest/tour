@@ -115,11 +115,11 @@ export default AreaVisitorsCard;
 //style configuration
 // 다른 대화 카드와 같은 어두운 톤
 const Card = clsx(
+    "w-180 bg-[#333743]",
     "flex flex-col gap-3",
     "rounded-[12px]",
-    "bg-[#333743]",
     "p-[22px_32px] box-border",
-    "text-[13px] text-[#FFFFFF]"
+    "text-[13px] text-[#FFFFFF] font-normal"
 );
 
 const Title = clsx(

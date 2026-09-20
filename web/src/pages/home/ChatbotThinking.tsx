@@ -11,7 +11,8 @@ type ChatbotThinkingNeedProps = {
 // 답변을 만드는 동안 말풍선 자리에 보이는 "생각 중" 표시 — 살아 있는 로고 + 진행 문구
 const ChatbotThinking = ({ label } : ChatbotThinkingNeedProps) => {
     return <div role="status" className={Layout}>
-        <AnimatedLogo size={36} hasGlow={false} />
+        {/* 36px 에서는 눈·입 획이 뭉개져 보여 한 단계 키운다 */}
+        <AnimatedLogo size={56} hasGlow={false} />
         <p className={Label}>{label}…</p>
     </div>
 }

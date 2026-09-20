@@ -33,7 +33,8 @@ function Home() {
     const { scrollContainerRef, scrollAnchorRef, handleScroll, requestOlderMessages } = useChatScroll({
         conversationKey: sessionId,
         messages: conversation.messages,
-        bottomFollowKey: `${conversation.messages.at(-1)?.key}|${conversation.draft?.text ?? ""}|${conversation.draft?.cards.length ?? 0}`,
+        // 생각 중 로고는 첫 status 이벤트가 와야 그려지므로 진행 문구 · 스트리밍 여부도 기준에 넣어 그때도 맨 아래로 따라간다
+        bottomFollowKey: `${conversation.messages.at(-1)?.key}|${conversation.isStreaming}|${conversation.statusLabel ?? ""}|${conversation.draft?.text ?? ""}|${conversation.draft?.cards.length ?? 0}`,
         canLoadOlder: !!sessionId && conversation.hasMoreHistory && !conversation.isLoadingOlder,
         onLoadOlder: () => { if (sessionId) loadOlderMessages(sessionId); },
     });
@@ -72,18 +73,20 @@ function Home() {
                         input={<ChatbotInput isStreaming={conversation.isStreaming} onSubmit={handleSendMessage} />}
                     />
                 )}
-                <ChatbotMessages
-                    chatMessage={conversation.messages}
-                    onSendMessage={handleSendMessage}
-                    isSendDisabled={conversation.isStreaming}
-                />
-                {conversation.isStreaming && (
-                    <ChatbotStreaming
-                        streamingCards={conversation.draft?.cards ?? []}
-                        statusLabel={conversation.statusLabel}
-                        streamingText={conversation.draft?.text ?? ""}
+                <div className="w-full flex flex-col gap-12.5">
+                    <ChatbotMessages
+                        chatMessage={conversation.messages}
+                        onSendMessage={handleSendMessage}
+                        isSendDisabled={conversation.isStreaming}
                     />
-                )}
+                    {conversation.isStreaming && (
+                        <ChatbotStreaming
+                            streamingCards={conversation.draft?.cards ?? []}
+                            statusLabel={conversation.statusLabel}
+                            streamingText={conversation.draft?.text ?? ""}
+                        />
+                    )}
+                </div>
                 {conversation.errorMessage && (
                     <ChatbotError
                         message={conversation.errorMessage}
@@ -107,7 +110,7 @@ export default Home;
 //style configuration
 const ChatbotContainer = clsx(
     "flex flex-col items-center",
-    "h-full bg-[#20232C]"
+    "w-full h-full bg-[#20232C]"
 );
 
 // 실제 스크롤되는 요소. 본문 폭 전체를 차지해 스크롤바가 오른쪽 끝에 붙는다.
@@ -118,17 +121,18 @@ const ChatbotScroller = clsx(
     "scrollbar-thin-hover",
 );
 
-// 내용 기둥. min-h-full 이라 빈 대화의 Quick Start(flex-1) 가 세로 가운데에 온다
+// 내용 기둥. min-h-full 이라 빈 대화의 Quick Start(flex-1) 가 세로 가운데에 온다.
+// 아래 여백은 페이드 띠(30px) 보다 넉넉히 두어 마지막 요소(생각 중 로고 · 답변)가 띠에 가려지지 않는다
 const ChatbotLayout = clsx(
     "flex flex-col gap-4",
-    "min-h-full w-180 max-w-full mx-auto",
-    "p-6 box-border"
+    "min-h-full w-[80%] max-w-full mx-auto",
+    "p-6 pb-14 box-border",
 );
 
 // 대화 목록 끝에 겹쳐서 아래로 갈수록 배경색으로 녹아들고 살짝 흐려진다. 클릭·스크롤은 통과.
 // 높이(h)와 끌어올림(-mt)은 같은 값으로 유지한다
 const ChatFadeStrip = clsx(
-    "w-180 max-w-full h-7.5 shrink-0",
+    "w-full max-w-full h-7.5 shrink-0",
     "-mt-7.5 relative z-10",
     "pointer-events-none",
     "bg-[#20232C] backdrop-blur-[3px]",

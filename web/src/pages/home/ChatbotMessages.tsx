@@ -47,7 +47,7 @@ export default ChatbotMessages;
 // key 가 같은 기존 메시지는 DOM 이 유지되므로, 애니메이션은 새로 삽입된 것(이전 묶음·새 답변)에만 돈다
 const MessageNote = clsx(
     "flex flex-col gap-8",
-    "animate-fade-in motion-reduce:animate-none"
+    "animate-fade-in motion-reduce:animate-none",
 );
 
 const SourceNote = clsx(

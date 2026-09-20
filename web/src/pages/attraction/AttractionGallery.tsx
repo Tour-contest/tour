@@ -1,5 +1,7 @@
 import { useState } from "react";
 import clsx from "clsx";
+// 카드 썸네일과 같은 아이콘. 파일 고유색(#333743)을 그대로 쓴다 — 색을 주려면 text-* 와 [&_path]:fill-current 를 붙인다
+import ExcludeIcon from "@/assets/logo/exclude.svg?react";
 
 type AttractionGalleryNeedProps = {
     title: string;
@@ -12,28 +14,47 @@ type AttractionGalleryNeedProps = {
 // 목록에는 원본·썸네일·저작권이 함께 오므로 큰 화면은 url, 줄은 small 로 그리고 저작권 문구를 붙인다
 const AttractionGallery = ({ title, representativeImage, images } : AttractionGalleryNeedProps) => {
     const [selectedIndex, setSelectedIndex] = useState<number>(0);
+    // 불러오기에 실패한 주소들 (서버가 준 링크가 깨져 있을 수 있다). 같은 주소는 다시 시도하지 않는다
+    const [failedUrls, setFailedUrls] = useState<string[]>([]);
 
     const items = images?.status === "ok" ? images.items : [];
     const selected = items[selectedIndex] ?? items[0];
     const heroUrl = selected?.url || representativeImage || "";
+    const isHeroBroken = heroUrl !== "" && failedUrls.includes(heroUrl);
 
+    const markFailed = (url: string) => {
+        setFailedUrls((prev) => (prev.includes(url) ? prev : [...prev, url]));
+    };
+
+    // 주소가 아예 없으면 갤러리 없이 안내만
     if (!heroUrl) {
         return <div className={EmptyHero}>
-            <p className={Muted}>등록된 사진이 없어요</p>
+            <ExcludeIcon aria-hidden="true" className={EmptyIcon} />
+            <p className={EmptyText}>이미지가 없어요</p>
         </div>
     }
 
     return <div className={GalleryGroup}>
-        <figure className={HeroFrame}>
-            <img src={heroUrl} alt={selected?.name || title} loading="eager" className={HeroImage} />
-            {selected?.copyright && <figcaption className={Copyright}>ⓒ {selected.copyright}</figcaption>}
-        </figure>
+        {/* 큰 사진이 깨지면 같은 자리에 안내를 둔다 — 썸네일 줄은 그대로라 다른 사진을 고를 수 있다 */}
+        {isHeroBroken ? (
+            <div className={EmptyHero}>
+                <ExcludeIcon aria-hidden="true" className={EmptyIcon} />
+                <p className={EmptyText}>이미지를 불러오지 못했어요</p>
+            </div>
+        ) : (
+            <figure className={HeroFrame}>
+                <img src={heroUrl} alt={selected?.name || title} loading="eager" onError={() => markFailed(heroUrl)} className={HeroImage} />
+                {selected?.copyright && <figcaption className={Copyright}>ⓒ {selected.copyright}</figcaption>}
+            </figure>
+        )}
 
         {items.length > 1 && (
             <ul className={ThumbnailRow} aria-label={`${title} 사진 ${items.length}장`}>
                 {
                     items.map((image, index) => {
                         const isSelected = index === selectedIndex;
+                        const thumbnailUrl = image.small || image.url;
+                        const isThumbnailBroken = failedUrls.includes(thumbnailUrl);
 
                         return <li key={image.url}>
                             <button
@@ -43,7 +64,13 @@ const AttractionGallery = ({ title, representativeImage, images } : AttractionGa
                                 onClick={() => setSelectedIndex(index)}
                                 className={clsx(ThumbnailButton, isSelected && ThumbnailSelected)}
                             >
-                                <img src={image.small || image.url} alt="" loading="lazy" className={ThumbnailImage} />
+                                {isThumbnailBroken ? (
+                                    <span className={ThumbnailEmpty}>
+                                        <ExcludeIcon aria-hidden="true" className={ThumbnailEmptyIcon} />
+                                    </span>
+                                ) : (
+                                    <img src={thumbnailUrl} alt="" loading="lazy" onError={() => markFailed(thumbnailUrl)} className={ThumbnailImage} />
+                                )}
                             </button>
                         </li>
                     })
@@ -78,11 +105,22 @@ const Copyright = clsx(
     "text-[11px]"
 );
 
+// 사진이 없거나 못 불러왔을 때: 카드 썸네일과 같은 회색 구름 아이콘 + 안내 한 줄
 const EmptyHero = clsx(
-    "flex items-center justify-center",
+    "flex flex-col items-center justify-center gap-2",
     "aspect-[16/9] w-full",
     "rounded-[12px]",
-    "bg-[#333743]"
+    "border border-[#63717A]",
+    "bg-[#1A1C22]"
+);
+
+const EmptyIcon = clsx(
+    "w-10 h-10"
+);
+
+// 아이콘 아래 안내 문구 — 큰 자리라 카드 각주보다 한 단계 크게
+const EmptyText = clsx(
+    "text-[14px] text-[#909090]"
 );
 
 // 가로 썸네일 줄도 얇은 스크롤바 (세로 스크롤러와 같은 규칙)
@@ -110,6 +148,11 @@ const ThumbnailImage = clsx(
     "size-full object-cover"
 );
 
-const Muted = clsx(
-    "text-[12px] text-[#909090]"
+const ThumbnailEmpty = clsx(
+    "flex size-full items-center justify-center",
+    "bg-[#20232C]"
+);
+
+const ThumbnailEmptyIcon = clsx(
+    "w-6 h-6"
 );

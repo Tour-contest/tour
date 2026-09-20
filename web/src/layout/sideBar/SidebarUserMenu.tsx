@@ -74,7 +74,7 @@ const SidebarUserMenu = ({ user, canWithdraw, onLogout, onWithdraw } : SidebarUs
                 onClick={() => setIsOpen((prev) => !prev)}
                 className={SettingsButton}
             >
-                <SystemIcon className="w-6 h-6" />
+                <SystemIcon className="w-8 h-8" />
             </button>
         </div>
     </div>
@@ -126,8 +126,7 @@ const SettingsButton = clsx(
     "rounded-[8px]",
     "text-[#909090]",
     "cursor-pointer",
-    "hover:bg-[#20232C] hover:text-[#FFFFFF]",
-    "aria-expanded:bg-[#20232C] aria-expanded:text-[#FFFFFF]"
+    // "aria-expanded:bg-[#20232C] aria-expanded:text-[#FFFFFF]"
 );
 
 // 아이콘 쪽(오른쪽)에 맞춰 행 위로 떠오른다. 레이아웃 흐름에 없어서 열려도 위 내용을 밀지 않는다

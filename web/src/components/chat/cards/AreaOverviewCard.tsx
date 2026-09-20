@@ -122,8 +122,8 @@ const AreaOverviewCard = ({ payload } : AreaOverviewCardNeedProps) => {
 export default AreaOverviewCard;
 //style configuration
 const Card = clsx(
-    "bg-[#333743]",
-    "flex flex-col gap-[30px]",
+    "w-180 bg-[#333743]",
+    "flex flex-col gap-7.5",
     "rounded-[12px]",
     "p-[22px_32px] box-border",
     "text-[14px] font-normal"
@@ -135,7 +135,7 @@ const Title = clsx(
 
 const Chart = clsx(
     "self-center",
-    "size-[160px]"
+    "size-40"
 );
 
 const ChipRow = clsx(

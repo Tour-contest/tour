@@ -158,9 +158,9 @@ export default CrowdAttractionCard;
 //style configuration
 // 다른 대화 카드(대안 · 추천 · 지역 현황)와 같은 어두운 톤
 const CardShell = clsx(
+    "w-180 bg-[#333743]",
     "flex flex-col gap-3",
     "rounded-[12px]",
-    "bg-[#333743]",
     "p-[22px_32px] box-border",
     "text-[13px] text-[#FFFFFF]"
 );
@@ -213,10 +213,10 @@ const BarTooltip = clsx(
     "pointer-events-none absolute bottom-full z-10",
     "whitespace-nowrap",
     "rounded-[6px]",
-    "bg-[#1A1C22] text-[#FFFFFF]",
+    "bg-[#1A1C22]",
     "border border-[#63717A]",
     "px-2 py-1",
-    "text-[11px]",
+    "text-[11px] text-[#FFFFFF]",
     "opacity-0",
     "group-hover:opacity-100 group-focus-visible:opacity-100"
 );

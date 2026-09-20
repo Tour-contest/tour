@@ -5,28 +5,12 @@ import LevelChip from "../LevelChip";
 //side features
 import { buildCandidateSourceText, buildReasonText } from "./alternativesText";
 import { buildKakaoMapSearchUrl } from "../utils/crowdVisual";
-import { useRepresentativeImage } from "../hooks/useRepresentativeImage";
+import AttractionThumbnail from "../AttractionCard/AttractionThumbnail";
 //style
 import clsx from "clsx";
-//icons
-import MapIcon from "@/assets/logo/map_icon.svg?react";
 
 type AlternativesCardNeedProps = {
     payload: AlternativesTouristData;
-};
-
-type AlternativeThumbnailNeedProps = {
-    contentId: string | null | undefined;
-    image: string | null | undefined;
-    name: string;
-};
-
-// 항목 썸네일. 응답 image 가 없으면 이미지 목록 API 첫 장(관광지당 1회, 캐시). 둘 다 없으면 자리만 지키는 빈 상자
-const AlternativeThumbnail = ({ contentId, image, name } : AlternativeThumbnailNeedProps) => {
-    const src = useRepresentativeImage(contentId, image);
-
-    if (!src) return <span aria-hidden="true" className={clsx(Thumbnail, ThumbnailEmpty)} />;
-    return <img src={src} alt={`${name} 대표 이미지`} loading="lazy" className={Thumbnail} />;
 };
 
 // SB-03 STEP 3 — 덜 붐비는 대안 추천
@@ -47,7 +31,7 @@ const AlternativesCard = ({ payload } : AlternativesCardNeedProps) => {
                     const mapKeyword = region ? `${region} ${item.name}` : item.name;
 
                     return <li key={item.content_id ?? item.name} className={ItemRow}>
-                        <AlternativeThumbnail contentId={item.content_id} image={item.image} name={item.name} />
+                        <AttractionThumbnail contentId={item.content_id} image={item.image} name={item.name} />
                         <div className={ItemMain}>
                             <div className={ItemTitleRow}>
                                 {/* content_id 가 없는 항목은 상세로 이어줄 수 없어 이름만 표시한다 */}
@@ -67,8 +51,7 @@ const AlternativesCard = ({ payload } : AlternativesCardNeedProps) => {
                             aria-label={`${item.name} 카카오맵에서 보기 (새 창)`}
                             className={MapLink}
                         >
-                            <MapIcon />
-                            <p>지도 ↗</p>
+                            <p>지도에서보기 ↗</p>
                         </a>
                     </li>
                 })
@@ -86,9 +69,9 @@ const AlternativesCard = ({ payload } : AlternativesCardNeedProps) => {
 export default AlternativesCard;
 //style configuration
 const CardShell = clsx(
+    "w-180 bg-[#333743]",
     "flex flex-col gap-3",
     "rounded-[12px]",
-    "bg-[#333743]",
     "p-[22px_32px] box-border",
     "text-[13px]"
 );
@@ -107,16 +90,6 @@ const ItemRow = clsx(
     "py-2.5"
 );
 
-const Thumbnail = clsx(
-    "size-14 shrink-0",
-    "rounded-[10px] object-cover",
-    "bg-[#20232C]"
-);
-
-const ThumbnailEmpty = clsx(
-    "border border-[#63717A]"
-);
-
 const ItemMain = clsx(
     "flex flex-1 flex-col gap-1 min-w-0"
 );
@@ -126,7 +99,7 @@ const ItemTitleRow = clsx(
 );
 
 const ItemName = clsx(
-    "text-[14px] text-[#FFFFFF] font-semibold"
+    "text-[17px] text-[#FFFFFF] font-semibold"
 );
 
 const ItemLink = clsx(
@@ -140,8 +113,8 @@ const Muted = clsx(
 const MapLink = clsx(
     "flex items-center gap-1 shrink-0",
     "border border-[#63717A] rounded-[8px]",
-    "px-2.5 py-1",
-    "text-[14px] text-[#FFFFFF] font-normal",
+    "px-3 py-1.5 box-border",
+    "text-[12px] text-[#FFFFFF] font-normal",
     "hover:bg-[#1A1C22]",
     "hover:border-[#FFFFFF]"
 );

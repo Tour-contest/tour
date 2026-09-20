@@ -24,9 +24,14 @@ type VisitorsBarChartNeedProps = {
 };
 
 // 글자를 실제 픽셀 크기(16px)로 두기 위해 viewBox 로 늘리지 않고, 카드 폭을 재서 그 픽셀 좌표로 그린다
-const CHART_HEIGHT = 240;
 const FALLBACK_WIDTH = 640;
-const MARGIN = { top: 48, right: 8, bottom: 30, left: 52 };
+const AXIS_FONT_SIZE = 16;
+// x 축 라벨은 막대 밑선에서 이만큼 아래에 놓는다 (글자 기준선까지).
+// 아래 여백과 전체 높이를 여기서 계산하므로 이 값만 바꾸면 라벨이 잘리지 않고 막대 높이도 그대로다
+const AXIS_LABEL_OFFSET = 30;
+const PLOT_HEIGHT = 162;
+const MARGIN = { top: 48, right: 8, bottom: AXIS_LABEL_OFFSET + Math.ceil(AXIS_FONT_SIZE * 0.4), left: 52 };
+const CHART_HEIGHT = MARGIN.top + PLOT_HEIGHT + MARGIN.bottom;
 const Y_TICK_COUNT = 4;
 // 나란히 선 막대의 위 모서리 반지름
 const BAR_RADIUS = 4;
@@ -37,7 +42,6 @@ const ACCENT_COLOR = "#6FC1FC";
 const GRID_COLOR = "#3A3D47";
 const AXIS_LABEL_COLOR = "#909090";
 const TOOLTIP_TEXT_COLOR = "#1A1C22";
-const AXIS_FONT_SIZE = 16;
 
 // 구분이 없을 때 쓰는 가짜 키. 합계 하나를 현지인 조각과 같은 그라데이션으로 그린다
 const TOTAL_KEY = "total";
@@ -69,7 +73,7 @@ const VisitorsBarChart = ({ title, weeks, isStacked, segments } : VisitorsBarCha
         const draw = () => {
             const width = svgElement.clientWidth || FALLBACK_WIDTH;
             const plotWidth = width - MARGIN.left - MARGIN.right;
-            const plotHeight = CHART_HEIGHT - MARGIN.top - MARGIN.bottom;
+            const plotHeight = PLOT_HEIGHT;
 
             const svg = select(svgElement).attr("width", width).attr("height", CHART_HEIGHT);
             svg.selectAll("*").remove();
@@ -142,7 +146,7 @@ const VisitorsBarChart = ({ title, weeks, isStacked, segments } : VisitorsBarCha
                 .join("text")
                 .attr("class", "axis")
                 .attr("x", (week) => (x(week.weekStart) ?? 0) + x.bandwidth() / 2)
-                .attr("y", plotHeight + 22)
+                .attr("y", plotHeight + AXIS_LABEL_OFFSET)
                 .attr("text-anchor", "middle")
                 .attr("font-size", AXIS_FONT_SIZE).attr("font-weight", 400).attr("font-family", "inherit")
                 .attr("fill", AXIS_LABEL_COLOR)

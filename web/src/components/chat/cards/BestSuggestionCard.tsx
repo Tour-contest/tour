@@ -59,8 +59,8 @@ const BestSuggestionCard = ({ payload } : BestSuggestionCardNeedProps) => {
 export default BestSuggestionCard;
 //style configuration
 const CardStyle = clsx(
-    "bg-[#333743]",
-    "flex flex-col gap-[30px]",
+    "w-180 bg-[#333743]",
+    "flex flex-col gap-7.5",
     "rounded-[12px]",
     "p-[22px_32px] box-border",
     "text-[14px] font-normal"
@@ -79,9 +79,8 @@ const Title = clsx(
 );
 
 const HeroImage = clsx(
-    "w-full h-[180px]",
+    "w-full h-45 bg-[#20232C]",
     "rounded-[12px] object-cover",
-    "bg-[#20232C]"
 );
 
 const Body = clsx(
@@ -110,7 +109,7 @@ const ActionRow = clsx(
 
 const ActionButton = clsx(
     "border border-[#63717A] rounded-[8px]",
-    "px-3 py-1.5",
+    "px-3 py-1.5 box-border",
     "text-[12px] text-[#FFFFFF] font-normal",
     "hover:bg-[#1A1C22]",
     "hover:border-[#FFFFFF]"

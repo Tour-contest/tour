@@ -192,6 +192,7 @@ function Attraction() {
 export default Attraction;
 //style configuration
 // 챗봇 홈과 같은 구조: 실제 스크롤되는 요소가 본문 전체 폭이라 스크롤바가 오른쪽 끝에 붙고, 내용만 가운데 720px 로 모은다.
+// 가로 안쪽 여백을 두지 않아 갤러리 · 안내 섹션 · 대화 카드(w-180)가 전부 같은 720px 폭이 된다
 // 스크롤바도 같은 규칙 — 얇고, 평소엔 투명, 올리면 배경에 맞춘 회색
 const PageContainer = clsx(
     "h-full w-full bg-[#20232C]",
@@ -202,7 +203,7 @@ const PageContainer = clsx(
 const PageLayout = clsx(
     "flex flex-col gap-4",
     "min-h-full w-180 max-w-full mx-auto",
-    "p-6 box-border",
+    "py-6 box-border",
     "text-[#FFFFFF]",
     "animate-fade-in motion-reduce:animate-none"
 );
