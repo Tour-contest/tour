@@ -12,6 +12,7 @@ import ChatbotMessages from "./ChatbotMessages";
 import ChatbotServiceNotice from "./ChatbotServiceNotice";
 import ChatbotStreaming from "./ChatbotStreaming";
 import ChatbotInput from "./ChatbotInput";
+import NotFound from "@/pages/not-found";
 
 // 대화 상태는 store 가 대화 id 단위로 들고 있고, 화면은 URL 의 대화 칸을 읽기만 한다.
 // 다른 대화로 이동해도 진행 중인 답변은 자기 칸에서 계속 쌓이고, 돌아오면 이어서 보인다
@@ -47,8 +48,19 @@ function Home() {
     const isOpeningConversation = !!sessionId && !conversation.isHistoryLoaded
         && conversation.messages.length === 0 && !conversation.errorMessage;
     const isEmptyChat = !isOpeningConversation && conversation.messages.length === 0 && !conversation.isStreaming;
+    // 주소의 대화 id 가 없거나(직접 고친 URL · 지워진 대화) 이력을 못 받은 경우 — 새 채팅 화면 대신 404 로 보여준다.
+    // 이력 실패는 store 가 칸을 비우고 errorMessage 만 남기므로 "id 있음 · 이력 없음 · 메시지 없음 · 오류 있음" 으로 가려낸다
+    const isConversationMissing = !!sessionId && !conversation.isHistoryLoaded && conversation.messages.length === 0
+        && !conversation.isStreaming && !!conversation.errorMessage;
     // 재시도는 답을 못 받은 전송이 남아 있고 서버가 재시도를 허용했을 때만
     const canRetry = conversation.isRetriable && conversation.pendingSend !== null && !conversation.isStreaming;
+
+    if (isConversationMissing) {
+        return <NotFound
+            title="대화를 찾지 못했어요"
+            descriptions={["없는 대화이거나 이미 삭제된 대화일 수 있어요.", "주소를 한 번 더 확인해 주세요."]}
+        />
+    }
 
     return (
         <div className={ChatbotContainer}>

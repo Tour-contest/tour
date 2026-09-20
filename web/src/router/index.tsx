@@ -37,9 +37,9 @@ const Router = () => {
                                 { path: "operation", element: <Operation /> },
                             ],
                         },
-                        { path: "*", element: <NotFound /> },
                     ],
                 },
+                { path: "*", element: <NotFound /> },
             ],
         },
     ]);

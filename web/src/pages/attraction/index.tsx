@@ -6,6 +6,7 @@ import { LoadingIndicator, LogoLoading } from "@/components/common";
 import { buildKakaoMapPointUrl, buildKakaoMapSearchUrl } from "@/components/chat/cards/utils/crowdVisual";
 import { decodeHtmlText } from "@/utils";
 import AttractionGallery from "./AttractionGallery";
+import NotFound from "@/pages/not-found";
 import useAttractionData from "./hooks/useAttractionData";
 import { CONTENT_TYPE_LABEL, LCLS1_LABEL, toCrowdPayload } from "./utils/attractionDisplay";
 
@@ -51,11 +52,12 @@ function Attraction() {
         </div>
     }
 
+    // 없는 관광지이거나 불러오기에 실패한 경우 — 404 화면을 재사용하고 "이전으로" 로 되돌린다 (뒤로 갈 곳이 없으면 홈)
     if (!detail) {
-        return <div className={clsx(CenterNote, "flex-col gap-3")}>
-            <p>관광지 정보를 찾지 못했어요</p>
-            <Link to="/" className={clsx("text-[13px]", "underline")}>홈으로</Link>
-        </div>
+        return <NotFound
+            title="관광지 정보를 찾지 못했어요"
+            descriptions={["없는 관광지이거나 잠시 불러오지 못했을 수 있어요.", "이전 화면으로 돌아가 다시 시도해 주세요."]}
+        />
     }
 
     const title = detail.title || "이름 없는 관광지";

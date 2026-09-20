@@ -61,14 +61,13 @@ const ChatbotAgenda = ({ onQuickStart, input } : ChatbotAgendaNeedProps) => {
 export default ChatbotAgenda;
 //style configuration
 const AgendaLayout = clsx(
-    "flex flex-1 flex-col items-center justify-center",
-    "gap-[60px]",
-    "py-10"
+    "flex flex-1 flex-col gap-15 items-center justify-center",
+    "py-10 box-border"
 );
 
 const HeroGroup = clsx(
-    "flex w-full flex-col items-center",
-    "gap-[45px]"
+    "w-full",
+    "flex flex-col gap-11.25 items-center",
 );
 
 const Greeting = clsx(
@@ -82,17 +81,21 @@ const InputSlot = clsx(
     "-mb-7.5"
 );
 
+// flex 로 2×2: 카드마다 폭을 (전체 − 간격) / 2 로 고정해야 grid 처럼 두 장씩 같은 폭으로 줄이 바뀐다.
+// items-stretch 라 한 줄의 두 장은 높이도 같다
 const PresetGrid = clsx(
-    "grid w-full grid-cols-2",
-    "gap-x-6 gap-y-[34px]"
+    "w-180 max-w-full",
+    "flex flex-wrap items-stretch gap-[34px]"
 );
 
 // 카드: 눈썹 · 제목 · 설명. 올리면 강조색 테두리와 제목
 const PresetCard = clsx(
-    "group flex flex-col items-center gap-[14px]",
+    // 간격(34px)의 절반을 뺀 50% — 한 줄에 정확히 두 장
+    "w-[calc(50%-17px)] shrink-0",
+    "group flex flex-col items-center justify-center gap-3.5",
     "rounded-[12px]",
     "border border-[#3A3D47] bg-[#2A2D36]",
-    "px-[53px] py-[14px] box-border",
+    "px-13.25 py-3.5 box-border",
     "text-center",
     "cursor-pointer select-none",
     "transition-[border-color,background-color] duration-150",
