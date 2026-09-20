@@ -77,9 +77,9 @@ const Description = clsx(
 // 확인 모달의 확인 버튼과 같은 강조색 채움
 const HomeButton = clsx(
     "rounded-full",
-    "bg-[#6FC1FC] text-[#FFFFFF]",
+    "bg-[#309AE6] text-[#FFFFFF]",
     "p-[6px_20px] box-border",
     "text-[15px] font-normal",
     "cursor-pointer",
-    "hover:bg-[#309AE6]"
+    "hover:bg-[#6FC1FC]"
 );
