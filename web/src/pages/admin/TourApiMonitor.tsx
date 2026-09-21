@@ -77,8 +77,8 @@ const TourApiMonitor = ({ dashboard } : TourApiMonitorNeedProps) => {
 export default TourApiMonitor;
 //style configuration
 const InterfaceLayout = clsx(
+    "w-full bg-[#333743]",
     "flex flex-col gap-5",
-    "bg-[#333743]",
     "rounded-[10px]",
     "p-[22px_32px] box-border"
 );
@@ -91,12 +91,15 @@ const WarningText = clsx(
     "text-[18px] text-[#46A8EE] font-normal"
 );
 
+// 좁아지면 (페이지 폭 940px 미만 — index.tsx 의 @container 기준) 4개가 2×2 로 쌓인다.
+// 항목 폭을 절반으로 잡아 줄바꿈시키므로 가로 간격은 두지 않고 세로 간격만 준다
 const MonitorStatus = clsx(
-    "flex items-center justify-between"
+    "flex flex-wrap items-center justify-between gap-y-6"
 );
 
 const KPIContext = clsx(
-    "flex flex-col gap-2.5"
+    "flex flex-col gap-2.5",
+    "basis-1/2 @min-[940px]:basis-auto"
 );
 
 const KPIContextTitle = clsx(

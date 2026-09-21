@@ -59,8 +59,11 @@ const CaseByOperationCall = ({ dashboard } : CaseByOperationCallNeedProps) => {
 }
 export default CaseByOperationCall;
 //style configuraion
+// 넓은 화면(페이지 폭 1280px 이상)에서는 600px 고정으로 차트 옆에 서고 높이는 행(360px)을 따른다.
+// 그보다 좁으면 한 줄을 다 쓰고, 행이 많을 때만 360px 에서 표가 스크롤된다
 const InterfaceLayout = clsx(
-    "w-[600px] bg-[#333743]",
+    "w-full max-h-[360px] bg-[#333743]",
+    "@7xl:w-[600px] @7xl:max-h-none @7xl:shrink-0",
     "flex flex-col gap-5",
     "rounded-[10px]",
     "p-[22px_32px] box-border"
