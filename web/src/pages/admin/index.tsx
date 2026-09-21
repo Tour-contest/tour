@@ -16,25 +16,6 @@ export type AdminDashboardData = {
     mapping: MappingMetricsData | null;
 };
 
-// 대화 카드와 같은 어두운 톤 (배경 #20232C · 카드 #333743 · 흰 제목 · 보조 #909090)
-const sectionStyle = clsx("flex", "flex-col", "gap-3", "rounded-[12px]", "bg-[#333743]", "p-[22px_32px]", "box-border", "text-[#FFFFFF] flex-1");
-const sectionTitleStyle = clsx("text-[20px]", "text-[#FFFFFF]", "font-medium");
-const mutedStyle = clsx("text-[12px]", "text-[#909090]");
-const sectionHeaderStyle = clsx("flex", "items-baseline", "justify-between", "gap-3");
-const moreLinkStyle = clsx("text-[13px]", "text-[#6FC1FC]", "hover:text-[#A3F1F9]", "hover:underline");
-const rowStyle = clsx("flex", "items-center", "justify-between", "gap-3", "text-[14px]", "text-[#D8D8D8]");
-
-
-// 얇은 호버 스크롤바 (index.css 의 scrollbar-thin-hover)
-const pageStyle = clsx(
-    "flex h-full flex-col gap-4",
-    "overflow-y-auto",
-    "bg-[#20232C]",
-    "p-6",
-    "animate-fade-in motion-reduce:animate-none",
-    "scrollbar-thin-hover",
-);
-
 function Admin() {
     const { fetchApiCallMetrics, fetchMappingMetrics } = useAdmin();
 
@@ -63,37 +44,86 @@ function Admin() {
 
     const { daily, recent } = dashboard.apiCalls;
 
-
-
     return (
-        <div className={pageStyle}>
+        <div className={PageStyle}>
             {/* 화면엔 메뉴가 제목 역할을 하지만 보조기기용 페이지 제목은 둔다 */}
-            <h1 className="sr-only">관제 대시보드</h1>
-            <TourApiMonitor dashboard={dashboard} />
-            <div className="flex gap-4 h-[360px] shrink-0">
-                <CaseByOperationCall dashboard={dashboard} />
-                <div className={sectionStyle}>
-                    <h2 className={sectionTitleStyle}>일자별 호출 추이</h2>
-                    <DailyCallsChart daily={daily} />
-                </div>
-            </div>
-            <div className={sectionStyle}>
-                <div className={sectionHeaderStyle}>
-                    <h2 className={sectionTitleStyle}>최근 호출 이력</h2>
-                    <Link to="/operation" className={moreLinkStyle}>전체 보기</Link>
-                </div>
-                {recent.length === 0 && <p className={mutedStyle}>호출 기록이 없습니다</p>}
-                {recent.map((log) => (
-                    <div key={log.id} className={rowStyle}>
-                        <span className={clsx("truncate")}>{resolveOperationLabel(log.operation)}</span>
-                        <span className={mutedStyle}>
-                            {log.status_code} · {log.latency_ms}ms
-                            {log.cache_hit === 1 && " · 중복제거"}
-                        </span>
+            <div className={ContentColumn}>
+                <h1 className="sr-only">관제 대시보드</h1>
+                <TourApiMonitor dashboard={dashboard} />
+                <div className={ChartRow}>
+                    <CaseByOperationCall dashboard={dashboard} />
+                    <div className={clsx(SectionStyle, "flex-1")}>
+                        <h2 className={SectionTitleStyle}>일자별 호출 추이</h2>
+                        <DailyCallsChart daily={daily} />
                     </div>
-                ))}
+                </div>
+                {/* h-full 은 위 카드들 높이만큼 밖으로 밀려난다 — 남은 높이만 가져가도록 flex-1 */}
+                <div className={clsx(SectionStyle, "flex-1")}>
+                    <div className={SectionHeaderStyle}>
+                        <h2 className={SectionTitleStyle}>최근 호출 이력</h2>
+                        <Link to="/operation" className={MoreLinkStyle}>전체 보기</Link>
+                    </div>
+                    {recent.length === 0 && <p className={MutedStyle}>호출 기록이 없습니다</p>}
+                    {recent.map((log) => (
+                        <div key={log.id} className={RowStyle}>
+                            <span className={clsx("truncate")}>{resolveOperationLabel(log.operation)}</span>
+                            <span className={MutedStyle}>
+                                {log.status_code} · {log.latency_ms}ms
+                                {log.cache_hit === 1 && " · 중복제거"}
+                            </span>
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );
 }
 export default Admin;
+//style configuration
+const ContentColumn = clsx(
+    "w-full max-w-380",
+    "flex flex-col gap-4",
+    "grow shrink-0"
+);
+
+const ChartRow = clsx(
+    "flex flex-col gap-4 shrink-0",
+    "@7xl:flex-row @7xl:h-[360px]"
+);
+
+const SectionStyle = clsx(
+    "bg-[#333743]",
+    "flex flex-col gap-3 min-w-0",
+    "rounded-[12px]",
+    "p-[22px_32px] box-border",
+    "text-[#FFFFFF]");
+
+const SectionTitleStyle = clsx(
+    "text-[20px] text-[#FFFFFF] font-medium"
+);
+const MutedStyle = clsx(
+    "text-[12px] text-[#909090] font-normal"
+);
+
+const SectionHeaderStyle = clsx(
+    "flex items-center justify-between gap-3"
+);
+
+const MoreLinkStyle = clsx(
+    "text-[13px] text-[#309AE6] hover:text-[#6FC1FC] hover:underline",
+);
+const RowStyle = clsx(
+    "flex items-center justify-between gap-3", 
+    "text-[14px] text-[#D8D8D8] font-normal"
+);
+
+// 얇은 호버 스크롤바 (index.css 의 scrollbar-thin-hover)
+const PageStyle = clsx(
+    "@container",
+    "flex h-full flex-col items-center",
+    "overflow-y-auto",
+    "bg-[#20232C]",
+    "p-[24px_40px] box-border",
+    "animate-fade-in motion-reduce:animate-none",
+    "scrollbar-thin-hover",
+);

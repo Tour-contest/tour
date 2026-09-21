@@ -98,7 +98,9 @@ const ErrorMessage = clsx(
 const SubmitButton = clsx(
     "rounded-[8px]",
     "bg-[#309AE6]",
-    "text-[#20232C] text-[18px] font-medium tracking-[2px]",
+    "text-[#FFFFFF] text-[18px] font-medium tracking-[2px]",
     "p-2 box-border",
     "disabled:opacity-50",
+    "cursor-pointer",
+    "hover:bg-[#6FC1FC] hover:text-[#20232C]",
 );

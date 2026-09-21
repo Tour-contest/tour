@@ -18,7 +18,7 @@ const OperationLogTable = ({ logs } : OperationLogTableNeedProps) => {
                 <th scope="col" className={clsx(TableCell, "w-[96px]")}>제공자</th>
                 <th scope="col" className={clsx(TableCell, "w-[160px]")}>상태</th>
                 <th scope="col" className={clsx(TableCell, NumberCell, "w-[96px]")}>지연</th>
-                <th scope="col" className={clsx(TableCell, "w-[160px]")}>세션</th>
+                <th scope="col" className={clsx(TableCell, NarrowHidden, "w-[160px]")}>세션</th>
             </tr>
         </thead>
         <tbody>
@@ -38,7 +38,7 @@ const OperationLogTable = ({ logs } : OperationLogTableNeedProps) => {
                             {log.result_code && <span className={KeyCode}>결과 {log.result_code}</span>}
                         </td>
                         <td className={clsx(TableCell, NumberCell)}>{log.latency_ms === null ? "-" : `${log.latency_ms.toLocaleString()}ms`}</td>
-                        <td className={TableCell} title={log.session_id ?? undefined}>
+                        <td className={clsx(TableCell, NarrowHidden)} title={log.session_id ?? undefined}>
                             <span className={SessionId}>{log.session_id ?? "-"}</span>
                         </td>
                     </tr>
@@ -67,6 +67,11 @@ const TableRow = clsx(
 
 const TableCell = clsx(
     "py-2.5 px-2 text-left font-normal align-middle"
+);
+
+// 페이지 폭 940px 미만(1280 화면)에서는 세션 열을 접어 오퍼레이션 이름이 잘리지 않게 한다 (기준은 index.tsx 의 @container)
+const NarrowHidden = clsx(
+    "hidden @min-[940px]:table-cell"
 );
 
 const NumberCell = clsx(

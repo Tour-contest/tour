@@ -49,10 +49,9 @@ function Login() {
 export default Login;
 //style configuration
 const LoginContainer = clsx(
-    // 고정 높이(h-screen) + 가운데 정렬이면 창이 내용보다 낮을 때 위쪽이 스크롤로도 닿지 않게 잘린다 — 최소 높이로 두어 내용만큼 늘어난다
     "min-h-app bg-[#20232C]",
     "bg-[radial-gradient(60%_40%_at_50%_-8%,#A3F1F999_0%,#6FC1FC99_19%,#309AE699_30%,transparent_80%)]",
-    "flex flex-col items-center justify-center gap-7.5",
+    "flex flex-col items-center justify-center gap-[clamp(20px,2.8vh,80px)]",
 );
 
 const Slogan = clsx(

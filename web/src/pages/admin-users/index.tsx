@@ -60,56 +60,58 @@ function AdminUsers() {
 
     return (
         <div className={Page}>
-            <div className={Header}>
-                <h1 className={Title}>회원 관리</h1>
-                {page && <p className={Muted}>전체 {page.total.toLocaleString()}명</p>}
-            </div>
+            <div className={ContentColumn}>
+                <div className={Header}>
+                    <h1 className={Title}>회원 관리</h1>
+                    {page && <p className={Muted}>전체 {page.total.toLocaleString()}명</p>}
+                </div>
 
-            <div className={Section}>
-                {/* 호출 이력처럼 필터를 카드 안 맨 위에 둔다 */}
-                <AdminUserFilters
-                    query={query}
-                    onSearch={handleSearch}
-                    filters={filters}
-                    onFiltersChange={setFilters}
-                    isFilterActive={isFilterActive}
-                />
+                <div className={Section}>
+                    {/* 호출 이력처럼 필터를 카드 안 맨 위에 둔다 */}
+                    <AdminUserFilters
+                        query={query}
+                        onSearch={handleSearch}
+                        filters={filters}
+                        onFiltersChange={setFilters}
+                        isFilterActive={isFilterActive}
+                    />
 
-                {isLoading && (
-                    <div className={CenterNote}>
-                        <LogoLoading label="회원 목록을 불러오는 중…" />
-                    </div>
-                )}
-                {hasError && (
-                    <div className={CenterNote}>
-                        <p className={ErrorText}>회원 목록을 불러오지 못했어요.</p>
-                        <button type="button" onClick={reload} className={Button}>다시 시도</button>
-                    </div>
-                )}
-                {!isLoading && !hasError && users.length === 0 && (
-                    <p className={clsx(CenterNote, Muted)}>{query ? `'${query}' 에 해당하는 회원이 없어요` : "회원이 없어요"}</p>
-                )}
-                {!isLoading && !hasError && users.length > 0 && (
-                    <>
-                        {visibleUsers.length === 0 ? (
-                            <p className={clsx(CenterNote, Muted)}>이 페이지에는 조건에 맞는 회원이 없어요. 다음 페이지를 확인해보세요</p>
-                        ) : (
-                            <AdminUserTable
-                                users={visibleUsers}
-                                pendingUserId={pendingUserId}
-                                onRequestStatusChange={(user, nextStatus) => statusChange.request({ user, nextStatus })}
-                            />
-                        )}
-
-                        <div className={Footer}>
-                            <p className={Muted}>
-                                {pageStart.toLocaleString()}–{pageEnd.toLocaleString()} / {page?.total.toLocaleString()}
-                                {isFilterActive && ` (이 페이지에서 ${visibleUsers.length}명 표시)`}
-                            </p>
-                            <Pagination page={currentPage} pageCount={pageCount} onChange={(next) => setOffset(next * PAGE_SIZE)} label="회원 목록 페이지" />
+                    {isLoading && (
+                        <div className={CenterNote}>
+                            <LogoLoading label="회원 목록을 불러오는 중…" />
                         </div>
-                    </>
-                )}
+                    )}
+                    {hasError && (
+                        <div className={CenterNote}>
+                            <p className={ErrorText}>회원 목록을 불러오지 못했어요.</p>
+                            <button type="button" onClick={reload} className={Button}>다시 시도</button>
+                        </div>
+                    )}
+                    {!isLoading && !hasError && users.length === 0 && (
+                        <p className={clsx(CenterNote, Muted)}>{query ? `'${query}' 에 해당하는 회원이 없어요` : "회원이 없어요"}</p>
+                    )}
+                    {!isLoading && !hasError && users.length > 0 && (
+                        <>
+                            {visibleUsers.length === 0 ? (
+                                <p className={clsx(CenterNote, Muted)}>이 페이지에는 조건에 맞는 회원이 없어요. 다음 페이지를 확인해보세요</p>
+                            ) : (
+                                <AdminUserTable
+                                    users={visibleUsers}
+                                    pendingUserId={pendingUserId}
+                                    onRequestStatusChange={(user, nextStatus) => statusChange.request({ user, nextStatus })}
+                                />
+                            )}
+
+                            <div className={Footer}>
+                                <p className={Muted}>
+                                    {pageStart.toLocaleString()}–{pageEnd.toLocaleString()} / {page?.total.toLocaleString()}
+                                    {isFilterActive && ` (이 페이지에서 ${visibleUsers.length}명 표시)`}
+                                </p>
+                                <Pagination page={currentPage} pageCount={pageCount} onChange={(next) => setOffset(next * PAGE_SIZE)} label="회원 목록 페이지" />
+                            </div>
+                        </>
+                    )}
+                </div>
             </div>
 
             {/* 정지는 그 회원의 이후 요청이 전부 403 이 된다 — 한 번 더 묻는다 */}
@@ -138,12 +140,20 @@ export default AdminUsers;
 //style configuration
 // 호출 이력과 같은 어두운 톤 · 얇은 호버 스크롤바 (index.css 의 scrollbar-thin-hover)
 const Page = clsx(
-    "flex h-full flex-col gap-4",
+    "@container",
+    "flex h-full flex-col items-center",
     "overflow-y-auto",
     "bg-[#20232C]",
-    "p-6",
+    "p-[24px_40px] box-border",
     "animate-fade-in motion-reduce:animate-none",
     "scrollbar-thin-hover",
+);
+
+// 대시보드와 같은 폭 기준 (admin/index.tsx): 좌우 패딩 40px, 시안 폭 1520px 에서 멈추고 가운데 정렬.
+// 좁아졌을 때의 분기는 페이지 실제 폭(@container)을 따른다. 목록 화면이라 높이는 바닥까지 채우지 않는다
+const ContentColumn = clsx(
+    "w-full max-w-380",
+    "flex flex-col gap-4"
 );
 
 const Header = clsx(
@@ -183,5 +193,5 @@ const Button = clsx(
 );
 
 const Footer = clsx(
-    "flex items-center justify-between gap-3"
+    "flex flex-wrap items-center justify-between gap-3"
 );

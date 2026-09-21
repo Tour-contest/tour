@@ -42,57 +42,67 @@ const Operation = () => {
     const isCapped = logs.length >= FETCH_LIMIT;
 
     return <div className={Page}>
-        <div className={Header}>
-            <h1 className={Title}>호출 이력</h1>
-            {data && <p className={Muted}>{data.date} · {logs.length.toLocaleString()}건</p>}
-        </div>
+        <div className={ContentColumn}>
+            <div className={Header}>
+                <h1 className={Title}>호출 이력</h1>
+                {data && <p className={Muted}>{data.date} · {logs.length.toLocaleString()}건</p>}
+            </div>
 
-        <section className={Section}>
-            <OperationFilters day={day} onDayChange={handleDayChange} provider={provider} onProviderChange={handleProviderChange} />
+            <section className={Section}>
+                <OperationFilters day={day} onDayChange={handleDayChange} provider={provider} onProviderChange={handleProviderChange} />
 
-            {isLoading && (
-                <div className={CenterNote}>
-                    <LogoLoading label="호출 이력을 불러오는 중…" />
-                </div>
-            )}
-
-            {hasError && (
-                <div className={CenterNote}>
-                    <p className={ErrorText}>호출 이력을 불러오지 못했어요.</p>
-                    <button type="button" onClick={reload} className={Button}>다시 시도</button>
-                </div>
-            )}
-
-            {!isLoading && !hasError && logs.length === 0 && (
-                <p className={clsx(CenterNote, Muted)}>호출 기록이 없습니다</p>
-            )}
-
-            {!isLoading && !hasError && logs.length > 0 && (
-                <>
-                    <OperationLogTable logs={visibleLogs} />
-                    <div className={Footer}>
-                        <p className={Muted}>
-                            {(page * PAGE_SIZE + 1).toLocaleString()}–{(page * PAGE_SIZE + visibleLogs.length).toLocaleString()} / {logs.length.toLocaleString()}
-                            {/* 서버 최대치만큼 받았으면 그 뒤 기록은 못 본다 — 알린다 */}
-                            {isCapped && ` (최근 ${FETCH_LIMIT}건까지만 보여요)`}
-                        </p>
-                        <Pagination page={page} pageCount={pageCount} onChange={setPage} label="호출 이력 페이지" />
+                {isLoading && (
+                    <div className={CenterNote}>
+                        <LogoLoading label="호출 이력을 불러오는 중…" />
                     </div>
-                </>
-            )}
-        </section>
+                )}
+
+                {hasError && (
+                    <div className={CenterNote}>
+                        <p className={ErrorText}>호출 이력을 불러오지 못했어요.</p>
+                        <button type="button" onClick={reload} className={Button}>다시 시도</button>
+                    </div>
+                )}
+
+                {!isLoading && !hasError && logs.length === 0 && (
+                    <p className={clsx(CenterNote, Muted)}>호출 기록이 없습니다</p>
+                )}
+
+                {!isLoading && !hasError && logs.length > 0 && (
+                    <>
+                        <OperationLogTable logs={visibleLogs} />
+                        <div className={Footer}>
+                            <p className={Muted}>
+                                {(page * PAGE_SIZE + 1).toLocaleString()}–{(page * PAGE_SIZE + visibleLogs.length).toLocaleString()} / {logs.length.toLocaleString()}
+                                {/* 서버 최대치만큼 받았으면 그 뒤 기록은 못 본다 — 알린다 */}
+                                {isCapped && ` (최근 ${FETCH_LIMIT}건까지만 보여요)`}
+                            </p>
+                            <Pagination page={page} pageCount={pageCount} onChange={setPage} label="호출 이력 페이지" />
+                        </div>
+                    </>
+                )}
+            </section>
+        </div>
     </div>
 }
 export default Operation;
 //style configuration
 // 대시보드와 같은 어두운 톤 · 얇은 호버 스크롤바 (index.css 의 scrollbar-thin-hover)
 const Page = clsx(
-    "flex h-full flex-col gap-4",
+    "@container",
+    "flex h-full flex-col items-center",
     "overflow-y-auto",
     "bg-[#20232C]",
-    "p-6",
+    "p-[24px_40px] box-border",
     "animate-fade-in motion-reduce:animate-none",
     "scrollbar-thin-hover",
+);
+
+// 대시보드와 같은 폭 기준 (admin/index.tsx): 좌우 패딩 40px, 시안 폭 1520px 에서 멈추고 가운데 정렬.
+// 좁아졌을 때의 분기는 페이지 실제 폭(@container)을 따른다. 목록 화면이라 높이는 바닥까지 채우지 않는다
+const ContentColumn = clsx(
+    "w-full max-w-380",
+    "flex flex-col gap-4"
 );
 
 const Header = clsx(
@@ -132,5 +142,5 @@ const Button = clsx(
 );
 
 const Footer = clsx(
-    "flex items-center justify-between gap-3"
+    "flex flex-wrap items-center justify-between gap-3"
 );

@@ -17,7 +17,7 @@ const AdminUserTable = ({ users, pendingUserId, onRequestStatusChange } : AdminU
                 <th scope="col" className={Cell}>사용자</th>
                 <th scope="col" className={Cell}>제공자</th>
                 <th scope="col" className={Cell}>권한</th>
-                <th scope="col" className={Cell}>가입일</th>
+                <th scope="col" className={clsx(Cell, NarrowHidden)}>가입일</th>
                 <th scope="col" className={Cell}>마지막 로그인</th>
                 <th scope="col" className={Cell}>상태</th>
                 <th scope="col" className={clsx(Cell, ActionCell)}>관리</th>
@@ -38,7 +38,7 @@ const AdminUserTable = ({ users, pendingUserId, onRequestStatusChange } : AdminU
                         </td>
                         <td className={Cell}>{PROVIDER_LABEL[user.provider]}</td>
                         <td className={Cell}>{ROLE_LABEL[user.role]}</td>
-                        <td className={Cell} title={user.created_at ?? undefined}>{formatDateTime(user.created_at)}</td>
+                        <td className={clsx(Cell, NarrowHidden)} title={user.created_at ?? undefined}>{formatDateTime(user.created_at)}</td>
                         <td className={Cell} title={user.last_login_at ?? undefined}>{formatDateTime(user.last_login_at)}</td>
                         <td className={Cell}>
                             <span className={clsx(StatusBadge, user.status === "suspended" ? StatusSuspended : StatusActive)}>
@@ -91,6 +91,11 @@ const Row = clsx(
 
 const Cell = clsx(
     "py-2.5 px-2 text-left font-normal align-middle"
+);
+
+// 페이지 폭 940px 미만(1280 화면)에서는 가입일 열을 접는다 — 관리에 더 쓰이는 마지막 로그인 · 상태를 남긴다 (기준은 index.tsx 의 @container)
+const NarrowHidden = clsx(
+    "hidden @min-[940px]:table-cell"
 );
 
 const ActionCell = clsx(
