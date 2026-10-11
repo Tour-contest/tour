@@ -1,0 +1,838 @@
+{
+  "@@locale": "ko",
+  "commonBack": "뒤로",
+  "@commonBack": {
+    "description": "뒤로가기 아이콘 버튼 툴팁 (여러 화면 공통)"
+  },
+  "loginGradientHeadline": "널널하게 즐기고 싶다면\n미리 확인하세요",
+  "@loginGradientHeadline": {
+    "description": "로그인 화면 최상단 그라디언트 헤드라인"
+  },
+  "loginSubheadline": "혼잡도부터 한산한 시간대까지\n널널이 미리 알려드려요",
+  "@loginSubheadline": {
+    "description": "로그인 화면 그라디언트 헤드라인 아래 보조 설명"
+  },
+  "loginKakaoButton": "카카오로 계속하기",
+  "@loginKakaoButton": {
+    "description": "카카오 SNS 로그인 버튼 레이블"
+  },
+  "loginInviteCaption": "지금 바로 널널과 함께 확인해 보세요!",
+  "@loginInviteCaption": {
+    "description": "로그인 화면 하단 초대 카드 캡션"
+  },
+  "loginKakaoError": "카카오 로그인에 실패했어요. 잠시 후 다시 시도해주세요.",
+  "@loginKakaoError": {
+    "description": "카카오 로그인 실패 시 스낵바 문구"
+  },
+  "loginKakaoTalkFailedDialogTitle": "카카오톡으로 로그인하지 못했어요",
+  "@loginKakaoTalkFailedDialogTitle": {
+    "description": "카카오톡 설치 상태에서 loginWithKakaoTalk()이 취소가 아닌 에러로 실패했을 때(예: 카카오톡 미로그인 상태) 계정 로그인 전환을 묻는 다이얼로그 제목"
+  },
+  "loginKakaoTalkFailedDialogMessage": "카카오 계정으로 다시 로그인해볼까요?",
+  "@loginKakaoTalkFailedDialogMessage": {
+    "description": "loginKakaoTalkFailedDialogTitle 다이얼로그 본문 — UserApi.instance.loginWithKakaoAccount()로 전환할지 안내"
+  },
+  "loginKakaoTalkFailedDialogConfirm": "계정으로 로그인",
+  "@loginKakaoTalkFailedDialogConfirm": {
+    "description": "loginKakaoTalkFailedDialogTitle 다이얼로그 확인 버튼 — 탭하면 loginWithKakaoAccount() 실행"
+  },
+  "loginAdminEntryLabel": "관리자 로그인",
+  "@loginAdminEntryLabel": {
+    "description": "로그인 화면 하단, 카카오 버튼 아래에 있는 숨겨진 관리자 로그인 진입 버튼 레이블(의도적으로 눈에 잘 안 띄게 표시)"
+  },
+  "loginAdminDialogTitle": "관리자 로그인",
+  "@loginAdminDialogTitle": {
+    "description": "관리자 로그인 다이얼로그 제목"
+  },
+  "loginAdminUsernameLabel": "아이디",
+  "@loginAdminUsernameLabel": {
+    "description": "관리자 로그인 다이얼로그 아이디 입력란 레이블"
+  },
+  "loginAdminPasswordLabel": "비밀번호",
+  "@loginAdminPasswordLabel": {
+    "description": "관리자 로그인 다이얼로그 비밀번호 입력란 레이블"
+  },
+  "loginAdminSubmitButton": "로그인",
+  "@loginAdminSubmitButton": {
+    "description": "관리자 로그인 다이얼로그 제출 버튼"
+  },
+  "loginAdminValidationError": "아이디와 비밀번호를 입력해주세요.",
+  "@loginAdminValidationError": {
+    "description": "관리자 로그인 다이얼로그에서 아이디/비밀번호를 비운 채 제출했을 때 보여주는 안내"
+  },
+  "loginAdminError": "관리자 로그인에 실패했어요.",
+  "@loginAdminError": {
+    "description": "관리자 로그인 실패 시 서버 메시지가 없을 때 보여주는 기본 안내(서버 메시지가 있으면 그걸 그대로 보여준다)"
+  },
+  "loginInProgressLabel": "로그인하는 중이에요",
+  "@loginInProgressLabel": {
+    "description": "VoiceOver 전용 안내(사람 눈에는 안 보이는 시맨틱 라벨/실시간 안내) — 로그인 처리 중 화면 전체를 덮는 로딩 오버레이와 관리자 로그인 다이얼로그의 제출 버튼 로딩 스피너 둘 다에서 쓴다"
+  },
+  "authSessionExpiredToast": "세션이 만료됐어요. 다시 로그인해주세요.",
+  "@authSessionExpiredToast": {
+    "description": "리프레시 토큰 만료/거절 등으로 서버가 갱신을 명시적으로 거절해 로그인 화면으로 자동 이동시킬 때 뜨는 토스트"
+  },
+  "chatHistoryTooltip": "지난 대화",
+  "@chatHistoryTooltip": {
+    "description": "채팅 화면 좌측 상단 히스토리 이동 버튼 툴팁"
+  },
+  "chatNewTooltip": "새 채팅",
+  "@chatNewTooltip": {
+    "description": "채팅 화면 우측 상단 새 대화 버튼 툴팁"
+  },
+  "chatProfileMenuTooltip": "프로필 메뉴",
+  "@chatProfileMenuTooltip": {
+    "description": "채팅 화면 헤더 우측 프로필 아바타 버튼의 VoiceOver 라벨(탭하면 설정/로그아웃 메뉴가 뜸) — 별도 시각 툴팁 없이 시맨틱스 전용으로만 쓰임"
+  },
+  "chatGreeting": "안녕하세요, {userName}님\n오늘은 어떤 여행지를 찾으시나요?",
+  "@chatGreeting": {
+    "description": "채팅 빈 상태(S2) 인사말",
+    "placeholders": {
+      "userName": {
+        "type": "String"
+      }
+    }
+  },
+  "chatThinkingLabel": "생각하고 있어요...",
+  "@chatThinkingLabel": {
+    "description": "채팅 화면에서 AI 응답을 기다리는 동안 보여주는 안내 문구"
+  },
+  "chatSendFailedToast": "메시지를 보내지 못했어요. 다시 시도해주세요.",
+  "@chatSendFailedToast": {
+    "description": "채팅 메시지 전송(ChatApi.sendMessage) 실패 시 뜨는 토스트 문구"
+  },
+  "chatFallbackOfferedMessage": "지금은 실시간 답변을 만들지 못했어요",
+  "@chatFallbackOfferedMessage": {
+    "description": "SSE가 버퍼를 하나도 못 채운 채 에러로 끝났을 때(레이트리밋 제외) 대체 흐름을 제안하는 문구"
+  },
+  "chatFallbackActionLabel": "다른 방식으로 찾아보기",
+  "@chatFallbackActionLabel": {
+    "description": "chatFallbackOfferedMessage 아래 버튼 레이블(AreasApi/AttractionsApi로 best-effort 조회 시작)"
+  },
+  "chatFallbackSearchingLabel": "찾는 중이에요",
+  "@chatFallbackSearchingLabel": {
+    "description": "chatFallbackActionLabel 버튼 탭 후 조회 중(state: searching)일 때 버튼 자리가 스피너로 바뀌며 잃는 라벨을 VoiceOver에 대신 announce하기 위한 문구(login_screen.dart의 loginInProgressLabel과 동일한 패턴)"
+  },
+  "chatFallbackExhaustedMessage": "정보를 찾지 못했어요. 다른 질문으로 다시 물어봐주세요.",
+  "@chatFallbackExhaustedMessage": {
+    "description": "대체 흐름(AreasApi/AttractionsApi 조회)도 결과를 못 찾았을 때(not_found/ambiguous) 안내 문구"
+  },
+  "chatFallbackResultCaption": "실시간 답변 대신 관련 정보를 찾아봤어요.",
+  "@chatFallbackResultCaption": {
+    "description": "대체 흐름으로 찾은 결과가 AI가 생성한 답변이 아니라 직접 조회한 결과임을 알리는 카드 상단 캡션"
+  },
+  "chatThemeWellnessTitle": "웰니스 여행지",
+  "@chatThemeWellnessTitle": {
+    "description": "채팅 빈 상태(S3) 테마 그리드 - 웰니스 여행지 카드 제목"
+  },
+  "chatThemeWellnessSubtitle": "야영장·오토캠핑 중심",
+  "@chatThemeWellnessSubtitle": {
+    "description": "채팅 빈 상태(S3) 테마 그리드 - 웰니스 여행지 카드 설명"
+  },
+  "chatThemeMedicalTitle": "의료 관광지",
+  "@chatThemeMedicalTitle": {
+    "description": "채팅 빈 상태(S3) 테마 그리드 - 의료 관광지 카드 제목"
+  },
+  "chatThemeMedicalSubtitle": "의료·헬스케어 시설 연계 관광지",
+  "@chatThemeMedicalSubtitle": {
+    "description": "채팅 빈 상태(S3) 테마 그리드 - 의료 관광지 카드 설명"
+  },
+  "chatThemePetTitle": "반려동물 동반",
+  "@chatThemePetTitle": {
+    "description": "채팅 빈 상태(S3) 테마 그리드 - 반려동물 동반 카드 제목"
+  },
+  "chatThemePetSubtitle": "반려동물 입장 가능한 한적한 곳",
+  "@chatThemePetSubtitle": {
+    "description": "채팅 빈 상태(S3) 테마 그리드 - 반려동물 동반 카드 설명"
+  },
+  "chatThemeCampingTitle": "캠핑 여행지",
+  "@chatThemeCampingTitle": {
+    "description": "채팅 빈 상태(S3) 테마 그리드 - 캠핑 여행지 카드 제목"
+  },
+  "chatThemeCampingSubtitle": "야영장·오토캠핑 중심",
+  "@chatThemeCampingSubtitle": {
+    "description": "채팅 빈 상태(S3) 테마 그리드 - 캠핑 여행지 카드 설명"
+  },
+  "chatInputHint": "궁금한 것을 널널에게 물어보세요.",
+  "@chatInputHint": {
+    "description": "채팅 입력창 placeholder"
+  },
+  "chatInputVoiceTooltip": "음성 입력",
+  "@chatInputVoiceTooltip": {
+    "description": "채팅 입력바 음성 입력 아이콘 버튼 툴팁"
+  },
+  "chatInputVoiceUnavailable": "음성 인식을 사용할 수 없어요. 마이크 권한을 확인해 주세요.",
+  "@chatInputVoiceUnavailable": {
+    "description": "음성 인식 초기화 실패(권한 거부·기기 미지원) 시 안내 토스트"
+  },
+  "chatInputVoiceError": "음성 인식 중 문제가 발생했어요. 다시 시도해 주세요.",
+  "@chatInputVoiceError": {
+    "description": "권한은 있지만 듣는 도중 오류(네트워크 오류, 인식 타임아웃 등)로 음성 입력이 중단됐을 때 안내 토스트"
+  },
+  "chatInputVoiceListeningTitle": "듣고 있어요",
+  "@chatInputVoiceListeningTitle": {
+    "description": "음성 입력 중 하단에 뜨는 VoiceListeningToast 안내 문구 첫 줄(14px)"
+  },
+  "chatInputVoiceListeningHint": "탭해서 종료",
+  "@chatInputVoiceListeningHint": {
+    "description": "음성 입력 중 하단에 뜨는 VoiceListeningToast 안내 문구 둘째 줄(13px)"
+  },
+  "chatInputSendTooltip": "전송",
+  "@chatInputSendTooltip": {
+    "description": "채팅 입력바 전송 버튼 툴팁"
+  },
+  "chatInputStopTooltip": "응답 생성 중지",
+  "@chatInputStopTooltip": {
+    "description": "AI 응답 생성 중일 때 전송 버튼 자리에 뜨는 정지 버튼 툴팁"
+  },
+  "chatCongestionLabel": "혼잡도 {percent}%",
+  "@chatCongestionLabel": {
+    "description": "추천 장소 카드의 혼잡도 배지",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "congestionLevelQuiet": "한적",
+  "@congestionLevelQuiet": {
+    "description": "혼잡도 배지: 한적(집중률 39 이하)"
+  },
+  "congestionLevelNormal": "보통",
+  "@congestionLevelNormal": {
+    "description": "혼잡도 배지: 보통(집중률 40~59)"
+  },
+  "congestionLevelBusy": "혼잡",
+  "@congestionLevelBusy": {
+    "description": "혼잡도 배지: 혼잡(집중률 60 이상, 75 미만)"
+  },
+  "congestionLevelVeryBusy": "매우 혼잡",
+  "@congestionLevelVeryBusy": {
+    "description": "혼잡도 배지: 매우 혼잡(집중률 75 이상)"
+  },
+  "congestionScoreSuffix": "점",
+  "@congestionScoreSuffix": {
+    "description": "CongestionBadge 점수 뒤에 붙는 단위(\"한적 23점\"처럼). 언어별로 다르거나 없을 수 있어 별도 키로 분리"
+  },
+  "forecastTooltip": "{weekday}요일 집중률 {score} · {level}",
+  "@forecastTooltip": {
+    "description": "예측 카드 막대 차트의 최고값 툴팁",
+    "placeholders": {
+      "weekday": {
+        "type": "String"
+      },
+      "score": {
+        "type": "int"
+      },
+      "level": {
+        "type": "String"
+      }
+    }
+  },
+  "mapAppSheetTitle": "{placeName} 지도로 보기",
+  "@mapAppSheetTitle": {
+    "description": "지도 앱 선택 시트 제목",
+    "placeholders": {
+      "placeName": {
+        "type": "String"
+      }
+    }
+  },
+  "mapAppSheetKakaoButton": "카카오맵에서 열기",
+  "@mapAppSheetKakaoButton": {
+    "description": "지도 앱 선택 시트의 카카오맵 버튼"
+  },
+  "mapAppSheetNaverButton": "네이버지도에서 열기",
+  "@mapAppSheetNaverButton": {
+    "description": "지도 앱 선택 시트의 네이버지도 버튼"
+  },
+  "mapAppSheetCancel": "취소하기",
+  "@mapAppSheetCancel": {
+    "description": "지도 앱 선택 시트의 취소 버튼"
+  },
+  "mapAppSheetUnavailable": "설치된 지도 앱을 찾을 수 없어요.",
+  "@mapAppSheetUnavailable": {
+    "description": "카카오맵/네이버지도 앱이 기기에 설치돼 있지 않아 스킴 실행에 실패했을 때 안내 토스트"
+  },
+  "drawerRecentSection": "최근",
+  "@drawerRecentSection": {
+    "description": "드로어의 최근 대화 섹션 라벨. 탭하면 지난 대화 화면(HistoryScreen)으로 이동한다"
+  },
+  "historyTitle": "지난 대화",
+  "@historyTitle": {
+    "description": "지난 대화 화면(HistoryScreen) 헤더 타이틀"
+  },
+  "historyEmptyMessage": "아직 지난 대화가 없어요.",
+  "@historyEmptyMessage": {
+    "description": "지난 대화 화면에서 세션 목록이 비어있을 때 안내 문구"
+  },
+  "historyErrorMessage": "지난 대화를 불러오지 못했어요.",
+  "@historyErrorMessage": {
+    "description": "ChatApi.fetchSessions 실패 시 안내 문구"
+  },
+  "historyLoadingLabel": "지난 대화 불러오는 중이에요",
+  "@historyLoadingLabel": {
+    "description": "지난 대화 화면 최초 목록 조회 중(_isLoading) 스피너의 VoiceOver 라벨 — CircularProgressIndicator 자체엔 기본 라벨이 없어 감싸는 Semantics로 announce함"
+  },
+  "historyOpeningSessionLabel": "대화 불러오는 중이에요",
+  "@historyOpeningSessionLabel": {
+    "description": "지난 대화 항목 탭 후 ChatApi.fetchMessages 조회 중(_isOpeningSession) 전체 화면 오버레이 스피너의 VoiceOver 라벨"
+  },
+  "historyRetryButton": "다시 시도",
+  "@historyRetryButton": {
+    "description": "지난 대화 목록 조회 실패 시 재시도 버튼"
+  },
+  "historyUntitledSession": "제목 없는 대화",
+  "@historyUntitledSession": {
+    "description": "세션에 title이 없을 때 대신 보여줄 문구"
+  },
+  "historyRelativeJustNow": "방금전",
+  "@historyRelativeJustNow": {
+    "description": "지난 대화 카드의 상대 시각 표시 — 1분 미만일 때"
+  },
+  "historyRelativeMinutes": "{minutes}분전",
+  "@historyRelativeMinutes": {
+    "description": "지난 대화 카드의 상대 시각 표시 — 1분 이상 1시간 미만",
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "historyRelativeHours": "{hours}시간전",
+  "@historyRelativeHours": {
+    "description": "지난 대화 카드의 상대 시각 표시 — 1시간 이상 1일 미만",
+    "placeholders": {
+      "hours": {"type": "int"}
+    }
+  },
+  "historyRelativeDays": "{days}일전",
+  "@historyRelativeDays": {
+    "description": "지난 대화 카드의 상대 시각 표시 — 1일 이상",
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "historyResumeError": "대화를 불러오지 못했어요. 잠시 후 다시 시도해주세요.",
+  "@historyResumeError": {
+    "description": "지난 대화 항목 탭 시 ChatApi.fetchMessages 조회 실패 안내 토스트"
+  },
+  "historySearchEmptyMessage": "검색 결과가 없어요.",
+  "@historySearchEmptyMessage": {
+    "description": "지난 대화 검색어에 맞는 세션이 하나도 없을 때 안내 문구(세션 목록 자체는 있는 상태, historyEmptyMessage와 구분)"
+  },
+  "historyFilterAll": "전체",
+  "@historyFilterAll": {
+    "description": "지난 대화 화면 날짜 필터 - 전체(기본 선택)"
+  },
+  "historyFilterToday": "오늘",
+  "@historyFilterToday": {
+    "description": "지난 대화 화면 날짜 필터 - 오늘(lastActiveAt이 오늘 날짜인 세션만)"
+  },
+  "historyTodayEmptyMessage": "오늘 나눈 대화가 없어요.",
+  "@historyTodayEmptyMessage": {
+    "description": "\"오늘\" 필터를 선택했는데 오늘 활동한 세션이 하나도 없을 때 안내 문구(검색어가 없는 경우에 한함, 검색어가 있으면 historySearchEmptyMessage를 우선함)"
+  },
+  "historyDateFilterTooltip": "날짜 필터",
+  "@historyDateFilterTooltip": {
+    "description": "지난 대화 화면 헤더 우측 날짜 필터 버튼의 VoiceOver 라벨(별도 시각 툴팁 없이 시맨틱스 전용)"
+  },
+  "historySearchFieldLabel": "지난 대화 검색",
+  "@historySearchFieldLabel": {
+    "description": "지난 대화 화면 하단 검색창의 VoiceOver 라벨 — 플레이스홀더 텍스트 대신 아이콘만 보여주는 디자인이라 시각적 힌트가 없어 시맨틱스로만 목적을 알림"
+  },
+  "historySearchClearTooltip": "검색어 지우기",
+  "@historySearchClearTooltip": {
+    "description": "지난 대화 검색창의 지우기(X) 버튼 VoiceOver 라벨"
+  },
+  "regionCardTitle": "{region} 여행지 추천",
+  "@regionCardTitle": {
+    "description": "지역 현황 카드 B의 제목",
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
+  "regionPopularLabel": "인기 관광지",
+  "@regionPopularLabel": {
+    "description": "지역 현황 카드의 인기 관광지 칩 섹션 라벨"
+  },
+  "regionQuietLabel": "한적한 관광지",
+  "@regionQuietLabel": {
+    "description": "지역 현황 카드의 한적한 관광지 칩 섹션 라벨"
+  },
+  "chatCardAttractionListTitle": "{label} 목록",
+  "@chatCardAttractionListTitle": {
+    "description": "attraction_list/detail 채팅 카드 제목. signgu_nm/category 중 값이 있는 것만 호출부(_AttractionListCardState)가 공백으로 이어붙여 label 하나로 넘긴다 — 이전엔 두 placeholder를 템플릿에 나란히 넣어, 실제 payload에 category가 없는 경우(대부분의 attraction_list/모든 detail 카드) signguNm만 있어도 \"OO  목록\"처럼 중간에 빈칸이 두 번 들어갔다",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "chatCardCrowdOverviewTitle": "{signguNm} 오늘 현황",
+  "@chatCardCrowdOverviewTitle": {
+    "description": "crowd 카드 맨 위 도넛 차트 카드의 제목",
+    "placeholders": {
+      "signguNm": {
+        "type": "String"
+      }
+    }
+  },
+  "chatCardCrowdDonutTotalLabel": "총 {count}곳",
+  "@chatCardCrowdDonutTotalLabel": {
+    "description": "도넛 차트 중앙에 숫자만 떠 있는 합계(RegionDonutChart)의 VoiceOver 라벨 — 시각적으로는 숫자만 보이지만 무엇의 합계인지 announce함",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatCardCrowdTitle": "{signguNm} 여행지 추천",
+  "@chatCardCrowdTitle": {
+    "description": "실 서버 채팅 카드(crowd) 제목",
+    "placeholders": {
+      "signguNm": {
+        "type": "String"
+      }
+    }
+  },
+  "chatCardCrowdPopularLabel": "인기 관광지",
+  "@chatCardCrowdPopularLabel": {
+    "description": "crowd 카드의 인기 관광지 섹션 라벨(samples.crowded, 비어있으면 samples.normal로 대체)"
+  },
+  "chatCardCrowdQuietLabel": "한적한 관광지",
+  "@chatCardCrowdQuietLabel": {
+    "description": "crowd 카드의 한적한 관광지 섹션 라벨(samples.quiet)"
+  },
+  "chatCardNoDataMessage": "이 카드에 표시할 정보가 없어요.",
+  "@chatCardNoDataMessage": {
+    "description": "attraction_detail_screen.dart의 _CrowdSection(혼잡도 예보가 비었을 때) 전용 안내 문구 — 채팅 카드는 더 이상 이 문구를 안 쓰고 chatCardFollowUpAction/chatCardNoCrowdDataMessage를 쓴다"
+  },
+  "chatCardFollowUpAction": "지역 전체 현황 보기",
+  "@chatCardFollowUpAction": {
+    "description": "채팅 카드의 payload.status가 no_data이거나 has_data가 false일 때(has_crowd_data:false인 특수 케이스 제외) 대신 보여주는 후속 질문 버튼 — 탭하면 이 문구 그대로 다음 채팅 메시지로 보낸다(NoDataCard.onActionTap)"
+  },
+  "chatCardNoCrowdDataMessage": "이 지역은 아직 혼잡도가 제공되지 않아요.",
+  "@chatCardNoCrowdDataMessage": {
+    "description": "채팅 카드의 payload.has_crowd_data가 false일 때(지역 자체에 집중률 데이터가 없음) 버튼 없이 보여주는 한 줄 안내"
+  },
+  "chatCardInterestLine": "{name} 검색 관심도가 최근 {weeks}주간 {trendLabel} ({changePct})",
+  "@chatCardInterestLine": {
+    "description": "interest 카드에서 trend가 flat이 아닌 항목만 한 줄로 보여주는 안내 문구. changePct는 부호(+/-)까지 포함해 미리 포맷한 문자열을 받는다",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "weeks": {
+        "type": "int"
+      },
+      "trendLabel": {
+        "type": "String"
+      },
+      "changePct": {
+        "type": "String"
+      }
+    }
+  },
+  "chatCardVisitorsTitle": "{signguNm} 방문자 추이",
+  "@chatCardVisitorsTitle": {
+    "description": "visitors 카드(날짜별 방문자 수 목록) 제목",
+    "placeholders": {
+      "signguNm": {
+        "type": "String"
+      }
+    }
+  },
+  "chatCardVisitorsDayCount": "{count}명",
+  "@chatCardVisitorsDayCount": {
+    "description": "visitors 카드의 날짜별 행에서 방문자 수 옆에 붙는 단위. count는 천단위 콤마까지 미리 포맷한 문자열",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "chatCardVisitorsPeakLabel": "최고 방문일",
+  "@chatCardVisitorsPeakLabel": {
+    "description": "visitors 카드 상단 강조 박스 — 방문자 수가 가장 많았던 날짜 위에 붙는 라벨"
+  },
+  "chatCardVisitorsRecentLabel": "최근 3일",
+  "@chatCardVisitorsRecentLabel": {
+    "description": "visitors 카드에서 최근 3일치 날짜별 목록 위에 붙는 섹션 라벨"
+  },
+  "chatCardVisitorsBasisLabel": "근거",
+  "@chatCardVisitorsBasisLabel": {
+    "description": "visitors 카드 맨 아래 데이터 출처/지연 설명 앞에 붙는 라벨"
+  },
+  "chatCardVisitorsDataThrough": "{date} 기준 데이터",
+  "@chatCardVisitorsDataThrough": {
+    "description": "visitors 카드의 근거 설명에서 데이터 기준일(data_through) 부분 — 서버 payload의 note 필드가 있으면 이 뒤에 이어붙여 함께 보여줌",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "chatCardShowMore": "{count}개 더보기",
+  "@chatCardShowMore": {
+    "description": "attraction_list 카드가 접혀 있을 때(상위 3개만 표시) 나머지 항목 개수와 함께 보여주는 펼치기 버튼",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatCardShowLess": "접기",
+  "@chatCardShowLess": {
+    "description": "attraction_list 카드가 펼쳐져 있을 때 다시 상위 3개만 보이게 접는 버튼"
+  },
+  "commonSettings": "설정",
+  "@commonSettings": {
+    "description": "설정 화면을 가리키는 문구 (아이콘 버튼 툴팁/화면 타이틀 공통)"
+  },
+  "commonCancel": "취소",
+  "@commonCancel": {
+    "description": "확인 팝업의 취소 버튼 (여러 화면 공통)"
+  },
+  "commonClose": "닫기",
+  "@commonClose": {
+    "description": "닫기 버튼/툴팁 (여러 화면 공통) — 예: photo_viewer_screen.dart의 닫기 버튼"
+  },
+  "snsProviderKakao": "카카오",
+  "@snsProviderKakao": {
+    "description": "카카오 SNS 로그인 수단의 화면 표시명"
+  },
+  "fontScaleNormal": "보통",
+  "@fontScaleNormal": {
+    "description": "글자 크기 설정 - 보통"
+  },
+  "fontScaleLarge": "크게",
+  "@fontScaleLarge": {
+    "description": "글자 크기 설정 - 크게"
+  },
+  "fontScaleExtraLarge": "아주 크게",
+  "@fontScaleExtraLarge": {
+    "description": "글자 크기 설정 - 아주 크게"
+  },
+  "settingsSectionMyInfo": "내 정보",
+  "@settingsSectionMyInfo": {
+    "description": "설정 화면 섹션 라벨"
+  },
+  "settingsEmailLabel": "이메일",
+  "@settingsEmailLabel": {
+    "description": "설정 화면 이메일 행 라벨"
+  },
+  "settingsConnectedAccount": "연결된 계정",
+  "@settingsConnectedAccount": {
+    "description": "설정 화면 연결된 계정 행 라벨"
+  },
+  "settingsAccountSuffix": "{provider} 계정",
+  "@settingsAccountSuffix": {
+    "description": "연결된 계정 행의 트레일링 텍스트(예: 카카오 계정)",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsDisconnect": "회원 탈퇴",
+  "@settingsDisconnect": {
+    "description": "회원 탈퇴 버튼 레이블(확인 팝업의 확인 버튼과 동일 문구)"
+  },
+  "settingsDisconnectAdminDisabledTooltip": "관리자 계정은 탈퇴할 수 없어요.",
+  "@settingsDisconnectAdminDisabledTooltip": {
+    "description": "관리자 로그인 계정에서 비활성화된 \"회원 탈퇴\" 버튼을 눌렀을 때(또는 길게 눌렀을 때) 보여주는 툴팁"
+  },
+  "settingsSectionFontSize": "글자 크기",
+  "@settingsSectionFontSize": {
+    "description": "설정 화면 섹션 라벨"
+  },
+  "settingsSectionInfo": "정보",
+  "@settingsSectionInfo": {
+    "description": "설정 화면 섹션 라벨"
+  },
+  "settingsAppVersion": "앱 버전",
+  "@settingsAppVersion": {
+    "description": "설정 화면 앱 버전 행 라벨"
+  },
+  "settingsContact": "문의하기",
+  "@settingsContact": {
+    "description": "설정 화면 문의하기 행 라벨"
+  },
+  "settingsContactCopied": "클립보드에 복사되었습니다.",
+  "@settingsContactCopied": {
+    "description": "문의 이메일 복사 후 스낵바 문구"
+  },
+  "settingsPrivacyPolicy": "개인정보처리방침",
+  "@settingsPrivacyPolicy": {
+    "description": "설정 화면 개인정보처리방침 행 라벨(웹뷰로 이동)"
+  },
+  "settingsTermsOfService": "서비스 이용약관",
+  "@settingsTermsOfService": {
+    "description": "설정 화면 서비스 이용약관 행 라벨(웹뷰로 이동)"
+  },
+  "settingsSectionOpenSource": "오픈소스",
+  "@settingsSectionOpenSource": {
+    "description": "설정 화면 섹션 라벨"
+  },
+  "settingsOpenSourceLicense": "오픈소스 라이선스",
+  "@settingsOpenSourceLicense": {
+    "description": "설정 화면 오픈소스 라이선스 행 라벨"
+  },
+  "settingsLogout": "로그아웃",
+  "@settingsLogout": {
+    "description": "로그아웃 버튼 레이블(확인 팝업의 확인 버튼과 동일 문구)"
+  },
+  "settingsDisconnectDialogTitle": "정말 탈퇴하시겠습니까?",
+  "@settingsDisconnectDialogTitle": {
+    "description": "회원 탈퇴 확인 팝업 제목"
+  },
+  "settingsDisconnectDialogMessage": "탈퇴하면 {provider} 계정 연결이 함께 해제되고, 저장된 모든 정보가 삭제돼요.",
+  "@settingsDisconnectDialogMessage": {
+    "description": "회원 탈퇴 확인 팝업 설명",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsDisconnectError": "회원 탈퇴에 실패했어요. 잠시 후 다시 시도해주세요.",
+  "@settingsDisconnectError": {
+    "description": "회원 탈퇴(AuthService.withdraw()) 실패 시 스낵바 문구"
+  },
+  "settingsLogoutDialogTitle": "로그아웃",
+  "@settingsLogoutDialogTitle": {
+    "description": "로그아웃 확인 팝업 제목"
+  },
+  "settingsLogoutDialogMessage": "정말 로그아웃 하시겠습니까?",
+  "@settingsLogoutDialogMessage": {
+    "description": "로그아웃 확인 팝업 설명"
+  },
+  "settingsLogoutDialogCancel": "취소하기",
+  "@settingsLogoutDialogCancel": {
+    "description": "로그아웃 확인 팝업의 취소 버튼(공용 ConfirmDialog의 기본 commonCancel 대신 이 팝업 전용으로 지정)"
+  },
+  "settingsLogoutDialogConfirm": "로그아웃하기",
+  "@settingsLogoutDialogConfirm": {
+    "description": "로그아웃 확인 팝업의 확인 버튼 — 메뉴/화면의 \"로그아웃\" 라벨(settingsLogout)과는 별개 키"
+  },
+  "settingsLoggingOutLabel": "로그아웃하는 중이에요",
+  "@settingsLoggingOutLabel": {
+    "description": "VoiceOver 전용 안내(사람 눈에는 안 보이는 시맨틱 라벨/실시간 안내) — 로그아웃 처리 중 화면 전체를 덮는 로딩 오버레이에서 쓴다(login_screen.dart의 loginInProgressLabel과 같은 용도)"
+  },
+  "settingsLoggedInWith": "{provider} 계정으로 로그인 중",
+  "@settingsLoggedInWith": {
+    "description": "내 정보 프로필 요약의 로그인 수단 안내",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "attractionListItemDetailCta": "자세히 보기 ›",
+  "@attractionListItemDetailCta": {
+    "description": "attraction_list 카드 항목 하단 상세 화면 진입 문구"
+  },
+  "attractionDetailTitle": "관광지 정보",
+  "@attractionDetailTitle": {
+    "description": "관광지 상세 화면 헤더 기본 타이틀(상세 조회 전/제목 없을 때)"
+  },
+  "attractionDetailNotFound": "관광지 정보를 찾을 수 없어요.",
+  "@attractionDetailNotFound": {
+    "description": "관광지 상세 조회 404/503 응답 시 안내"
+  },
+  "attractionDetailLoadError": "관광지 정보를 불러오지 못했어요.",
+  "@attractionDetailLoadError": {
+    "description": "관광지 상세/혼잡도 조회 실패 시 안내(재시도 버튼과 함께)"
+  },
+  "attractionDetailLoadingLabel": "관광지 정보 불러오는 중이에요",
+  "@attractionDetailLoadingLabel": {
+    "description": "관광지 상세 화면 최초 조회 중(_loadingDetail) 스피너의 VoiceOver 라벨 — CircularProgressIndicator 자체엔 기본 라벨이 없어 감싸는 Semantics로 announce함"
+  },
+  "attractionDetailCrowdSection": "혼잡도 예보",
+  "@attractionDetailCrowdSection": {
+    "description": "관광지 상세 화면 혼잡도 그래프 섹션 라벨"
+  },
+  "attractionDetailCrowdLoadingLabel": "혼잡도 불러오는 중이에요",
+  "@attractionDetailCrowdLoadingLabel": {
+    "description": "혼잡도 그래프 재조회 중(기간 pill 변경 시) 스피너의 VoiceOver 라벨"
+  },
+  "attractionDetailCrowdDaysOption": "{days}일",
+  "@attractionDetailCrowdDaysOption": {
+    "description": "혼잡도 그래프 기간 선택 pill(7일/14일/28일)",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "attractionDetailCrowdSummary": "평균 {avg} · 최고 {peakDate} {peakRate} · 최저 {minDate} {minRate}",
+  "@attractionDetailCrowdSummary": {
+    "description": "혼잡도 그래프 아래 기간 요약(평균/최고/최저)",
+    "placeholders": {
+      "avg": {
+        "type": "int"
+      },
+      "peakDate": {
+        "type": "String"
+      },
+      "peakRate": {
+        "type": "int"
+      },
+      "minDate": {
+        "type": "String"
+      },
+      "minRate": {
+        "type": "int"
+      }
+    }
+  },
+  "attractionDetailInfoSection": "이용정보",
+  "@attractionDetailInfoSection": {
+    "description": "관광지 상세 화면 이용정보(+지도에서 보기) 섹션 라벨"
+  },
+  "attractionDetailOpenMapButton": "지도에서 보기",
+  "@attractionDetailOpenMapButton": {
+    "description": "관광지 상세 화면 지도 버튼(카카오맵/네이버지도 통합) — 탭하면 MapAppSheet가 뜸"
+  },
+  "attractionDetailPhotoLabel": "사진 {index}/{count}",
+  "@attractionDetailPhotoLabel": {
+    "description": "이미지 캐러셀 각 사진의 VoiceOver 라벨(탭하면 확대 보기로 이동) — 사진 자체에 대체 텍스트가 없어 위치만 안내",
+    "placeholders": {
+      "index": {"type": "int"},
+      "count": {"type": "int"}
+    }
+  },
+  "attractionDetailPhotoZoomHint": "탭하여 크게 보기",
+  "@attractionDetailPhotoZoomHint": {
+    "description": "이미지 캐러셀 사진의 VoiceOver 힌트"
+  },
+  "attractionDetailIntroSection": "상세 소개",
+  "@attractionDetailIntroSection": {
+    "description": "관광지 상세 화면 소개문 섹션 라벨"
+  },
+  "attractionDetailAlternativesSection": "함께 찾는 곳",
+  "@attractionDetailAlternativesSection": {
+    "description": "관광지 상세 화면 대안 여행지 섹션 라벨"
+  },
+  "alternativeRankLabel": "함께 찾는 곳 {rank}위",
+  "@alternativeRankLabel": {
+    "description": "AlternativeCard 상단 랭킹 라벨",
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "alternativeReasonLabel": "{lowerBy}점 낮음 · {distanceKm}km",
+  "@alternativeReasonLabel": {
+    "description": "AlternativeCard의 추천 사유(원본 대비 혼잡도 차이, 거리) — 소수 첫째 자리까지 미리 포맷한 문자열을 넘긴다",
+    "placeholders": {
+      "lowerBy": {
+        "type": "String"
+      },
+      "distanceKm": {
+        "type": "String"
+      }
+    }
+  },
+  "alternativeDetailLinkLabel": "자세히 보기 ›",
+  "@alternativeDetailLinkLabel": {
+    "description": "AlternativeCard 하단 안내 문구(카드 자체가 상세 화면으로 이동하는 탭 영역이라 별도 탭 핸들러는 없음). 원래 \"지도에서 보기\"였다가 실제로는 지도가 아니라 상세 화면으로 이동해 사용자 요청으로 문구 교체"
+  },
+  "chatCardAlternativesTitle": "{name} 대신 가볼만한 곳",
+  "@chatCardAlternativesTitle": {
+    "description": "실 서버 채팅 카드(alternatives) 제목 — base가 있을 때",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "attractionDetailPetSection": "반려동물 동반 정보",
+  "@attractionDetailPetSection": {
+    "description": "관광지 상세 화면 반려동물 동반 정보 섹션 라벨"
+  },
+  "attractionDetailPetNoData": "반려동물 동반 정보가 없어요.",
+  "@attractionDetailPetNoData": {
+    "description": "반려동물 동반 정보가 no_data이거나 표시할 필드가 없을 때 안내"
+  },
+  "attractionDetailSimilarSection": "비슷한 관광지",
+  "@attractionDetailSimilarSection": {
+    "description": "관광지 상세 화면 비슷한 관광지 섹션 라벨"
+  },
+  "attractionDetailSimilarityLabel": "{percent}% 유사",
+  "@attractionDetailSimilarityLabel": {
+    "description": "비슷한 관광지 각 행의 유사도 표시",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "attractionDetailInterestSection": "검색 관심도",
+  "@attractionDetailInterestSection": {
+    "description": "관광지 상세 화면 검색 관심도 섹션 라벨"
+  },
+  "attractionDetailInterestTrendUp": "상승",
+  "@attractionDetailInterestTrendUp": {
+    "description": "검색 관심도 trend가 up일 때 라벨"
+  },
+  "attractionDetailInterestTrendDown": "하락",
+  "@attractionDetailInterestTrendDown": {
+    "description": "검색 관심도 trend가 down일 때 라벨"
+  },
+  "attractionDetailInterestTrendFlat": "보합",
+  "@attractionDetailInterestTrendFlat": {
+    "description": "검색 관심도 trend가 flat이거나 알 수 없는 값일 때 기본 라벨"
+  },
+  "attractionDetailInterestWeeksLabel": "최근 {weeks}주 기준",
+  "@attractionDetailInterestWeeksLabel": {
+    "description": "검색 관심도 요약이 집계된 기간",
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsSectionLanguage": "언어",
+  "@settingsSectionLanguage": {
+    "description": "설정 화면 언어 섹션 라벨"
+  },
+  "languageOptionKorean": "한국어",
+  "@languageOptionKorean": {
+    "description": "언어 설정 - 한국어로 고정하는 옵션"
+  },
+  "languageOptionEnglish": "English",
+  "@languageOptionEnglish": {
+    "description": "언어 설정 - 영어로 고정하는 옵션"
+  },
+  "networkOfflineDialogTitle": "인터넷 연결이 끊겼어요",
+  "@networkOfflineDialogTitle": {
+    "description": "네트워크 연결 끊김 팝업 제목"
+  },
+  "networkOfflineDialogMessage": "네트워크 연결을 확인해 주세요.\n연결되면 자동으로 이어서 진행돼요.",
+  "@networkOfflineDialogMessage": {
+    "description": "네트워크 연결 끊김 팝업 설명"
+  },
+  "serverUnavailableDialogTitle": "서버에 문제가 있어요",
+  "@serverUnavailableDialogTitle": {
+    "description": "앱 실행 시 헬스 체크 실패 팝업 제목"
+  },
+  "serverUnavailableDialogMessage": "일시적인 서버 오류로 서비스를 이용할 수 없어요.\n잠시 후 다시 시도해 주세요.",
+  "@serverUnavailableDialogMessage": {
+    "description": "앱 실행 시 헬스 체크 실패 팝업 설명"
+  },
+  "serverUnavailableDialogExitButton": "앱 종료",
+  "@serverUnavailableDialogExitButton": {
+    "description": "앱 실행 시 헬스 체크 실패 팝업의 앱 종료 버튼"
+  },
+  "webViewLoadError": "페이지를 불러오지 못했어요.",
+  "@webViewLoadError": {
+    "description": "웹뷰 화면(개인정보처리방침/이용약관 등) 로딩 실패 시 안내(재시도 버튼과 함께, `l10n.historyRetryButton` 재사용)"
+  },
+  "photoViewerLoadingLabel": "사진 불러오는 중이에요",
+  "@photoViewerLoadingLabel": {
+    "description": "PhotoViewerScreen에서 원본 사진을 불러오는 동안 CachedNetworkImage의 placeholder로 뜨는 CircularProgressIndicator의 VoiceOver 라벨 — VoiceOver 지원 재점검 중 발견한 누락"
+  }
+}
